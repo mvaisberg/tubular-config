@@ -1,3 +1,5 @@
+"use client";
+
 import { useConfigStore } from '@/lib/store';
 import { ModuleConfig } from '@/lib/types';
 import { Plus, Trash2, RotateCcw } from 'lucide-react'; // Using Lucide icons if available

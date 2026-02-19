@@ -1,3 +1,5 @@
+"use client";
+
 import { useConfigStore } from '@/lib/store';
 import { generateParts } from '@/lib/calculator';
 import { useMemo, useEffect } from 'react';

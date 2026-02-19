@@ -1,3 +1,5 @@
+"use client";
+
 import { ModuleConfig } from '@/lib/types';
 import { useConfigStore } from '@/lib/store';
 import { useRef, useState } from 'react';
