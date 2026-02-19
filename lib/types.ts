@@ -8,6 +8,8 @@ export interface Coordinates {
     z: number;
 }
 
+export type ModuleMaterial = 'acrylic' | 'steel';
+
 export interface ModuleConfig {
     id: string;
     position: Coordinates; // Grid coordinates (not world units), e.g., [0, 0, 0]
@@ -17,6 +19,7 @@ export interface ModuleConfig {
         d: Dimension;
     };
     color: string;
+    material: ModuleMaterial;
     hasPanel: {
         top: boolean;
         bottom: boolean;

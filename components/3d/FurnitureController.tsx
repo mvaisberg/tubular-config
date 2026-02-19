@@ -14,7 +14,7 @@ export const FurnitureController = () => {
     const addModule = useConfigStore((state) => state.actions.addModule);
     const fetchPartsData = useConfigStore((state) => state.actions.fetchPartsData);
 
-    // Initial seed for testing
+    // Initial seed
     useEffect(() => {
         fetchPartsData(); // Fetch prices
 
@@ -24,17 +24,11 @@ export const FurnitureController = () => {
                 position: { x: 0, y: 0, z: 0 },
                 size: { w: 750, h: 350, d: 350 },
                 color: 'white',
+                material: 'steel',
                 hasPanel: { top: true, bottom: true, left: true, right: true, front: false, back: true }
             });
-            addModule({
-                id: 'init-2',
-                position: { x: 750, y: 0, z: 0 },
-                size: { w: 750, h: 350, d: 350 },
-                color: 'blue',
-                hasPanel: { top: true, bottom: true, left: true, right: true, front: true, back: true }
-            });
         }
-    }, [addModule, modules.length]);
+    }, []); // Run once on mount
 
     const parts = useMemo(() => generateParts(modules), [modules]);
 

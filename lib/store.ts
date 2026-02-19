@@ -19,6 +19,8 @@ interface ConfigState {
     actions: {
         addModule: (module: ModuleConfig) => void
         removeModule: (id: string) => void
+        updateModule: (id: string, updates: Partial<ModuleConfig>) => void
+        updateAllModules: (updates: Partial<ModuleConfig>) => void
         selectModule: (id: string | null) => void
         reset: () => void
         fetchPartsData: () => Promise<void>
@@ -34,11 +36,28 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     actions: {
         selectModule: (id) => set({ selectedModuleId: id }),
         addModule: (module) => {
-            set((state) => ({ modules: [...state.modules, module], selectedModuleId: module.id })); // Auto-select new
+            set((state) => ({ modules: [...state.modules, module], selectedModuleId: module.id }));
+            get().actions.calculatePrice();
+        },
+        updateModule: (id, updates) => {
+            set((state) => ({
+                modules: state.modules.map((m) =>
+                    m.id === id ? { ...m, ...updates } : m
+                ),
+            }));
+            get().actions.calculatePrice();
+        },
+        updateAllModules: (updates) => {
+            set((state) => ({
+                modules: state.modules.map((m) => ({ ...m, ...updates })),
+            }));
             get().actions.calculatePrice();
         },
         removeModule: (id) => {
-            set((state) => ({ modules: state.modules.filter((m) => m.id !== id) }));
+            set((state) => ({
+                modules: state.modules.filter((m) => m.id !== id),
+                selectedModuleId: state.selectedModuleId === id ? null : state.selectedModuleId
+            }));
             get().actions.calculatePrice();
         },
         reset: () => {

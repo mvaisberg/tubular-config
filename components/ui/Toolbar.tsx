@@ -21,6 +21,7 @@ export const Toolbar = () => {
                     position: { x: 0, y: 0, z: 0 },
                     size: { w: 750, h: 350, d: 350 },
                     color: 'white',
+                    material: 'steel',
                     hasPanel: { top: true, bottom: true, left: true, right: true, front: false, back: true }
                 });
             }
@@ -62,6 +63,7 @@ export const Toolbar = () => {
             position: newPos,
             size: newSize,
             color: selected.color,
+            material: selected.material,
             hasPanel: { ...selected.hasPanel } // Copy panels config
         });
     };
@@ -80,9 +82,6 @@ export const Toolbar = () => {
                         <button onClick={() => handleAdd('left')} className="p-2 hover:bg-gray-100 rounded-full" title="Add Left">←</button>
                         <button onClick={() => handleAdd('right')} className="p-2 hover:bg-gray-100 rounded-full" title="Add Right">→</button>
                         <button onClick={() => handleAdd('top')} className="p-2 hover:bg-gray-100 rounded-full" title="Add Top">↑</button>
-                        <button onClick={() => handleAdd('bottom')} className="p-2 hover:bg-gray-100 rounded-full" title="Add Bottom">↓</button>
-                        <button onClick={() => handleAdd('front')} className="p-2 hover:bg-gray-100 rounded-full" title="Add Front">↗</button>
-                        <button onClick={() => handleAdd('back')} className="p-2 hover:bg-gray-100 rounded-full" title="Add Back">↙</button>
                     </div>
                     <button
                         onClick={() => removeModule(selectedModuleId)}
