@@ -1,3 +1,5 @@
+"use client";
+
 import { useConfigStore } from '@/lib/store';
 import { useMemo } from 'react';
 
