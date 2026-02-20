@@ -1,9 +1,33 @@
 "use client";
 
+import { useConfigStore } from '@/lib/store';
+import { useRef, useEffect, Suspense } from 'react';
 import { Canvas } from "@react-three/fiber";
 import { Environment, OrbitControls } from "@react-three/drei";
-import { Suspense } from "react";
 import { FurnitureController } from "./FurnitureController";
+
+const CameraController = () => {
+    const cameraResetVersion = useConfigStore((state) => state.cameraResetVersion);
+    const controlsRef = useRef<any>(null);
+
+    useEffect(() => {
+        if (cameraResetVersion > 0 && controlsRef.current) {
+            controlsRef.current.reset();
+            // Reset target to our preferred center if orbit reset doesn't preserve it
+            controlsRef.current.target.set(0, 0.4, 0);
+        }
+    }, [cameraResetVersion]);
+
+    return (
+        <OrbitControls
+            ref={controlsRef}
+            makeDefault
+            maxPolarAngle={Math.PI / 2 - 0.05}
+            minPolarAngle={0}
+            target={[0, 0.4, 0]}
+        />
+    );
+};
 
 export default function Scene() {
     return (
@@ -11,24 +35,20 @@ export default function Scene() {
             <Canvas shadows camera={{ position: [2, 2, 2], fov: 50 }}>
                 <Suspense fallback={null}>
                     <Environment preset="studio" />
-                    <ambientLight intensity={0.5} />
-                    <OrbitControls makeDefault />
+                    <ambientLight intensity={0.4} />
+                    <directionalLight position={[5, 10, 5]} intensity={2} castShadow />
+                    <CameraController />
 
                     {/* Floor */}
-                    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]}>
+                    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
                         <planeGeometry args={[10, 10]} />
                         <meshStandardMaterial color="#f0f0f0" />
                     </mesh>
 
-                    {/* Placeholder Cube */}
-                    <mesh position={[0, 0, 0]}>
-                        <boxGeometry args={[0.75, 0.35, 0.35]} />
-                        <meshStandardMaterial color="orange" />
-                    </mesh>
-
-                    {/* Added FurnitureController based on instruction */}
-                    {/* Note: The instruction's snippet contained an extra `</mesh>` which has been omitted to maintain syntax correctness. */}
-                    <FurnitureController />
+                    {/* USM feet raise the unit by ~35-40mm. Shifting up so y=0 is floor. */}
+                    <group position={[0, 0.035, 0]}>
+                        <FurnitureController />
+                    </group>
 
                 </Suspense>
             </Canvas>

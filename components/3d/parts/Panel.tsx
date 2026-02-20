@@ -43,7 +43,7 @@ export const Panel = ({ position, orientation, width, height, color = 'white' }:
         switch (orientation) {
             case 'xy': return [width * 0.001, height * 0.001, thickness] as [number, number, number];
             case 'xz': return [width * 0.001, thickness, height * 0.001] as [number, number, number];
-            case 'yz': return [thickness, width * 0.001, height * 0.001] as [number, number, number];
+            case 'yz': return [thickness, height * 0.001, width * 0.001] as [number, number, number];
         }
     }, [orientation, width, height]);
 
@@ -62,14 +62,40 @@ export const Panel = ({ position, orientation, width, height, color = 'white' }:
         switch (orientation) {
             case 'xy': return [x + w / 2, y + h / 2, z];
             case 'xz': return [x + w / 2, y, z + h / 2];
-            case 'yz': return [x, y + w / 2, z + h / 2];
+            case 'yz': return [x, y + h / 2, z + w / 2];
         }
     }, [position, orientation, width, height]);
+
+    // Color Mapping
+    const getColorParams = (colorName: string) => {
+        // Steel
+        // Use higher metalness for shine, lower roughness for sharpness.
+        // Use slightly brighter colors or ensure lighting hits them.
+        if (colorName === 'black') return { color: '#0F0F0F', opacity: 1, transparent: false, metalness: 0.6, roughness: 0.3 };
+        if (colorName === 'white') return { color: '#FFFFFF', opacity: 1, transparent: false, metalness: 0.5, roughness: 0.3 };
+        if (colorName === 'beige') return { color: '#D2C3A8', opacity: 1, transparent: false, metalness: 0.4, roughness: 0.3 };
+
+        // Acrylic - Make them pop more.
+        if (colorName === 'transparent') return { color: '#E0F7FA', opacity: 0.2, transparent: true, metalness: 0.1, roughness: 0.05, transmission: 0.95, thickness: 0.5 };
+        if (colorName === 'orange_translucent') return { color: '#FF6600', opacity: 0.7, transparent: true, metalness: 0.2, roughness: 0.1 };
+        if (colorName === 'blue_translucent') return { color: '#0088FF', opacity: 0.7, transparent: true, metalness: 0.2, roughness: 0.1 };
+        if (colorName === 'green_translucent') return { color: '#00CC44', opacity: 0.7, transparent: true, metalness: 0.2, roughness: 0.1 };
+
+        return { color: colorName, opacity: 1, transparent: false, metalness: 0.5, roughness: 0.3 };
+    };
+
+    const { color: threeColor, opacity, transparent, metalness, roughness } = getColorParams(color);
 
     return (
         <mesh position={offset as [number, number, number]}>
             <boxGeometry args={args} />
-            <meshStandardMaterial color={color} metalness={0.1} roughness={0.8} />
+            <meshStandardMaterial
+                color={threeColor}
+                metalness={metalness}
+                roughness={roughness}
+                transparent={transparent}
+                opacity={opacity}
+            />
         </mesh>
     );
 };

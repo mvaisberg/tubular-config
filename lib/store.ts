@@ -16,15 +16,19 @@ interface ConfigState {
     partsData: PartData[]
     totalPrice: number
     selectedModuleId: string | null
+    cameraResetVersion: number
     actions: {
         addModule: (module: ModuleConfig) => void
         removeModule: (id: string) => void
         updateModule: (id: string, updates: Partial<ModuleConfig>) => void
+        updateColumnWidth: (id: string, newWidth: number) => void
+        updateRowHeight: (id: string, newHeight: number) => void
         updateAllModules: (updates: Partial<ModuleConfig>) => void
         selectModule: (id: string | null) => void
         reset: () => void
         fetchPartsData: () => Promise<void>
         calculatePrice: () => void
+        triggerCameraReset: () => void
     }
 }
 
@@ -33,8 +37,10 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     partsData: [],
     totalPrice: 0,
     selectedModuleId: null,
+    cameraResetVersion: 0,
     actions: {
         selectModule: (id) => set({ selectedModuleId: id }),
+        triggerCameraReset: () => set((state) => ({ cameraResetVersion: state.cameraResetVersion + 1 })),
         addModule: (module) => {
             set((state) => ({ modules: [...state.modules, module], selectedModuleId: module.id }));
             get().actions.calculatePrice();
@@ -45,6 +51,59 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
                     m.id === id ? { ...m, ...updates } : m
                 ),
             }));
+            get().actions.calculatePrice();
+        },
+        updateColumnWidth: (id, newWidth) => {
+            const state = get();
+            const targetModule = state.modules.find(m => m.id === id);
+            if (!targetModule) return;
+
+            const currentX = targetModule.position.x;
+            const currentWidth = targetModule.size.w;
+            const delta = newWidth - currentWidth;
+
+            if (delta === 0) return;
+
+            const updatedModules = state.modules.map(m => {
+                // If in the same column (start X is same), update width
+                if (m.position.x === currentX) {
+                    return { ...m, size: { ...m.size, w: newWidth } };
+                }
+                // If after this column, shift X position
+                if (m.position.x > currentX) {
+                    return { ...m, position: { ...m.position, x: m.position.x + delta } };
+                }
+                return m;
+            });
+
+            set({ modules: updatedModules as ModuleConfig[] }); // Cast to ensure type safety
+            set({ modules: updatedModules as ModuleConfig[] }); // Cast to ensure type safety
+            get().actions.calculatePrice();
+        },
+        updateRowHeight: (id, newHeight) => {
+            const state = get();
+            const targetModule = state.modules.find(m => m.id === id);
+            if (!targetModule) return;
+
+            const currentY = targetModule.position.y;
+            const currentHeight = targetModule.size.h;
+            const delta = newHeight - currentHeight;
+
+            if (delta === 0) return;
+
+            const updatedModules = state.modules.map(m => {
+                // If in the same row (start Y is same), update height
+                if (m.position.y === currentY) {
+                    return { ...m, size: { ...m.size, h: newHeight } };
+                }
+                // If above this row, shift Y position
+                if (m.position.y > currentY) {
+                    return { ...m, position: { ...m.position, y: m.position.y + delta } };
+                }
+                return m;
+            });
+
+            set({ modules: updatedModules as ModuleConfig[] });
             get().actions.calculatePrice();
         },
         updateAllModules: (updates) => {
@@ -61,7 +120,19 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
             get().actions.calculatePrice();
         },
         reset: () => {
-            set({ modules: [], totalPrice: 0 });
+            set({
+                modules: [{
+                    id: crypto.randomUUID(),
+                    position: { x: 0, y: 0, z: 0 },
+                    size: { w: 750, h: 350, d: 350 },
+                    color: 'white',
+                    material: 'steel',
+                    hasPanel: { top: true, bottom: true, left: true, right: true, front: false, back: true }
+                }],
+                selectedModuleId: null,
+                totalPrice: 0 // Will be recalculated
+            });
+            get().actions.calculatePrice();
         },
         fetchPartsData: async () => {
             const supabase = createClient();

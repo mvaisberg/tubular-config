@@ -51,7 +51,8 @@ export function generateParts(modules: ModuleConfig[]): DerivedPart[] {
             addPart({
                 id,
                 type: 'ball',
-                position: [cx, cy_val, cz_val]
+                position: [cx, cy_val, cz_val],
+                hasFoot: cy_val === 0
             });
         });
 
@@ -100,6 +101,11 @@ export function generateParts(modules: ModuleConfig[]): DerivedPart[] {
         // Panel positions are their bottom-left-back corner? Or center?
         // Let's use the corner with lowest coordinates.
 
+        // PANELS
+        // We dedup panels based on their global position and dimensions.
+        // Panel positions are their bottom-left-back corner? Or center?
+        // Let's use the corner with lowest coordinates.
+
         const addPanel = (x1: number, y1: number, z1: number, plane: 'xy' | 'xz' | 'yz', w_dim: number, h_dim: number) => {
             const id = `panel-${plane}-${x1}-${y1}-${z1}-${w_dim}-${h_dim}`;
             // Dimensions for the panel geometry
@@ -114,6 +120,7 @@ export function generateParts(modules: ModuleConfig[]): DerivedPart[] {
                 position: [x1, y1, z1],
                 orientation: plane, // now compatible with updated type
                 dimensions: { width: w_dim, height: h_dim },
+                color: mod.color // Pass module color!
             });
         };
 

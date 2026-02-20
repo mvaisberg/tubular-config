@@ -36,7 +36,7 @@ export const FurnitureController = () => {
         <group>
             {parts.map((part: DerivedPart) => {
                 if (part.type === 'ball') {
-                    return <Ball key={part.id} position={part.position} />;
+                    return <Ball key={part.id} position={part.position} hasFoot={part.hasFoot} />;
                 }
                 if (part.type === 'tube') {
                     return (

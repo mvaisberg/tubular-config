@@ -39,8 +39,8 @@ export const Tube = ({ position, length, orientation }: TubeProps) => {
 
     return (
         <mesh position={centerPos} rotation={rotation}>
-            <cylinderGeometry args={[radius, radius, visualLength, 16]} />
-            <meshStandardMaterial color="#d4d4d4" metalness={0.6} roughness={0.3} />
+            <cylinderGeometry args={[radius, radius, visualLength, 32]} />
+            <meshStandardMaterial color="#ffffff" metalness={1} roughness={0.1} />
         </mesh>
     );
 };

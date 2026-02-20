@@ -6,11 +6,13 @@ import { Sidebar } from "@/components/ui/Sidebar";
 
 export default function Home() {
   return (
-    <div className="w-full h-screen bg-white">
+    <div className="flex h-screen w-full bg-white overflow-hidden">
       <Sidebar />
-      <Scene />
-      <PriceDisplay />
-      <Toolbar />
+      <div className="flex-1 relative h-full">
+        <Scene />
+        <PriceDisplay />
+        <Toolbar />
+      </div>
     </div>
   );
 }
