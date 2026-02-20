@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { PartData } from "@/lib/types"; // Need to ensure PartData matches DB
 import { createClient } from "@/lib/supabase/client";
-import { Pencil, Save, X } from "lucide-react";
+import { Pencil, Save, X, Trash2, Image as ImageIcon } from "lucide-react";
 
 interface PartsTableProps {
-    initialParts: any[]; // Using any for now to avoid strict type mismatch with DB vs App types
+    initialParts: any[];
 }
 
 export default function PartsTable({ initialParts }: PartsTableProps) {
@@ -14,14 +13,15 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editForm, setEditForm] = useState<any>({});
     const [isCreating, setIsCreating] = useState(false);
-    const [createForm, setCreateForm] = useState<Partial<PartData>>({
-        sku: '', name: '', type: 'tube', cost: 0, price: 0, stock: 0, dimensions: {}
+    const [createForm, setCreateForm] = useState<any>({
+        sku: '', name: '', type: 'tube', price_ars: '', price_usd: '', image_url: ''
     });
+    const [uploadingImage, setUploadingImage] = useState(false);
 
     const supabase = createClient();
 
     const handleEdit = (part: any) => {
-        setEditingId(part.sku);
+        setEditingId(part.id);
         setEditForm({ ...part });
     };
 
@@ -31,56 +31,125 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
     };
 
     const handleChange = (field: string, value: any) => {
-        setEditForm((prev: any) => ({ ...prev, [field]: value }));
+        setEditForm((prev: any) => {
+            const up = { ...prev, [field]: value };
+            // Enforce only one price
+            if (field === 'price_ars' && value) up.price_usd = '';
+            if (field === 'price_usd' && value) up.price_ars = '';
+            return up;
+        });
     };
 
     const handleCreateChange = (field: string, value: any) => {
-        setCreateForm((prev: any) => ({ ...prev, [field]: value }));
+        setCreateForm((prev: any) => {
+            const up = { ...prev, [field]: value };
+            // Enforce only one price
+            if (field === 'price_ars' && value) up.price_usd = '';
+            if (field === 'price_usd' && value) up.price_ars = '';
+            return up;
+        });
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, isEdit: boolean) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploadingImage(true);
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `parts/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('images') // Assume bucket exists, if not need to create
+            .upload(filePath, file);
+
+        if (uploadError) {
+            console.error('Error uploading image:', uploadError);
+            alert('Error al subir la imagen. Asegúrate que el bucket "images" exista en Supabase y sea público.');
+            setUploadingImage(false);
+            return;
+        }
+
+        const { data } = supabase.storage.from('images').getPublicUrl(filePath);
+        
+        if (isEdit) {
+            handleChange('image_url', data.publicUrl);
+        } else {
+            handleCreateChange('image_url', data.publicUrl);
+        }
+        setUploadingImage(false);
     };
 
     const handleSave = async () => {
         if (!editingId) return;
 
+        if (!editForm.price_ars && !editForm.price_usd) {
+            alert('Debes ingresar el Precio en ARS o en USD');
+            return;
+        }
+
+        const args = {
+            sku: editForm.sku,
+            name: editForm.name,
+            type: editForm.type,
+            price_ars: editForm.price_ars ? parseFloat(editForm.price_ars) : null,
+            price_usd: editForm.price_usd ? parseFloat(editForm.price_usd) : null,
+            image_url: editForm.image_url
+        };
+
         const { error } = await supabase
             .from('parts')
-            .update({
-                name: editForm.name,
-                cost: parseFloat(editForm.cost),
-                price: parseFloat(editForm.price),
-                stock: parseInt(editForm.stock)
-            })
-            .eq('sku', editingId); // Accessing by SKU for now as ID
+            .update(args)
+            .eq('id', editingId);
 
         if (error) {
             alert("Error updating part: " + error.message);
         } else {
-            setParts(parts.map(p => p.sku === editingId ? { ...p, ...editForm } : p));
+            setParts(parts.map(p => p.id === editingId ? { ...p, ...args } : p));
             setEditingId(null);
         }
     };
 
     const handleCreate = async () => {
-        const { error } = await supabase
+        if (!createForm.price_ars && !createForm.price_usd) {
+            alert('Debes ingresar el Precio en ARS o en USD');
+            return;
+        }
+
+        const args = {
+            sku: createForm.sku,
+            name: createForm.name,
+            type: createForm.type,
+            price_ars: createForm.price_ars ? parseFloat(createForm.price_ars) : null,
+            price_usd: createForm.price_usd ? parseFloat(createForm.price_usd) : null,
+            image_url: createForm.image_url
+        };
+
+        const { data, error } = await supabase
             .from('parts')
-            .insert([{
-                sku: createForm.sku,
-                name: createForm.name,
-                type: createForm.type,
-                cost: parseFloat(createForm.cost as any),
-                price: parseFloat(createForm.price as any),
-                stock: parseInt(createForm.stock as any),
-                dimensions: createForm.dimensions || {}
-            }]);
+            .insert([args])
+            .select('*')
+            .single();
 
         if (error) {
             alert("Error creating part: " + error.message);
-        } else {
-            setParts([...parts, createForm]);
+        } else if (data) {
+            setParts([...parts, data]);
             setIsCreating(false);
-            setCreateForm({ sku: '', name: '', type: 'tube', cost: 0, price: 0, stock: 0, dimensions: {} });
-            // Refresh page or re-fetch? State update is enough for now.
+            setCreateForm({ sku: '', name: '', type: 'tube', price_ars: '', price_usd: '', image_url: '' });
         }
     };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('¿Estás seguro de eliminar esta parte?')) return;
+        
+        const { error } = await supabase.from('parts').delete().eq('id', id);
+        if (error) {
+            alert("Error deleting part: " + error.message);
+        } else {
+            setParts(parts.filter(p => p.id !== id));
+        }
+    }
 
     return (
         <div className="space-y-4">
@@ -121,29 +190,50 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
                                 <option value="accessory">Accessory</option>
                             </select>
                             <div className="flex gap-2">
-                                <input
-                                    type="number" step="0.01" placeholder="Cost"
-                                    className="w-1/2 border p-2 rounded"
-                                    value={createForm.cost}
-                                    onChange={e => handleCreateChange('cost', e.target.value)}
-                                />
-                                <input
-                                    type="number" step="0.01" placeholder="Price"
-                                    className="w-1/2 border p-2 rounded"
-                                    value={createForm.price}
-                                    onChange={e => handleCreateChange('price', e.target.value)}
-                                />
+                                <div>
+                                    <label className="text-xs text-gray-500">Precio ARS</label>
+                                    <input
+                                        type="number" step="0.01" placeholder="ARS"
+                                        className="w-full border p-2 rounded bg-gray-50 disabled:opacity-50"
+                                        value={createForm.price_ars}
+                                        onChange={e => handleCreateChange('price_ars', e.target.value)}
+                                        disabled={!!createForm.price_usd}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-gray-500">Precio USD</label>
+                                    <input
+                                        type="number" step="0.01" placeholder="USD"
+                                        className="w-full border p-2 rounded bg-gray-50 disabled:opacity-50"
+                                        value={createForm.price_usd}
+                                        onChange={e => handleCreateChange('price_usd', e.target.value)}
+                                        disabled={!!createForm.price_ars}
+                                    />
+                                </div>
                             </div>
-                            <input
-                                type="number" placeholder="Stock"
-                                className="w-full border p-2 rounded"
-                                value={createForm.stock}
-                                onChange={e => handleCreateChange('stock', e.target.value)}
-                            />
+                            
+                            <div>
+                                <label className="text-xs text-gray-500 block mb-1">Imagen (Opcional)</label>
+                                {createForm.image_url ? (
+                                    <div className="relative w-24 h-24 mb-2">
+                                        <img src={createForm.image_url} alt="Preview" className="w-full h-full object-cover rounded border" />
+                                        <button onClick={() => handleCreateChange('image_url', '')} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"><X size={12} /></button>
+                                    </div>
+                                ) : (
+                                    <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        onChange={(e) => handleImageUpload(e, false)}
+                                        disabled={uploadingImage}
+                                        className="w-full border p-2 rounded text-sm disabled:opacity-50" 
+                                    />
+                                )}
+                            </div>
+
                         </div>
                         <div className="flex justify-end gap-2 mt-6">
                             <button onClick={() => setIsCreating(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
-                            <button onClick={handleCreate} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Create</button>
+                            <button onClick={handleCreate} disabled={uploadingImage} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">Create</button>
                         </div>
                     </div>
                 </div>
@@ -153,73 +243,106 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
                 <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                         <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Cost</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Price (PVP)</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Price (ARS)</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Price (USD)</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {parts.map((part) => {
-                            const isEditing = editingId === part.sku;
+                            const isEditing = editingId === part.id;
                             return (
-                                <tr key={part.sku}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{part.sku}</td>
+                                <tr key={part.id}>
+                                    <td className="px-6 py-4 whitespace-nowrap">
+                                        {isEditing ? (
+                                            <div>
+                                                {editForm.image_url ? (
+                                                     <div className="relative w-12 h-12">
+                                                        <img src={editForm.image_url} alt="Thumb" className="w-full h-full object-cover rounded border" />
+                                                        <button onClick={() => handleChange('image_url', '')} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5"><X size={10} /></button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center">
+                                                        <input 
+                                                            type="file" 
+                                                            id={`file-${part.id}`}
+                                                            accept="image/*" 
+                                                            onChange={(e) => handleImageUpload(e, true)}
+                                                            className="hidden" 
+                                                        />
+                                                        <label htmlFor={`file-${part.id}`} className="cursor-pointer text-blue-500 hover:text-blue-700 p-1 border rounded"><ImageIcon size={16}/></label>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            part.image_url ? <img src={part.image_url} alt={part.name} className="w-12 h-12 object-cover rounded border" /> : <div className="w-12 h-12 bg-gray-100 rounded border flex items-center justify-center text-gray-400"><ImageIcon size={16}/></div>
+                                        )}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        {isEditing ? <input value={editForm.sku || ''} onChange={(e) => handleChange('sku', e.target.value)} className="w-full border rounded p-1"/> : part.sku}
+                                    </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {isEditing ? (
                                             <input
-                                                value={editForm.name}
+                                                value={editForm.name || ''}
                                                 onChange={(e) => handleChange('name', e.target.value)}
                                                 className="w-full border rounded p-1"
                                             />
                                         ) : part.name}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{part.type}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {isEditing ? (
-                                            <input
-                                                type="number"
-                                                step="0.01"
-                                                value={editForm.cost}
-                                                onChange={(e) => handleChange('cost', e.target.value)}
-                                                className="w-24 border rounded p-1 text-right"
-                                            />
-                                        ) : `$${part.cost.toFixed(2)}`}
+                                            <select value={editForm.type || 'tube'} onChange={e => handleChange('type', e.target.value)} className="border rounded p-1">
+                                                <option value="tube">Tube</option>
+                                                <option value="connector">Connector</option>
+                                                <option value="panel">Panel</option>
+                                                <option value="accessory">Accessory</option>
+                                            </select>
+                                        ) : part.type}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
                                         {isEditing ? (
                                             <input
                                                 type="number"
                                                 step="0.01"
-                                                value={editForm.price}
-                                                onChange={(e) => handleChange('price', e.target.value)}
-                                                className="w-24 border rounded p-1 text-right"
+                                                value={editForm.price_ars ?? ''}
+                                                onChange={(e) => handleChange('price_ars', e.target.value)}
+                                                disabled={!!editForm.price_usd}
+                                                className="w-24 border rounded p-1 text-right disabled:opacity-50 bg-gray-50"
                                             />
-                                        ) : `$${part.price.toFixed(2)}`}
+                                        ) : part.price_ars ? `$${Number(part.price_ars).toFixed(2)}` : '-'}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
                                         {isEditing ? (
                                             <input
                                                 type="number"
-                                                value={editForm.stock}
-                                                onChange={(e) => handleChange('stock', e.target.value)}
-                                                className="w-20 border rounded p-1 text-right"
+                                                step="0.01"
+                                                value={editForm.price_usd ?? ''}
+                                                onChange={(e) => handleChange('price_usd', e.target.value)}
+                                                disabled={!!editForm.price_ars}
+                                                className="w-24 border rounded p-1 text-right disabled:opacity-50 bg-gray-50"
                                             />
-                                        ) : part.stock}
+                                        ) : part.price_usd ? `US$${Number(part.price_usd).toFixed(2)}` : '-'}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         {isEditing ? (
                                             <div className="flex justify-end gap-2">
                                                 <button onClick={handleSave} className="text-green-600 hover:text-green-900"><Save size={18} /></button>
-                                                <button onClick={handleCancel} className="text-red-600 hover:text-red-900"><X size={18} /></button>
+                                                <button onClick={handleCancel} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
                                             </div>
                                         ) : (
-                                            <button onClick={() => handleEdit(part)} className="text-blue-600 hover:text-blue-900">
-                                                <Pencil size={18} />
-                                            </button>
+                                            <div className="flex justify-end gap-3">
+                                                <button onClick={() => handleEdit(part)} className="text-blue-600 hover:text-blue-900">
+                                                    <Pencil size={18} />
+                                                </button>
+                                                <button onClick={() => handleDelete(part.id)} className="text-red-600 hover:text-red-900">
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </div>
                                         )}
                                     </td>
                                 </tr>
@@ -231,3 +354,4 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
         </div>
     );
 }
+
