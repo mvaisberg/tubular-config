@@ -57,7 +57,14 @@ interface ConfigState {
 }
 
 export const useConfigStore = create<ConfigState>((set, get) => ({
-    modules: [],
+    modules: [{
+        id: 'initial-module',
+        position: { x: 0, y: 0, z: 0 },
+        size: { w: 750, h: 350, d: 350 },
+        color: 'white',
+        material: 'steel',
+        hasPanel: { top: true, bottom: true, left: true, right: true, front: false, back: true }
+    }],
     partsData: [],
     settings: null,
     bomSummary: {},

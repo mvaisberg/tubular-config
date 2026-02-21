@@ -19,17 +19,6 @@ export const FurnitureController = () => {
     useEffect(() => {
         fetchPartsData(); // Fetch prices
         fetchSettings(); // Fetch costs/margins
-
-        if (modules.length === 0) {
-            addModule({
-                id: 'init-1',
-                position: { x: 0, y: 0, z: 0 },
-                size: { w: 750, h: 350, d: 350 },
-                color: 'white',
-                material: 'steel',
-                hasPanel: { top: true, bottom: true, left: true, right: true, front: false, back: true }
-            });
-        }
     }, []); // Run once on mount
 
     const parts = useMemo(() => generateParts(modules), [modules]);

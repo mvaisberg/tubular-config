@@ -14,7 +14,7 @@ export const PriceDisplay = () => {
     const bomItems = Object.values(bomSummary);
 
     return (
-        <div className="absolute top-4 right-4 bg-[#ebecdf]/95 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-white/50 w-80 max-h-[85vh] overflow-y-auto z-20 transition-all duration-300">
+        <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-[#354763]/10 w-80 max-h-[85vh] overflow-y-auto z-20 transition-all duration-300">
             <h3 className="text-sm font-bold mb-6 flex items-center justify-between text-[#354763] tracking-widest uppercase">
                 <span>Resumen</span>
                 <span className="text-[10px] bg-[#354763] text-white px-3 py-1 rounded-full font-black">
@@ -31,10 +31,10 @@ export const PriceDisplay = () => {
                 <div className="bg-white/40 p-4 rounded-xl space-y-3 border border-[#354763]/5 shadow-inner">
                     <div className="flex justify-between items-center group">
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-[#aab799] uppercase tracking-tighter">Efectivo</span>
+                            <span className="text-[10px] font-black text-[#354763] uppercase tracking-tighter">Efectivo</span>
                             <span className="text-[9px] font-bold text-[#354763]/30 uppercase tracking-widest">20% OFF</span>
                         </div>
-                        <span className="text-xl font-black text-[#aab799] drop-shadow-sm transition-transform group-hover:scale-105">
+                        <span className="text-xl font-black text-[#354763] drop-shadow-sm transition-transform group-hover:scale-105">
                             ${(totalPrice * 0.8).toLocaleString('es-AR', { minimumFractionDigits: 0 })}
                         </span>
                     </div>

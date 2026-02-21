@@ -103,7 +103,7 @@ export const Toolbar = () => {
                 <>
                     <button
                         onClick={() => setModalData({ isOpen: true, type: "quote" })}
-                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 font-medium transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 bg-[#354763] text-white rounded-full hover:bg-[#354763]/90 font-medium transition-colors"
                         title="Guardar Cotización"
                     >
                         <Save size={18} />
@@ -113,7 +113,7 @@ export const Toolbar = () => {
                     {isAdmin && (
                         <button
                             onClick={() => setModalData({ isOpen: true, type: "product" })}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 font-medium transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-full hover:bg-black/90 font-medium transition-colors"
                             title="Guardar como Producto"
                         >
                             <ShoppingBag size={18} />

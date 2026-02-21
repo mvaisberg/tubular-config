@@ -13,7 +13,7 @@ const AddButton = ({ position, onClick, direction }: { position: [number, number
                     e.stopPropagation();
                     onClick();
                 }}
-                className="w-1.5 h-1.5 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 shadow-sm text-[4px] font-bold leading-none cursor-pointer p-0"
+                className="w-1.5 h-1.5 bg-[#354763] text-white rounded-full flex items-center justify-center hover:bg-[#354763]/80 shadow-sm text-[4px] font-bold leading-none cursor-pointer p-0"
                 title={`Add ${direction}`}
             >
             </button>
@@ -157,9 +157,9 @@ export const ModuleHitBox = ({ module }: { module: ModuleConfig }) => {
             >
                 <boxGeometry args={args} />
                 <meshBasicMaterial
-                    color={isSelected ? "#00ff00" : "#0000ff"}
+                    color="#354763"
                     transparent
-                    opacity={isSelected ? 0.1 : hovered ? 0.05 : 0}
+                    opacity={isSelected ? 0.15 : hovered ? 0.05 : 0}
                     wireframe={isSelected}
                 />
             </mesh>

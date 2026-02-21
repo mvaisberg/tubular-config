@@ -127,7 +127,7 @@ export const Sidebar = () => {
     const currentSteelStyle = getSteelStyle();
 
     return (
-        <div className="h-full w-80 bg-[#ebecdf] shadow-2xl border-r border-[#354763]/10 p-8 overflow-y-auto flex-shrink-0 z-10">
+        <div className="h-full w-80 bg-white shadow-2xl border-r border-[#354763]/10 p-8 overflow-y-auto flex-shrink-0 z-10">
             <div className="flex flex-col items-center mb-10 gap-2">
                 <img src="/brandbook/logo/logo-azul.svg" alt="Tubular" className="w-32 mb-2" />
                 <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#354763]/30">Configurator</span>
@@ -158,9 +158,6 @@ export const Sidebar = () => {
 
             {selectedModuleId ? (
                 <>
-                    <div className="mb-8 p-4 bg-[#aab799]/10 text-[#354763] text-[10px] uppercase tracking-widest font-bold rounded-xl border border-[#aab799]/20 flex justify-center items-center">
-                        Módulo seleccionado
-                    </div>
 
                     {/* Steel Configuration */}
                     {currentMaterial === 'steel' && (
@@ -202,7 +199,7 @@ export const Sidebar = () => {
                                             key={w}
                                             onClick={() => updateColumnWidth(selectedModuleId, w)}
                                             className={`flex-1 py-3 rounded-xl border-2 transition-all font-bold text-sm ${targetModule.size.w === w
-                                                ? 'bg-white border-[#aab799] text-[#354763] shadow-md'
+                                                ? 'bg-white border-[#354763] text-[#354763] shadow-md'
                                                 : 'border-transparent text-[#354763]/40 hover:bg-white/50'
                                                 }`}
                                         >
@@ -220,7 +217,7 @@ export const Sidebar = () => {
                                             key={h}
                                             onClick={() => updateRowHeight(selectedModuleId, h)}
                                             className={`flex-1 py-3 rounded-xl border-2 transition-all font-bold text-sm ${targetModule.size.h === h
-                                                ? 'bg-white border-[#aab799] text-[#354763] shadow-md'
+                                                ? 'bg-white border-[#354763] text-[#354763] shadow-md'
                                                 : 'border-transparent text-[#354763]/40 hover:bg-white/50'
                                                 }`}
                                         >
@@ -233,7 +230,7 @@ export const Sidebar = () => {
                     </div>
                 </>
             ) : (
-                <div className="p-6 bg-[#ebecdf] border-2 border-dashed border-[#354763]/10 rounded-2xl text-center mb-10">
+                <div className="p-6 bg-[#354763]/5 border-2 border-dashed border-[#354763]/10 rounded-2xl text-center mb-10">
                     <p className="text-[#354763]/40 text-xs font-medium leading-relaxed italic">Selecciona un módulo en la vista 3D para editar sus dimensiones y estilo.</p>
                 </div>
             )}
