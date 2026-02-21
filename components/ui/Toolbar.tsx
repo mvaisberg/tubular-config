@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useConfigStore } from '@/lib/store';
 import { ModuleConfig } from '@/lib/types';
-import { Plus, Trash2, RotateCcw, Target, Save, ShoppingBag } from 'lucide-react';
+import { Plus, Trash2, RotateCcw, Target, Save, ShoppingBag, Layout } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useSearchParams } from 'next/navigation';
 import { SaveModal } from './SaveModal';
@@ -16,6 +16,14 @@ export const Toolbar = () => {
     const removeModule = useConfigStore((state) => state.actions.removeModule);
     const reset = useConfigStore((state) => state.actions.reset);
     const triggerCameraReset = useConfigStore((state) => state.actions.triggerCameraReset);
+    const environment = useConfigStore((state) => state.environment);
+    const setEnvironment = useConfigStore((state) => state.actions.setEnvironment);
+
+    const toggleEnvironment = () => {
+        if (environment === 'none') setEnvironment('modern');
+        else if (environment === 'modern') setEnvironment('industrial');
+        else setEnvironment('none');
+    };
 
     const [isSaving, setIsSaving] = useState(false);
     const [isSavingProduct, setIsSavingProduct] = useState(false);
@@ -96,8 +104,8 @@ export const Toolbar = () => {
                     color: 'white',
                     material: 'steel',
                     hasPanel: { top: true, bottom: true, left: true, right: true, front: false, back: true }
-                })} className="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 font-medium">
-                    Start Configuration
+                })} className="px-4 py-2 bg-black text-white rounded-full hover:bg-black/90 font-medium">
+                    Comenzar Configuración
                 </button>
             ) : (
                 <>
@@ -147,6 +155,15 @@ export const Toolbar = () => {
                     </button>
                 );
             })()}
+
+            <button
+                onClick={toggleEnvironment}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${environment !== 'none' ? 'bg-[#354763] text-white shadow-md' : 'text-[#354763] hover:bg-gray-100'}`}
+                title="Cambiar Ambiente"
+            >
+                <Layout size={18} />
+                <span>Ambientar</span>
+            </button>
 
             <div className="h-6 w-px bg-gray-200 mx-2" />
 

@@ -3,10 +3,12 @@
 import { useConfigStore } from '@/lib/store';
 import { useRef, useEffect, Suspense } from 'react';
 import { Canvas } from "@react-three/fiber";
-import { Environment, OrbitControls } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
+import { RoomEnvironment } from "./RoomEnvironment";
 import { FurnitureController } from "./FurnitureController";
 
 const CameraController = () => {
+    // ... existing CameraController ...
     const cameraResetVersion = useConfigStore((state) => state.cameraResetVersion);
     const controlsRef = useRef<any>(null);
 
@@ -34,22 +36,13 @@ export default function Scene() {
         <div className="w-full h-full">
             <Canvas shadows camera={{ position: [2, 2, 2], fov: 50 }}>
                 <Suspense fallback={null}>
-                    <Environment preset="studio" />
-                    <ambientLight intensity={0.4} />
-                    <directionalLight position={[5, 10, 5]} intensity={2} castShadow />
+                    <RoomEnvironment />
                     <CameraController />
-
-                    {/* Floor */}
-                    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-                        <planeGeometry args={[10, 10]} />
-                        <meshStandardMaterial color="#f0f0f0" />
-                    </mesh>
 
                     {/* USM feet raise the unit by ~35-40mm. Shifting up so y=0 is floor. */}
                     <group position={[0, 0.035, 0]}>
                         <FurnitureController />
                     </group>
-
                 </Suspense>
             </Canvas>
         </div>
