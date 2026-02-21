@@ -13,9 +13,10 @@ const AddButton = ({ position, onClick, direction }: { position: [number, number
                     e.stopPropagation();
                     onClick();
                 }}
-                className="w-1.5 h-1.5 bg-[#354763] text-white rounded-full flex items-center justify-center hover:bg-[#354763]/80 shadow-sm text-[4px] font-bold leading-none cursor-pointer p-0"
+                className="w-1.2 h-1.2 bg-[#354763] text-white rounded-full flex items-center justify-center hover:bg-[#354763]/80 shadow-sm text-[6px] font-bold leading-none cursor-pointer p-0"
                 title={`Add ${direction}`}
             >
+                +
             </button>
         </Html>
     );
