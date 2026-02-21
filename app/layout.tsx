@@ -5,42 +5,42 @@ import "./globals.css";
 const bananaGrotesk = localFont({
   src: [
     {
-      path: "../public/brandbook/font/BANANAGROTESK-THIN.OTF",
+      path: "../public/brandbook/font/BANANAGROTESK-THIN.otf",
       weight: "100",
       style: "normal",
     },
     {
-      path: "../public/brandbook/font/BANANAGROTESK-EXTRALIGHT.OTF",
+      path: "../public/brandbook/font/BANANAGROTESK-EXTRALIGHT.otf",
       weight: "200",
       style: "normal",
     },
     {
-      path: "../public/brandbook/font/BANANAGROTESK-LIGHT.OTF",
+      path: "../public/brandbook/font/BANANAGROTESK-LIGHT.otf",
       weight: "300",
       style: "normal",
     },
     {
-      path: "../public/brandbook/font/BANANAGROTESK-REGULAR.OTF",
+      path: "../public/brandbook/font/BANANAGROTESK-REGULAR.otf",
       weight: "400",
       style: "normal",
     },
     {
-      path: "../public/brandbook/font/BANANAGROTESK-MEDIUM.OTF",
+      path: "../public/brandbook/font/BANANAGROTESK-MEDIUM.otf",
       weight: "500",
       style: "normal",
     },
     {
-      path: "../public/brandbook/font/BANANAGROTESK-SEMIBOLD.OTF",
+      path: "../public/brandbook/font/BANANAGROTESK-SEMIBOLD.otf",
       weight: "600",
       style: "normal",
     },
     {
-      path: "../public/brandbook/font/BANANAGROTESK-BOLD.OTF",
+      path: "../public/brandbook/font/BANANAGROTESK-BOLD.otf",
       weight: "700",
       style: "normal",
     },
     {
-      path: "../public/brandbook/font/BANANAGROTESK-EXTRABOLD.OTF",
+      path: "../public/brandbook/font/BANANAGROTESK-EXTRABOLD.otf",
       weight: "800",
       style: "normal",
     },
