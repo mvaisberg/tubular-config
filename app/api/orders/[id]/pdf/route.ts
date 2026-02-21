@@ -41,7 +41,7 @@ export async function GET(
 
         // Items table
         const tableColumn = ["Descripción", "Cantidad", "Precio Unitario", "Subtotal"];
-        const tableRows = [];
+        const tableRows: string[][] = [];
 
         let subtotal = 0;
 
