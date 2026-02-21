@@ -42,16 +42,12 @@ export function generateParts(modules: ModuleConfig[]): DerivedPart[] {
             [x + w, y + h, z + d]
         ];
 
-        corners.forEach(([cz, cy, cz_coord], idx) => {
-            // Fix: Use correct destructured variables. Array is [x, y, z]
-            const cx = corners[idx][0];
-            const cy_val = corners[idx][1];
-            const cz_val = corners[idx][2];
+        corners.forEach(([cx, cy_val, cz_val], idx) => {
             const id = `ball-${cx}-${cy_val}-${cz_val}`;
             addPart({
                 id,
                 type: 'ball',
-                position: [cx, cy_val, cz_val],
+                position: [cx, cy_val, cz_val] as [number, number, number],
                 hasFoot: cy_val === 0
             });
         });
@@ -108,19 +104,14 @@ export function generateParts(modules: ModuleConfig[]): DerivedPart[] {
 
         const addPanel = (x1: number, y1: number, z1: number, plane: 'xy' | 'xz' | 'yz', w_dim: number, h_dim: number) => {
             const id = `panel-${plane}-${x1}-${y1}-${z1}-${w_dim}-${h_dim}`;
-            // Dimensions for the panel geometry
-            // xy: width=w, height=h (Front/Back)
-            // xz: width=w, depth=h (Top/Bottom) -> h_dim is actually depth
-            // yz: height=w, depth=h (Side) -> w_dim is height, h_dim is depth? 
-            // Let's be explicit.
-
             addPart({
                 id,
                 type: 'panel',
-                position: [x1, y1, z1],
-                orientation: plane, // now compatible with updated type
+                position: [x1, y1, z1] as [number, number, number],
+                orientation: plane,
                 dimensions: { width: w_dim, height: h_dim },
-                color: mod.color // Pass module color!
+                color: mod.color,
+                material: mod.material
             });
         };
 

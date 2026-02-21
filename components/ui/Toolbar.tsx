@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { useConfigStore } from '@/lib/store';
 import { ModuleConfig } from '@/lib/types';
-import { Plus, Trash2, RotateCcw, Target, Save } from 'lucide-react';
+import { Plus, Trash2, RotateCcw, Target, Save, ShoppingBag } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { useSearchParams } from 'next/navigation';
+import { SaveModal } from './SaveModal';
 
 export const Toolbar = () => {
     const selectedModuleId = useConfigStore((state) => state.selectedModuleId);
@@ -16,7 +18,15 @@ export const Toolbar = () => {
     const triggerCameraReset = useConfigStore((state) => state.actions.triggerCameraReset);
 
     const [isSaving, setIsSaving] = useState(false);
+    const [isSavingProduct, setIsSavingProduct] = useState(false);
+    const [modalData, setModalData] = useState<{ isOpen: boolean; type: "quote" | "product" }>({
+        isOpen: false,
+        type: "quote"
+    });
+
     const supabase = createClient();
+    const searchParams = useSearchParams();
+    const isAdmin = searchParams.get('admin') === 'true';
 
     const handleAdd = (direction: 'right' | 'left' | 'top' | 'bottom' | 'front' | 'back') => {
         // ... (existing handleAdd code) ...
@@ -38,31 +48,42 @@ export const Toolbar = () => {
         // ...
     };
 
-    const handleSaveQuote = async () => {
+    const onSave = async (formData: { name: string; sku?: string; description?: string }) => {
         if (modules.length === 0) return;
-        setIsSaving(true);
 
-        const name = prompt("Ingrese nombre del cliente para la cotización:");
-
-        // Calculate USD total based on settings
-        const { data: settings } = await supabase.from('settings').select('usd_exchange_rate').eq('id', 1).single();
-        const usdRate = settings?.usd_exchange_rate || 1000; // fallback
-        const totalUsd = totalPrice / usdRate;
-
-        const { error } = await supabase.from('quotes').insert([{
-            client_name: name || 'Sin Nombre',
-            configuration: modules,
-            total_price_ars: totalPrice,
-            total_price_usd: totalUsd
-        }]);
-
-        if (error) {
-            alert("Error al guardar cotización");
-            console.error(error);
+        if (modalData.type === "quote") {
+            setIsSaving(true);
+            const bomSummary = useConfigStore.getState().bomSummary;
+            const finalConfiguration = { modules, bom: bomSummary };
+            const { error } = await supabase.from('quotes').insert([{
+                client_name: formData.name,
+                configuration: finalConfiguration,
+                total_price_ars: totalPrice,
+                total_price_usd: totalPrice / (useConfigStore.getState().settings?.usd_exchange_rate || 1000)
+            }]);
+            if (error) alert("Error al guardar cotización");
+            else {
+                alert("Cotización guardada exitosamente");
+                setModalData(prev => ({ ...prev, isOpen: false }));
+            }
+            setIsSaving(false);
         } else {
-            alert("Cotización guardada exitosamente");
+            setIsSavingProduct(true);
+            const { error } = await supabase.from('preconfigured_products').insert([{
+                name: formData.name,
+                sku: formData.sku || `PROD-${Date.now()}`,
+                description: formData.description,
+                configuration: modules,
+            }]);
+
+            if (error) {
+                alert("Error al guardar producto");
+            } else {
+                alert("Producto guardado exitosamente");
+                setModalData(prev => ({ ...prev, isOpen: false }));
+            }
+            setIsSavingProduct(false);
         }
-        setIsSaving(false);
     };
 
     return (
@@ -81,14 +102,24 @@ export const Toolbar = () => {
             ) : (
                 <>
                     <button
-                        onClick={handleSaveQuote}
-                        disabled={isSaving}
-                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 font-medium disabled:opacity-50 transition-colors"
+                        onClick={() => setModalData({ isOpen: true, type: "quote" })}
+                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 font-medium transition-colors"
                         title="Guardar Cotización"
                     >
                         <Save size={18} />
-                        {isSaving ? "Guardando..." : "Guardar Cotización"}
+                        Cotizar
                     </button>
+
+                    {isAdmin && (
+                        <button
+                            onClick={() => setModalData({ isOpen: true, type: "product" })}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 font-medium transition-colors"
+                            title="Guardar como Producto"
+                        >
+                            <ShoppingBag size={18} />
+                            Guardar Producto
+                        </button>
+                    )}
 
                     <div className="h-6 w-px bg-gray-200 mx-2" />
                 </>
@@ -134,6 +165,15 @@ export const Toolbar = () => {
             >
                 <Target size={20} />
             </button>
+
+            <SaveModal
+                isOpen={modalData.isOpen}
+                type={modalData.type}
+                title={modalData.type === "product" ? "Guardar Nuevo Producto" : "Nueva Cotización"}
+                isSaving={modalData.type === "product" ? isSavingProduct : isSaving}
+                onClose={() => setModalData(prev => ({ ...prev, isOpen: false }))}
+                onSave={onSave}
+            />
         </div>
     );
 };

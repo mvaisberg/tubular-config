@@ -32,40 +32,48 @@ export default function LoginForm() {
     };
 
     return (
-        <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold mb-6 text-center">Admin Login</h2>
+        <div className="w-full max-w-md p-10 bg-[#ebecdf] rounded-2xl shadow-2xl border border-[#354763]/10">
+            <div className="flex flex-col items-center mb-10 gap-2">
+                <img src="/brandbook/logo/logo-azul.svg" alt="Tubular" className="w-40 mb-2" />
+                <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#354763]/30">Admin Dashboard</span>
+            </div>
+
             {error && (
-                <div className="bg-red-50 text-red-500 p-3 rounded mb-4 text-sm">
+                <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-xs font-bold border border-red-100 italic">
                     {error}
                 </div>
             )}
-            <form onSubmit={handleLogin} className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Email</label>
+            <form onSubmit={handleLogin} className="space-y-6">
+                <div className="space-y-1.5">
+                    <label className="text-[10px] uppercase tracking-widest font-extrabold text-[#354763]/60 ml-1">Email</label>
                     <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
+                        className="w-full bg-white border-2 border-transparent focus:border-[#aab799] outline-none p-4 rounded-xl shadow-sm transition-all text-[#354763] font-medium"
                         required
                     />
                 </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Password</label>
+                <div className="space-y-1.5">
+                    <label className="text-[10px] uppercase tracking-widest font-extrabold text-[#354763]/60 ml-1">Contraseña</label>
                     <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border"
+                        className="w-full bg-white border-2 border-transparent focus:border-[#aab799] outline-none p-4 rounded-xl shadow-sm transition-all text-[#354763] font-medium"
                         required
                     />
                 </div>
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                    className="w-full bg-[#354763] hover:bg-[#2a394f] text-white py-4 rounded-xl font-bold shadow-lg shadow-[#354763]/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center"
                 >
-                    {loading ? "Signing in..." : "Sign in"}
+                    {loading ? (
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                        "INGRESAR"
+                    )}
                 </button>
             </form>
         </div>

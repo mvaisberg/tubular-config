@@ -13,10 +13,12 @@ export const FurnitureController = () => {
     const modules = useConfigStore((state) => state.modules);
     const addModule = useConfigStore((state) => state.actions.addModule);
     const fetchPartsData = useConfigStore((state) => state.actions.fetchPartsData);
+    const fetchSettings = useConfigStore((state) => state.actions.fetchSettings);
 
     // Initial seed
     useEffect(() => {
         fetchPartsData(); // Fetch prices
+        fetchSettings(); // Fetch costs/margins
 
         if (modules.length === 0) {
             addModule({

@@ -42,6 +42,7 @@ export interface DerivedPart {
     orientation?: Axis | 'xy' | 'xz' | 'yz'; // Expanded for panels
     dimensions?: { width: number; height: number }; // For panels
     color?: string; // For panels
+    material?: ModuleMaterial; // For panels
     hasFoot?: boolean; // For balls at the bottom
 }
 

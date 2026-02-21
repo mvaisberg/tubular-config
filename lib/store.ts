@@ -2,19 +2,41 @@ import { create } from 'zustand'
 import { ModuleConfig, DerivedPart } from './types'
 import { createClient } from './supabase/client'
 import { generateParts } from './calculator'
+import { calculatePricing, BOMItem } from './pricing'
 
 interface PartData {
     id: string
     sku: string
     type: string
-    price: number
+    name?: string
+    price_ars?: number
+    price_usd?: number
     dimensions: any
 }
 
 interface ConfigState {
     modules: ModuleConfig[]
     partsData: PartData[]
+    settings: {
+        usd_exchange_rate: number;
+        profit_margin: number;
+        shipping_cost: number;
+        transaction_fee_percent: number;
+        transaction_fee_iva_percent: number;
+        installments_6_percent: number;
+        iva_percent: number;
+        target_margin_percent: number;
+    } | null;
+    bomSummary: Record<string, BOMItem>
+    totalCost: number
     totalPrice: number
+    metrics: {
+        basePrice: number;
+        grossProfit: number;
+        realRevenue: number;
+        roasBreakEven: number;
+        roasTarget: number;
+    } | null;
     selectedModuleId: string | null
     cameraResetVersion: number
     actions: {
@@ -25,8 +47,10 @@ interface ConfigState {
         updateRowHeight: (id: string, newHeight: number) => void
         updateAllModules: (updates: Partial<ModuleConfig>) => void
         selectModule: (id: string | null) => void
+        setModules: (modules: ModuleConfig[]) => void
         reset: () => void
         fetchPartsData: () => Promise<void>
+        fetchSettings: () => Promise<void>
         calculatePrice: () => void
         triggerCameraReset: () => void
     }
@@ -35,12 +59,20 @@ interface ConfigState {
 export const useConfigStore = create<ConfigState>((set, get) => ({
     modules: [],
     partsData: [],
+    settings: null,
+    bomSummary: {},
+    totalCost: 0,
     totalPrice: 0,
+    metrics: null,
     selectedModuleId: null,
     cameraResetVersion: 0,
     actions: {
         selectModule: (id) => set({ selectedModuleId: id }),
         triggerCameraReset: () => set((state) => ({ cameraResetVersion: state.cameraResetVersion + 1 })),
+        setModules: (modules) => {
+            set({ modules, selectedModuleId: null });
+            get().actions.calculatePrice();
+        },
         addModule: (module) => {
             set((state) => ({ modules: [...state.modules, module], selectedModuleId: module.id }));
             get().actions.calculatePrice();
@@ -144,44 +176,39 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
                 console.error('Error fetching parts:', error);
             }
         },
-        calculatePrice: () => {
-            const { modules, partsData } = get();
-            const derivedParts = generateParts(modules);
-            let total = 0;
-
-            derivedParts.forEach(part => {
-                // Find matching part in DB
-                let match: PartData | undefined;
-
-                if (part.type === 'ball') {
-                    match = partsData.find(p => p.type === 'connector'); // Map ball -> connector
-                } else if (part.type === 'tube') {
-                    // Find tube by length
-                    // part.length should match dimensions->length
-                    match = partsData.find(p => p.type === 'tube' && p.dimensions?.length === part.length);
-                } else if (part.type === 'panel') {
-                    // Find panel by dimensions
-                    // part.dimensions.width/height vs DB dimensions width/height
-                    // Need to match both irrespective of order? Or exact?
-                    // Standard USM panels: 750x350.
-                    if (part.dimensions) {
-                        const { width, height } = part.dimensions;
-                        match = partsData.find(p =>
-                            p.type === 'panel' &&
-                            ((p.dimensions?.width === width && p.dimensions?.height === height) ||
-                                (p.dimensions?.width === height && p.dimensions?.height === width))
-                        );
+        fetchSettings: async () => {
+            const supabase = createClient();
+            const { data, error } = await supabase.from('settings').select('*').eq('id', 1).single();
+            if (data) {
+                set({
+                    settings: {
+                        usd_exchange_rate: data.usd_exchange_rate || 1000,
+                        profit_margin: data.profit_margin || 50,
+                        shipping_cost: data.shipping_cost || 20000,
+                        transaction_fee_percent: data.transaction_fee_percent || 2.5,
+                        transaction_fee_iva_percent: data.transaction_fee_iva_percent || 21,
+                        installments_6_percent: data.installments_6_percent || 13,
+                        iva_percent: data.iva_percent || 21,
+                        target_margin_percent: data.target_margin_percent || 65
                     }
-                }
+                });
+                get().actions.calculatePrice();
+            } else if (error) {
+                console.error('Error fetching settings:', error);
+            }
+        },
+        calculatePrice: () => {
+            const { modules, partsData, settings } = get();
+            if (!settings) return;
 
-                if (match) {
-                    total += match.price;
-                } else {
-                    console.warn(`No price found for part: ${part.type} ${part.id}`);
-                }
+            const result = calculatePricing(modules, partsData, settings);
+
+            set({
+                totalCost: result.totalCost,
+                totalPrice: result.totalPrice,
+                bomSummary: result.bomSummary,
+                metrics: result.metrics
             });
-
-            set({ totalPrice: total });
         }
     },
 }))
