@@ -3,6 +3,8 @@ import ProductsTable from "@/components/admin/ProductsTable";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProductsAdminPage() {
     const supabase = await createClient();
 

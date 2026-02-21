@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, Trash2, Save, RefreshCw, Calculator, Truck, Percent, DollarSign } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 interface FixedCost {
     id: string;
     name: string;
