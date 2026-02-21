@@ -23,8 +23,28 @@ export const FurnitureController = () => {
 
     const parts = useMemo(() => generateParts(modules), [modules]);
 
+    // Calculate center of modules to keep assembly centered in view
+    const centerOffset = useMemo(() => {
+        if (modules.length === 0) return { x: 0, z: 0 };
+
+        let minX = Infinity, maxX = -Infinity;
+        let minZ = Infinity, maxZ = -Infinity;
+
+        modules.forEach(mod => {
+            minX = Math.min(minX, mod.position.x);
+            maxX = Math.max(maxX, mod.position.x + mod.size.w);
+            minZ = Math.min(minZ, mod.position.z);
+            maxZ = Math.max(maxZ, mod.position.z + mod.size.d);
+        });
+
+        return {
+            x: -((minX + maxX) / 2) * 0.001,
+            z: -((minZ + maxZ) / 2) * 0.001
+        };
+    }, [modules]);
+
     return (
-        <group>
+        <group position={[centerOffset.x, 0, centerOffset.z]}>
             {parts.map((part: DerivedPart) => {
                 if (part.type === 'ball') {
                     return <Ball key={part.id} position={part.position} hasFoot={part.hasFoot} />;
