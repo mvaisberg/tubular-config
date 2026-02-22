@@ -15,29 +15,29 @@ export const PriceDisplay = () => {
                     <div className="flex flex-col items-center max-w-lg text-center p-8 space-y-8">
                         <div className="flex items-center gap-6">
                             {/* Tubular Logo */}
-                            <div className="w-24 h-24 bg-white rounded-2xl shadow-xl flex items-center justify-center p-4 border border-[#354763]/10">
+                            <div className="w-40 h-40 bg-white rounded-3xl shadow-xl flex items-center justify-center p-6 border border-[#354763]/10">
                                 <img src="/brandbook/logo/logo-azul.svg" alt="Tubular" className="w-full object-contain" />
                             </div>
 
                             {/* Animated Transfer Indicator */}
-                            <div className="flex flex-col items-center justify-center w-16 relative">
-                                <div className="flex gap-1">
-                                    <div className="w-2 h-2 rounded-full bg-[#354763] animate-bounce" style={{ animationDelay: '0ms' }} />
-                                    <div className="w-2 h-2 rounded-full bg-[#354763] animate-bounce" style={{ animationDelay: '150ms' }} />
-                                    <div className="w-2 h-2 rounded-full bg-[#354763] animate-bounce" style={{ animationDelay: '300ms' }} />
+                            <div className="flex flex-col items-center justify-center w-20 relative">
+                                <div className="flex gap-2">
+                                    <div className="w-3 h-3 rounded-full bg-[#354763] animate-bounce" style={{ animationDelay: '0ms' }} />
+                                    <div className="w-3 h-3 rounded-full bg-[#354763] animate-bounce" style={{ animationDelay: '150ms' }} />
+                                    <div className="w-3 h-3 rounded-full bg-[#354763] animate-bounce" style={{ animationDelay: '300ms' }} />
                                 </div>
                             </div>
 
                             {/* Tiendanube Logo */}
-                            <div className="w-24 h-24 bg-white rounded-2xl shadow-xl flex items-center justify-center p-4 border border-[#354763]/10">
-                                <img src="/tiendanube.svg" alt="Tiendanube" className="w-12 h-12 object-contain" />
+                            <div className="w-40 h-40 bg-white rounded-3xl shadow-xl flex items-center justify-center p-6 border border-[#354763]/10">
+                                <img src="/tiendanube.svg" alt="Tiendanube" className="w-20 h-20 object-contain" />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <h2 className="text-2xl font-black text-[#354763] tracking-tight">Preparando tu carrito...</h2>
+                            <h2 className="text-2xl font-black text-[#354763] tracking-tight">Preparando tu carrito en Tiendanube...</h2>
                             <p className="text-slate-500 font-medium leading-relaxed max-w-md mx-auto">
-                                Te estamos redirigiendo a Tiendanube para que puedas cargar tus datos de envío y realizar el pago de forma segura.
+                                Te estamos redirigiendo para que puedas cargar tus datos de envío y realizar el pago de forma segura.
                             </p>
                         </div>
                     </div>
@@ -57,7 +57,7 @@ export const PriceDisplay = () => {
                         <div className="flex justify-between items-center group">
                             <div className="flex flex-col gap-0.5">
                                 <span className="text-xs font-black text-[#354763] uppercase">6 Cuotas Sin Interés</span>
-                                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Precio de Lista: ${totalPrice.toLocaleString('es-AR')}</span>
+                                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Precio de Lista: ${totalPrice.toLocaleString('es-AR')}</span>
                             </div>
                             <span className="text-lg font-black text-[#354763] transition-transform group-hover:scale-105">
                                 ${(totalPrice / 6).toLocaleString('es-AR', { minimumFractionDigits: 0 })}
@@ -69,7 +69,7 @@ export const PriceDisplay = () => {
                         <div className="flex justify-between items-center group">
                             <div className="flex flex-col gap-0.5">
                                 <span className="text-xs font-black text-[#354763] uppercase">Transferencia</span>
-                                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">10% OFF</span>
+                                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">10% OFF</span>
                             </div>
                             <span className="text-lg font-black text-[#354763] transition-transform group-hover:scale-105">
                                 ${(totalPrice * 0.9).toLocaleString('es-AR', { minimumFractionDigits: 0 })}
@@ -81,7 +81,7 @@ export const PriceDisplay = () => {
                         <div className="flex justify-between items-center group">
                             <div className="flex flex-col gap-0.5">
                                 <span className="text-xs font-black text-[#354763] uppercase">Efectivo</span>
-                                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">15% OFF</span>
+                                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">15% OFF</span>
                             </div>
                             <span className="text-lg font-black text-[#354763] transition-transform group-hover:scale-105">
                                 ${(totalPrice * 0.85).toLocaleString('es-AR', { minimumFractionDigits: 0 })}
