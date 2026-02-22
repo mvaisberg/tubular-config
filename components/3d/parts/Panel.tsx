@@ -70,26 +70,31 @@ export const Panel = ({ position, orientation, width, height, color = 'white' }:
         if (colorName === 'white') return { color: '#FFFFFF', opacity: 1, transparent: false, metalness: 0.05, roughness: 0.3 }; // RAL 9010
         if (colorName === 'beige') return { color: '#A4957D', opacity: 1, transparent: false, metalness: 0.05, roughness: 0.4 }; // RAL 1019
 
-        // Acrylic - Make them pop more.
-        if (colorName === 'transparent') return { color: '#E0F7FA', opacity: 0.2, transparent: true, metalness: 0.1, roughness: 0.05, transmission: 0.95, thickness: 0.5 };
-        if (colorName === 'orange_translucent') return { color: '#FF6600', opacity: 0.7, transparent: true, metalness: 0.2, roughness: 0.1 };
-        if (colorName === 'blue_translucent') return { color: '#0088FF', opacity: 0.7, transparent: true, metalness: 0.2, roughness: 0.1 };
-        if (colorName === 'green_translucent') return { color: '#00CC44', opacity: 0.7, transparent: true, metalness: 0.2, roughness: 0.1 };
+        // Acrylic - Make them pop more and act like tinted glass.
+        // Transmission handles the see-through part physically. Opacity provides the base color strength.
+        if (colorName === 'transparent') return { color: '#ffffff', opacity: 1, transparent: true, metalness: 0.1, roughness: 0.05, transmission: 1.0, thickness: 0.05, ior: 1.5, clearcoat: 1.0 };
+        if (colorName === 'orange_translucent') return { color: '#FF5500', opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5 };
+        if (colorName === 'blue_translucent') return { color: '#0044FF', opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5 };
+        if (colorName === 'green_translucent') return { color: '#00D12D', opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5 };
 
         return { color: colorName, opacity: 1, transparent: false, metalness: 0.5, roughness: 0.3 };
     };
 
-    const { color: threeColor, opacity, transparent, metalness, roughness } = getColorParams(color);
+    const params = getColorParams(color);
 
     return (
         <mesh position={offset as [number, number, number]} castShadow receiveShadow>
             <boxGeometry args={args} />
-            <meshStandardMaterial
-                color={threeColor}
-                metalness={metalness}
-                roughness={roughness}
-                transparent={transparent}
-                opacity={opacity}
+            <meshPhysicalMaterial
+                color={params.color}
+                metalness={params.metalness}
+                roughness={params.roughness}
+                transparent={params.transparent}
+                opacity={params.opacity}
+                transmission={params.transmission || 0}
+                thickness={params.thickness || 0}
+                ior={params.ior || 1.5}
+                clearcoat={params.clearcoat || 0}
             />
         </mesh>
     );

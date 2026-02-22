@@ -136,7 +136,7 @@ export const Sidebar = () => {
     return (
         <div className="h-full w-[360px] bg-white shadow-2xl border-r border-[#354763]/10 p-5 overflow-y-auto flex-shrink-0 z-10">
             <div className="flex flex-col items-center mb-4 gap-2">
-                <img src="/brandbook/logo/logo-azul.svg" alt="Tubular" className="w-28 mb-1" />
+                <img src="/brandbook/logo/logo-azul.svg" alt="Tubular" className="w-[135px] mb-1" />
             </div>
 
             <h2 className="text-xl font-bold mb-5 text-[#354763] tracking-tight">Personalización</h2>
