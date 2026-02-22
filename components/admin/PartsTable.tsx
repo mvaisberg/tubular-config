@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Pencil, Save, X, Trash2, Image as ImageIcon } from "lucide-react";
+import { Pencil, Save, X, Trash2, Image as ImageIcon, Plus } from "lucide-react";
 
 interface PartsTableProps {
     initialParts: any[];
@@ -33,7 +33,6 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
     const handleChange = (field: string, value: any) => {
         setEditForm((prev: any) => {
             const up = { ...prev, [field]: value };
-            // Enforce only one price
             if (field === 'price_ars' && value) up.price_usd = '';
             if (field === 'price_usd' && value) up.price_ars = '';
             return up;
@@ -43,7 +42,6 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
     const handleCreateChange = (field: string, value: any) => {
         setCreateForm((prev: any) => {
             const up = { ...prev, [field]: value };
-            // Enforce only one price
             if (field === 'price_ars' && value) up.price_usd = '';
             if (field === 'price_usd' && value) up.price_ars = '';
             return up;
@@ -60,18 +58,18 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
         const filePath = `parts/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-            .from('images') // Assume bucket exists, if not need to create
+            .from('images')
             .upload(filePath, file);
 
         if (uploadError) {
             console.error('Error uploading image:', uploadError);
-            alert('Error al subir la imagen. Asegúrate que el bucket "images" exista en Supabase y sea público.');
+            alert('Error al subir la imagen.');
             setUploadingImage(false);
             return;
         }
 
         const { data } = supabase.storage.from('images').getPublicUrl(filePath);
-        
+
         if (isEdit) {
             handleChange('image_url', data.publicUrl);
         } else {
@@ -142,7 +140,7 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
 
     const handleDelete = async (id: string) => {
         if (!confirm('¿Estás seguro de eliminar esta parte?')) return;
-        
+
         const { error } = await supabase.from('parts').delete().eq('id', id);
         if (error) {
             alert("Error deleting part: " + error.message);
@@ -152,159 +150,171 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
     }
 
     return (
-        <div className="space-y-4">
-            <div className="flex justify-end">
+        <div className="space-y-6 relative pb-32">
+            <div className="flex justify-between items-center mb-6">
                 <button
                     onClick={() => setIsCreating(true)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
+                    className="flex items-center gap-2 bg-black text-white px-4 py-3 text-xs font-black uppercase tracking-widest hover:bg-blue-600 transition-colors shadow-[4px_4px_0px_#000]"
                 >
-                    Add New Part
+                    <Plus size={14} strokeWidth={2.5} />
+                    NUEVA PIEZA
                 </button>
             </div>
 
             {isCreating && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-xl">
-                        <h3 className="text-lg font-bold mb-4">Create New Part</h3>
-                        <div className="space-y-3">
-                            <input
-                                placeholder="SKU"
-                                className="w-full border p-2 rounded"
-                                value={createForm.sku}
-                                onChange={e => handleCreateChange('sku', e.target.value)}
-                            />
-                            <input
-                                placeholder="Name"
-                                className="w-full border p-2 rounded"
-                                value={createForm.name}
-                                onChange={e => handleCreateChange('name', e.target.value)}
-                            />
-                            <select
-                                className="w-full border p-2 rounded"
-                                value={createForm.type}
-                                onChange={e => handleCreateChange('type', e.target.value)}
-                            >
-                                <option value="tube">Tube</option>
-                                <option value="connector">Connector</option>
-                                <option value="panel">Panel</option>
-                                <option value="accessory">Accessory</option>
-                            </select>
-                            <div className="flex gap-2">
-                                <div>
-                                    <label className="text-xs text-gray-500">Precio ARS</label>
+                <div className="fixed inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                    <div className="bg-white border-2 border-black p-8 max-w-lg w-full shadow-[8px_8px_0px_#000]">
+                        <h3 className="text-2xl font-black uppercase tracking-tighter mb-6 border-b-2 border-black pb-2 text-black">Cear Pieza</h3>
+                        <div className="space-y-4">
+                            <div className="group">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-black mb-1 block group-focus-within:text-blue-600 transition-colors">SKU</label>
+                                <input
+                                    placeholder="SKU-XXXX"
+                                    className="w-full border-2 border-black p-2 rounded-none focus:outline-none focus:border-blue-600 bg-white text-black font-bold uppercase transition-colors"
+                                    value={createForm.sku}
+                                    onChange={e => handleCreateChange('sku', e.target.value)}
+                                />
+                            </div>
+                            <div className="group">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-black mb-1 block group-focus-within:text-blue-600 transition-colors">Nombre</label>
+                                <input
+                                    placeholder="Nombre de la Pieza"
+                                    className="w-full border-2 border-black p-2 rounded-none focus:outline-none focus:border-blue-600 bg-white text-black font-bold uppercase transition-colors"
+                                    value={createForm.name}
+                                    onChange={e => handleCreateChange('name', e.target.value)}
+                                />
+                            </div>
+                            <div className="group">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-black mb-1 block group-focus-within:text-blue-600 transition-colors">Tipo</label>
+                                <select
+                                    className="w-full border-2 border-black p-2 rounded-none focus:outline-none focus:border-blue-600 bg-white text-black font-bold uppercase transition-colors"
+                                    value={createForm.type}
+                                    onChange={e => handleCreateChange('type', e.target.value)}
+                                >
+                                    <option value="tube">TUBE</option>
+                                    <option value="connector">CONNECTOR</option>
+                                    <option value="panel">PANEL</option>
+                                    <option value="accessory">ACCESSORY</option>
+                                </select>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="group">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-black mb-1 block group-focus-within:text-blue-600 transition-colors">Precio ARS</label>
                                     <input
                                         type="number" step="0.01" placeholder="ARS"
-                                        className="w-full border p-2 rounded bg-gray-50 disabled:opacity-50"
+                                        className="w-full border-2 border-black p-2 rounded-none focus:outline-none focus:border-blue-600 bg-white text-black font-black uppercase disabled:opacity-30 disabled:border-black/30 transition-colors"
                                         value={createForm.price_ars}
                                         onChange={e => handleCreateChange('price_ars', e.target.value)}
                                         disabled={!!createForm.price_usd}
                                     />
                                 </div>
-                                <div>
-                                    <label className="text-xs text-gray-500">Precio USD</label>
+                                <div className="group">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-black mb-1 block group-focus-within:text-blue-600 transition-colors">Precio USD</label>
                                     <input
                                         type="number" step="0.01" placeholder="USD"
-                                        className="w-full border p-2 rounded bg-gray-50 disabled:opacity-50"
+                                        className="w-full border-2 border-black p-2 rounded-none focus:outline-none focus:border-blue-600 bg-white text-black font-black uppercase disabled:opacity-30 disabled:border-black/30 transition-colors"
                                         value={createForm.price_usd}
                                         onChange={e => handleCreateChange('price_usd', e.target.value)}
                                         disabled={!!createForm.price_ars}
                                     />
                                 </div>
                             </div>
-                            
+
                             <div>
-                                <label className="text-xs text-gray-500 block mb-1">Imagen (Opcional)</label>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-black mb-1 block">Imagen</label>
                                 {createForm.image_url ? (
-                                    <div className="relative w-24 h-24 mb-2">
-                                        <img src={createForm.image_url} alt="Preview" className="w-full h-full object-cover rounded border" />
-                                        <button onClick={() => handleCreateChange('image_url', '')} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"><X size={12} /></button>
+                                    <div className="relative w-24 h-24 mb-2 group/img">
+                                        <img src={createForm.image_url} alt="Preview" className="w-full h-full object-cover border-2 border-black" />
+                                        <button onClick={() => handleCreateChange('image_url', '')} className="absolute -top-3 -right-3 bg-red-600 text-white rounded-none p-2 border-2 border-black opacity-0 group-hover/img:opacity-100 transition-opacity transform hover:scale-110"><X size={14} strokeWidth={3} /></button>
                                     </div>
                                 ) : (
-                                    <input 
-                                        type="file" 
-                                        accept="image/*" 
+                                    <input
+                                        type="file"
+                                        accept="image/*"
                                         onChange={(e) => handleImageUpload(e, false)}
                                         disabled={uploadingImage}
-                                        className="w-full border p-2 rounded text-sm disabled:opacity-50" 
+                                        className="w-full border-2 border-black p-2 text-xs font-bold uppercase rounded-none file:mr-4 file:py-2 file:px-4 file:border-0 file:text-xs file:font-black file:uppercase file:bg-black file:text-white hover:file:bg-blue-600 file:transition-colors file:cursor-pointer disabled:opacity-50"
                                     />
                                 )}
                             </div>
 
                         </div>
-                        <div className="flex justify-end gap-2 mt-6">
-                            <button onClick={() => setIsCreating(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded">Cancel</button>
-                            <button onClick={handleCreate} disabled={uploadingImage} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50">Create</button>
+                        <div className="flex justify-end gap-4 mt-8 pt-4 border-t-2 border-black">
+                            <button onClick={() => setIsCreating(false)} className="px-6 py-3 text-xs font-black uppercase tracking-widest text-black border-2 border-transparent hover:border-black transition-colors">CANCELAR</button>
+                            <button onClick={handleCreate} disabled={uploadingImage} className="px-6 py-3 bg-blue-600 text-white text-xs font-black uppercase tracking-widest hover:bg-black transition-colors disabled:opacity-50 shadow-[4px_4px_0px_#000]">CREAR PIEZA</button>
                         </div>
                     </div>
                 </div>
             )}
 
-            <div className="overflow-x-auto bg-white rounded-lg border border-gray-200 shadow-sm">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+            <div className="overflow-x-auto bg-white border border-black shadow-[8px_8px_0px_#000]">
+                <table className="min-w-full divide-y divide-black">
+                    <thead className="bg-black">
                         <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Price (ARS)</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Price (USD)</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            <th className="px-6 py-4 text-left text-[10px] font-black text-white uppercase tracking-[0.2em]">IMG</th>
+                            <th className="px-6 py-4 text-left text-[10px] font-black text-white uppercase tracking-[0.2em]">SKU</th>
+                            <th className="px-6 py-4 text-left text-[10px] font-black text-white uppercase tracking-[0.2em]">NOMBRE</th>
+                            <th className="px-6 py-4 text-left text-[10px] font-black text-white uppercase tracking-[0.2em]">TIPO</th>
+                            <th className="px-6 py-4 text-right text-[10px] font-black text-white uppercase tracking-[0.2em]">ARS</th>
+                            <th className="px-6 py-4 text-right text-[10px] font-black text-white uppercase tracking-[0.2em]">USD</th>
+                            <th className="px-6 py-4 text-right text-[10px] font-black text-white uppercase tracking-[0.2em] w-24">ACT</th>
                         </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-white divide-y divide-black/20">
                         {parts.map((part) => {
                             const isEditing = editingId === part.id;
                             return (
-                                <tr key={part.id}>
-                                    <td className="px-6 py-4 whitespace-nowrap">
+                                <tr key={part.id} className="hover:bg-black/5 transition-colors group">
+                                    <td className="px-6 py-3 whitespace-nowrap">
                                         {isEditing ? (
                                             <div>
                                                 {editForm.image_url ? (
-                                                     <div className="relative w-12 h-12">
-                                                        <img src={editForm.image_url} alt="Thumb" className="w-full h-full object-cover rounded border" />
-                                                        <button onClick={() => handleChange('image_url', '')} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5"><X size={10} /></button>
+                                                    <div className="relative w-12 h-12">
+                                                        <img src={editForm.image_url} alt="Thumb" className="w-full h-full object-cover border border-black shadow-[2px_2px_0px_#000]" />
+                                                        <button onClick={() => handleChange('image_url', '')} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-none p-1 border border-black"><X size={10} strokeWidth={3} /></button>
                                                     </div>
                                                 ) : (
                                                     <div className="flex items-center">
-                                                        <input 
-                                                            type="file" 
+                                                        <input
+                                                            type="file"
                                                             id={`file-${part.id}`}
-                                                            accept="image/*" 
+                                                            accept="image/*"
                                                             onChange={(e) => handleImageUpload(e, true)}
-                                                            className="hidden" 
+                                                            className="hidden"
                                                         />
-                                                        <label htmlFor={`file-${part.id}`} className="cursor-pointer text-blue-500 hover:text-blue-700 p-1 border rounded"><ImageIcon size={16}/></label>
+                                                        <label htmlFor={`file-${part.id}`} className="cursor-pointer text-black hover:text-blue-600 p-2 border border-black shadow-[2px_2px_0px_#000] transition-colors"><ImageIcon size={16} strokeWidth={2} /></label>
                                                     </div>
                                                 )}
                                             </div>
                                         ) : (
-                                            part.image_url ? <img src={part.image_url} alt={part.name} className="w-12 h-12 object-cover rounded border" /> : <div className="w-12 h-12 bg-gray-100 rounded border flex items-center justify-center text-gray-400"><ImageIcon size={16}/></div>
+                                            part.image_url
+                                                ? <img src={part.image_url} alt={part.name} className="w-12 h-12 object-cover border border-black shadow-[2px_2px_0px_#000] grayscale group-hover:grayscale-0 transition-all duration-300" />
+                                                : <div className="w-12 h-12 bg-black/5 border border-black/20 flex flex-col items-center justify-center text-black/20 text-[8px] font-black uppercase"><ImageIcon size={14} className="mb-1 opacity-50" /> N/A</div>
                                         )}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        {isEditing ? <input value={editForm.sku || ''} onChange={(e) => handleChange('sku', e.target.value)} className="w-full border rounded p-1"/> : part.sku}
+                                    <td className="px-6 py-3 whitespace-nowrap text-xs font-black text-black">
+                                        {isEditing ? <input value={editForm.sku || ''} onChange={(e) => handleChange('sku', e.target.value)} className="w-full border-b-2 border-black focus:border-blue-600 outline-none p-1 font-black bg-transparent uppercase" /> : part.sku}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-3 whitespace-nowrap text-xs font-bold text-black uppercase">
                                         {isEditing ? (
                                             <input
                                                 value={editForm.name || ''}
                                                 onChange={(e) => handleChange('name', e.target.value)}
-                                                className="w-full border rounded p-1"
+                                                className="w-full border-b-2 border-black focus:border-blue-600 outline-none p-1 font-bold bg-transparent uppercase"
                                             />
                                         ) : part.name}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-3 whitespace-nowrap text-xs text-black/60 font-black uppercase tracking-widest">
                                         {isEditing ? (
-                                            <select value={editForm.type || 'tube'} onChange={e => handleChange('type', e.target.value)} className="border rounded p-1">
-                                                <option value="tube">Tube</option>
-                                                <option value="connector">Connector</option>
-                                                <option value="panel">Panel</option>
-                                                <option value="accessory">Accessory</option>
+                                            <select value={editForm.type || 'tube'} onChange={e => handleChange('type', e.target.value)} className="border-b-2 border-black focus:border-blue-600 outline-none p-1 font-black bg-white uppercase">
+                                                <option value="tube">TUBE</option>
+                                                <option value="connector">CONNECTOR</option>
+                                                <option value="panel">PANEL</option>
+                                                <option value="accessory">ACCESSORY</option>
                                             </select>
                                         ) : part.type}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
+                                    <td className="px-6 py-3 whitespace-nowrap text-xs font-black text-right text-black">
                                         {isEditing ? (
                                             <input
                                                 type="number"
@@ -312,11 +322,11 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
                                                 value={editForm.price_ars ?? ''}
                                                 onChange={(e) => handleChange('price_ars', e.target.value)}
                                                 disabled={!!editForm.price_usd}
-                                                className="w-24 border rounded p-1 text-right disabled:opacity-50 bg-gray-50"
+                                                className="w-24 border-b-2 border-black focus:border-blue-600 outline-none p-1 text-right disabled:opacity-30 disabled:border-black/30 bg-transparent"
                                             />
-                                        ) : part.price_ars ? `$${Number(part.price_ars).toFixed(2)}` : '-'}
+                                        ) : part.price_ars ? `$${Number(part.price_ars).toLocaleString('es-AR')}` : '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
+                                    <td className="px-6 py-3 whitespace-nowrap text-xs font-black text-right text-black">
                                         {isEditing ? (
                                             <input
                                                 type="number"
@@ -324,23 +334,23 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
                                                 value={editForm.price_usd ?? ''}
                                                 onChange={(e) => handleChange('price_usd', e.target.value)}
                                                 disabled={!!editForm.price_ars}
-                                                className="w-24 border rounded p-1 text-right disabled:opacity-50 bg-gray-50"
+                                                className="w-24 border-b-2 border-black focus:border-blue-600 outline-none p-1 text-right disabled:opacity-30 disabled:border-black/30 bg-transparent"
                                             />
-                                        ) : part.price_usd ? `US$${Number(part.price_usd).toFixed(2)}` : '-'}
+                                        ) : part.price_usd ? `U$S ${Number(part.price_usd).toFixed(2)}` : '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <td className="px-6 py-3 whitespace-nowrap text-right align-middle">
                                         {isEditing ? (
                                             <div className="flex justify-end gap-2">
-                                                <button onClick={handleSave} className="text-green-600 hover:text-green-900"><Save size={18} /></button>
-                                                <button onClick={handleCancel} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+                                                <button onClick={handleSave} className="text-black hover:text-blue-600 transition-colors p-2 border border-transparent hover:border-black"><Save size={16} strokeWidth={2.5} /></button>
+                                                <button onClick={handleCancel} className="text-black/50 hover:text-red-600 transition-colors p-2 border border-transparent hover:border-black"><X size={16} strokeWidth={2.5} /></button>
                                             </div>
                                         ) : (
-                                            <div className="flex justify-end gap-3">
-                                                <button onClick={() => handleEdit(part)} className="text-blue-600 hover:text-blue-900">
-                                                    <Pencil size={18} />
+                                            <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button onClick={() => handleEdit(part)} className="text-black hover:text-blue-600 hover:bg-black/5 p-2 transition-colors border border-transparent hover:border-black">
+                                                    <Pencil size={14} strokeWidth={2.5} />
                                                 </button>
-                                                <button onClick={() => handleDelete(part.id)} className="text-red-600 hover:text-red-900">
-                                                    <Trash2 size={18} />
+                                                <button onClick={() => handleDelete(part.id)} className="text-black/50 hover:text-red-600 hover:bg-red-50 p-2 transition-colors border border-transparent hover:border-red-600">
+                                                    <Trash2 size={14} strokeWidth={2.5} />
                                                 </button>
                                             </div>
                                         )}

@@ -110,8 +110,11 @@ export const Sidebar = () => {
     };
 
     const handleColorChange = (color: string) => {
-        // Enforce global color change for the entire furniture
-        updateAllModules({ color });
+        if (selectedModuleId) {
+            handleUpdate({ color });
+        } else {
+            updateAllModules({ color });
+        }
     };
 
     const currentMaterial = targetModule?.material || 'steel';
@@ -127,7 +130,7 @@ export const Sidebar = () => {
     const currentSteelStyle = getSteelStyle();
 
     return (
-        <div className="h-full w-96 bg-white shadow-2xl border-r border-[#354763]/10 p-8 overflow-y-auto flex-shrink-0 z-10">
+        <div className="h-full w-[450px] bg-white shadow-2xl border-r border-[#354763]/10 p-8 overflow-y-auto flex-shrink-0 z-10">
             <div className="flex flex-col items-center mb-6 gap-2">
                 <img src="/brandbook/logo/logo-azul.svg" alt="Tubular" className="w-32 mb-2" />
             </div>
@@ -144,7 +147,7 @@ export const Sidebar = () => {
                             onClick={() => handleMaterialChange(opt.value as ModuleMaterial)}
                             className={`flex-1 py-2.5 px-4 rounded-xl border-2 transition-all font-bold text-xs uppercase tracking-widest ${currentMaterial === opt.value
                                 ? 'bg-[#354763] text-white border-[#354763] shadow-lg shadow-[#354763]/20'
-                                : 'bg-white text-[#354763]/60 border-transparent hover:border-[#354763]/10 hover:bg-white/50'
+                                : 'bg-white text-black/70 border-transparent hover:border-[#354763]/10 hover:bg-[#354763]/5'
                                 }`}
                         >
                             {opt.label}
@@ -161,26 +164,26 @@ export const Sidebar = () => {
                     {/* Steel Configuration */}
                     {currentMaterial === 'steel' && (
                         <div className="mb-8">
-                            <h3 className="text-[10px] uppercase tracking-widest font-extrabold text-black mb-4 ml-1">Tipo de modulo</h3>
-                            <div className="flex flex-col gap-2.5">
-                                <button
-                                    onClick={() => handleSteelStyleChange('all')}
-                                    className={`py-3 px-4 text-left rounded-xl border-2 transition-all text-sm font-bold ${currentSteelStyle === 'all' ? 'bg-white border-[#354763] text-[#354763] shadow-md' : 'border-transparent text-[#354763]/50 hover:bg-white/50'}`}
-                                >
-                                    Completo (5 caras)
-                                </button>
-                                <button
-                                    onClick={() => handleSteelStyleChange('no-back')}
-                                    className={`py-3 px-4 text-left rounded-xl border-2 transition-all text-sm font-bold ${currentSteelStyle === 'no-back' ? 'bg-white border-[#354763] text-[#354763] shadow-md' : 'border-transparent text-[#354763]/50 hover:bg-white/50'}`}
-                                >
-                                    Abierto atrás (4 caras)
-                                </button>
-                                <button
-                                    onClick={() => handleSteelStyleChange('top-bottom')}
-                                    className={`py-3 px-4 text-left rounded-xl border-2 transition-all text-sm font-bold ${currentSteelStyle === 'top-bottom' ? 'bg-white border-[#354763] text-[#354763] shadow-md' : 'border-transparent text-[#354763]/50 hover:bg-white/50'}`}
-                                >
-                                    Solo Arriba/Abajo (2 caras)
-                                </button>
+                            <h3 className="text-[10px] uppercase tracking-widest font-extrabold text-black mb-4 ml-1">Paneles</h3>
+                            <div className="flex flex-col gap-3">
+                                {[
+                                    { key: 'back', label: 'Panel Trasero' },
+                                    { key: 'left', label: 'Panel Izquierdo' },
+                                    { key: 'right', label: 'Panel Derecho' }
+                                ].map(panel => (
+                                    <label key={panel.key} className="flex items-center justify-between p-3 rounded-xl border-2 border-[#354763]/5 bg-white shadow-sm hover:border-[#354763]/20 cursor-pointer transition-all">
+                                        <span className="text-sm font-bold text-black">{panel.label}</span>
+                                        <div className="relative inline-flex items-center cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                className="sr-only peer"
+                                                checked={targetModule.hasPanel[panel.key as keyof typeof targetModule.hasPanel] as boolean}
+                                                onChange={(e) => handleUpdate({ hasPanel: { ...targetModule.hasPanel, [panel.key]: e.target.checked } })}
+                                            />
+                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#354763]"></div>
+                                        </div>
+                                    </label>
+                                ))}
                             </div>
                         </div>
                     )}
@@ -198,8 +201,8 @@ export const Sidebar = () => {
                                             key={w}
                                             onClick={() => updateColumnWidth(selectedModuleId, w)}
                                             className={`flex-1 py-3 rounded-xl border-2 transition-all font-bold text-sm ${targetModule.size.w === w
-                                                ? 'bg-white border-[#354763] text-[#354763] shadow-md'
-                                                : 'border-transparent text-[#354763]/40 hover:bg-white/50'
+                                                ? 'bg-white border-[#354763] text-black shadow-md'
+                                                : 'border-transparent text-black/60 hover:bg-[#354763]/5'
                                                 }`}
                                         >
                                             {w}mm
@@ -216,8 +219,8 @@ export const Sidebar = () => {
                                             key={h}
                                             onClick={() => updateRowHeight(selectedModuleId, h)}
                                             className={`flex-1 py-3 rounded-xl border-2 transition-all font-bold text-sm ${targetModule.size.h === h
-                                                ? 'bg-white border-[#354763] text-[#354763] shadow-md'
-                                                : 'border-transparent text-[#354763]/40 hover:bg-white/50'
+                                                ? 'bg-white border-[#354763] text-black shadow-md'
+                                                : 'border-transparent text-black/60 hover:bg-[#354763]/5'
                                                 }`}
                                         >
                                             {h}mm
@@ -229,8 +232,8 @@ export const Sidebar = () => {
                     </div>
                 </>
             ) : (
-                <div className="p-6 bg-[#354763]/5 border-2 border-dashed border-[#354763]/10 rounded-2xl text-center mb-8">
-                    <p className="text-[#354763]/40 text-xs font-medium leading-relaxed italic">Selecciona un módulo en la vista 3D para editar sus dimensiones y estilo.</p>
+                <div className="p-6 bg-[#354763]/10 border-2 border-dashed border-[#354763]/20 rounded-2xl text-center mb-8">
+                    <p className="text-black text-sm font-bold leading-relaxed">Selecciona un módulo en la vista 3D para editar sus dimensiones y estilo.</p>
                 </div>
             )}
 
@@ -246,7 +249,7 @@ export const Sidebar = () => {
                             onClick={() => handleColorChange(col.value)}
                             className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${targetModule.color === col.value
                                 ? 'border-[#354763] bg-white shadow-lg shadow-[#354763]/5'
-                                : 'border-transparent hover:bg-white/50 hover:border-[#354763]/5'
+                                : 'border-transparent hover:bg-[#354763]/5 hover:border-[#354763]/10'
                                 }`}
                         >
                             <div

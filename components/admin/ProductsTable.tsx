@@ -35,24 +35,24 @@ export default function ProductsTable({ initialProducts, partsData, settings }: 
     }, [initialProducts, partsData, settings]);
 
     return (
-        <div className="bg-[#ebecdf]/50 rounded-2xl shadow-xl border border-[#354763]/10 overflow-hidden">
-            <table className="min-w-full divide-y divide-[#354763]/10">
-                <thead className="bg-[#354763]">
+        <div className="overflow-x-auto bg-white border border-black shadow-[8px_8px_0px_#000]">
+            <table className="min-w-full divide-y divide-black">
+                <thead className="bg-black">
                     <tr>
-                        <th className="px-6 py-4 text-left text-[10px] font-bold text-white uppercase tracking-widest">Nombre / SKU</th>
-                        <th className="px-6 py-4 text-left text-[10px] font-bold text-white uppercase tracking-widest">Módulos</th>
-                        <th className="px-6 py-4 text-right text-[10px] font-bold text-white uppercase tracking-widest">Costo Act.</th>
-                        <th className="px-6 py-4 text-right text-[10px] font-bold text-white uppercase tracking-widest opacity-80">PVP Lista</th>
-                        <th className="px-6 py-4 text-right text-[10px] font-bold text-[#aab799] uppercase tracking-widest bg-white/5">Transf. (-10%)</th>
-                        <th className="px-6 py-4 text-right text-[10px] font-bold text-[#aab799] uppercase tracking-widest bg-white/10">Efectivo (-20%)</th>
-                        <th className="px-6 py-4 text-right text-[10px] font-bold text-white uppercase tracking-widest">Acciones</th>
+                        <th className="px-6 py-4 text-left text-[10px] font-black text-white uppercase tracking-[0.2em]">Nombre / SKU</th>
+                        <th className="px-6 py-4 text-left text-[10px] font-black text-white uppercase tracking-[0.2em]">Módulos</th>
+                        <th className="px-6 py-4 text-right text-[10px] font-black text-white uppercase tracking-[0.2em]">Costo Act.</th>
+                        <th className="px-6 py-4 text-right text-[10px] font-black text-white uppercase tracking-[0.2em] opacity-80">PVP Lista</th>
+                        <th className="px-6 py-4 text-right text-[10px] font-black text-blue-200 uppercase tracking-[0.2em] bg-white/5">Transf. (-10%)</th>
+                        <th className="px-6 py-4 text-right text-[10px] font-black text-blue-200 uppercase tracking-[0.2em] bg-white/10">Efectivo (-20%)</th>
+                        <th className="px-6 py-4 text-right text-[10px] font-black text-white uppercase tracking-[0.2em] w-32">Acciones</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-[#354763]/5">
+                <tbody className="bg-white divide-y divide-black/20">
                     {productDetails.length === 0 && (
                         <tr>
-                            <td colSpan={7} className="px-6 py-12 text-center text-[#354763]/40 italic font-medium">
-                                No hay productos preconfigurados aún.
+                            <td colSpan={7} className="px-6 py-12 text-center text-black/40 text-xs font-bold uppercase tracking-widest">
+                                NO HAY PRODUCTOS PRECONFIGURADOS AÚN.
                             </td>
                         </tr>
                     )}
@@ -62,97 +62,96 @@ export default function ProductsTable({ initialProducts, partsData, settings }: 
                         const bomItems = Object.values(pricing.bomSummary);
 
                         return (
-                            <div key={product.id} className="contents">
-                                <tr className="hover:bg-white transition-colors group">
+                            <div key={product.id} className="contents group">
+                                <tr className={`hover:bg-black/5 transition-colors ${isExpanded ? 'bg-black/5' : ''}`}>
                                     <td className="px-6 py-5 whitespace-nowrap">
-                                        <div className="text-sm font-bold text-[#354763]">{product.name}</div>
-                                        <div className="text-[10px] font-mono font-bold text-[#354763]/30 tracking-wider">
+                                        <div className="text-sm font-black text-black uppercase">{product.name}</div>
+                                        <div className="text-[10px] font-bold text-black/50 tracking-widest uppercase mt-1">
                                             {product.sku || product.id.split('-')[0]}
                                         </div>
                                     </td>
                                     <td className="px-6 py-5 whitespace-nowrap">
-                                        <span className="bg-[#354763]/5 text-[#354763] px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                                            {product.modules.length} modules
+                                        <span className="bg-black text-white px-2 py-1 text-[10px] font-black uppercase tracking-widest border border-black shadow-[2px_2px_0px_#000]">
+                                            {product.modules.length} MÓDULOS
                                         </span>
                                     </td>
-                                    <td className="px-6 py-5 whitespace-nowrap text-sm text-right font-medium text-[#354763]/60">
+                                    <td className="px-6 py-5 whitespace-nowrap text-xs text-right font-bold text-black/60">
                                         ${pricing.totalCost.toLocaleString('es-AR')}
                                     </td>
-                                    <td className="px-6 py-5 whitespace-nowrap text-sm text-right font-bold text-[#354763]/40 italic">
+                                    <td className="px-6 py-5 whitespace-nowrap text-xs text-right font-bold text-black/40 line-through">
                                         ${pricing.totalPrice.toLocaleString('es-AR', { minimumFractionDigits: 0 })}
                                     </td>
-                                    <td className="px-6 py-5 whitespace-nowrap text-sm text-right font-black text-[#354763] bg-[#354763]/5">
+                                    <td className="px-6 py-5 whitespace-nowrap text-xs text-right font-black text-black bg-black/5">
                                         ${(pricing.totalPrice * 0.9).toLocaleString('es-AR', { minimumFractionDigits: 0 })}
                                     </td>
-                                    <td className="px-6 py-5 whitespace-nowrap text-sm text-right font-black text-[#aab799] bg-[#aab799]/5">
+                                    <td className="px-6 py-5 whitespace-nowrap text-sm text-right font-black text-white bg-blue-600 border-l border-r border-black">
                                         ${(pricing.totalPrice * 0.8).toLocaleString('es-AR', { minimumFractionDigits: 0 })}
                                     </td>
-                                    <td className="px-6 py-5 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                        <button
-                                            onClick={() => toggleExpand(product.id)}
-                                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-[10px] tracking-widest uppercase transition-all ${isExpanded ? 'bg-[#354763] text-white shadow-lg shadow-[#354763]/20' : 'bg-white text-[#354763] border border-[#354763]/10 hover:border-[#354763]/30'
-                                                }`}
-                                        >
-                                            <Package size={12} />
-                                            {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                                        </button>
-                                        <Link
-                                            href={`/?quote=${product.id}&admin=true`}
-                                            target="_blank"
-                                            className="inline-flex items-center gap-1.5 bg-[#aab799] text-white px-3 py-1.5 rounded-lg font-bold text-[10px] tracking-widest uppercase hover:bg-[#99a688] transition-all shadow-lg shadow-[#aab799]/10"
-                                        >
-                                            <ExternalLink size={12} />
-                                            3D
-                                        </Link>
-                                        <button
-                                            className="inline-flex items-center gap-1.5 text-red-500 hover:text-red-700 bg-red-50 px-3 py-1.5 rounded-lg transition-all group-hover:opacity-100 opacity-20"
-                                            onClick={() => {/* TODO: Delete logic */ }}
-                                        >
-                                            <Trash2 size={12} />
-                                        </button>
+                                    <td className="px-6 py-5 whitespace-nowrap text-right align-middle">
+                                        <div className="flex justify-end gap-2 items-center">
+                                            <button
+                                                onClick={() => toggleExpand(product.id)}
+                                                className={`p-2 border transition-colors ${isExpanded ? 'bg-black text-white border-black' : 'text-black border-transparent hover:border-black'}`}
+                                            >
+                                                {isExpanded ? <ChevronUp size={16} strokeWidth={2.5} /> : <ChevronDown size={16} strokeWidth={2.5} />}
+                                            </button>
+                                            <Link
+                                                href={`/?quote=${product.id}&admin=true`}
+                                                target="_blank"
+                                                className="p-2 text-black border border-transparent hover:border-black hover:text-blue-600 transition-colors"
+                                            >
+                                                <ExternalLink size={16} strokeWidth={2.5} />
+                                            </Link>
+                                            <button
+                                                className="p-2 text-black/30 border border-transparent hover:border-red-600 hover:text-red-600 transition-colors"
+                                                onClick={() => {/* TODO: Delete logic */ }}
+                                            >
+                                                <Trash2 size={16} strokeWidth={2.5} />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                                 {isExpanded && (
-                                    <tr className="bg-white/50">
-                                        <td colSpan={7} className="px-6 py-6 font-sans">
-                                            <div className="bg-white p-6 rounded-2xl border border-[#354763]/10 shadow-inner">
-                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                                                    <div className="bg-[#354763] p-4 rounded-2xl shadow-lg border border-white/10">
-                                                        <span className="text-[10px] font-black text-white/40 uppercase tracking-widest block mb-1">ROAS Break-Even</span>
-                                                        <span className="text-xl font-black text-white italic">{pricing.metrics.roasBreakEven.toFixed(2)}</span>
+                                    <tr>
+                                        <td colSpan={7} className="p-0 border-b-2 border-black">
+                                            <div className="bg-white p-8 lg:p-12 shadow-inner border-t-2 border-black">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                                                    <div className="bg-black text-white p-6 border-2 border-black shadow-[4px_4px_0px_#000]">
+                                                        <span className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] block mb-2 border-b border-white/20 pb-2">ROAS Break-Even</span>
+                                                        <span className="text-3xl font-black">{pricing.metrics.roasBreakEven.toFixed(2)}</span>
                                                     </div>
-                                                    <div className="bg-[#aab799] p-4 rounded-2xl shadow-lg border border-white/10">
-                                                        <span className="text-[10px] font-black text-[#354763]/40 uppercase tracking-widest block mb-1">ROAS Target (70%)</span>
-                                                        <span className="text-xl font-black text-[#354763] italic">{pricing.metrics.roasTarget.toFixed(2)}</span>
+                                                    <div className="bg-blue-600 text-white p-6 border-2 border-black shadow-[4px_4px_0px_#000]">
+                                                        <span className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em] block mb-2 border-b border-white/20 pb-2">ROAS Target (70%)</span>
+                                                        <span className="text-3xl font-black">{pricing.metrics.roasTarget.toFixed(2)}</span>
                                                     </div>
-                                                    <div className="bg-white p-4 rounded-2xl border border-[#354763]/10">
-                                                        <span className="text-[10px] font-black text-[#354763]/40 uppercase tracking-widest block mb-1">Utilidad Bruta</span>
-                                                        <span className="text-xl font-black text-[#354763]">${pricing.metrics.grossProfit.toLocaleString('es-AR', { minimumFractionDigits: 0 })}</span>
+                                                    <div className="bg-white p-6 border-2 border-black shadow-[4px_4px_0px_#000]">
+                                                        <span className="text-[10px] font-black text-black/50 uppercase tracking-[0.2em] block mb-2 border-b border-black/20 pb-2">Utilidad Bruta</span>
+                                                        <span className="text-2xl font-black">${pricing.metrics.grossProfit.toLocaleString('es-AR', { minimumFractionDigits: 0 })}</span>
                                                     </div>
-                                                    <div className="bg-white p-4 rounded-2xl border border-[#354763]/10">
-                                                        <span className="text-[10px] font-black text-[#354763]/40 uppercase tracking-widest block mb-1">Recaudación Real</span>
-                                                        <span className="text-xl font-black text-[#354763]">${pricing.metrics.realRevenue.toLocaleString('es-AR', { minimumFractionDigits: 0 })}</span>
+                                                    <div className="bg-white p-6 border-2 border-black shadow-[4px_4px_0px_#000]">
+                                                        <span className="text-[10px] font-black text-black/50 uppercase tracking-[0.2em] block mb-2 border-b border-black/20 pb-2">Recaudación Real</span>
+                                                        <span className="text-2xl font-black text-blue-600">${pricing.metrics.realRevenue.toLocaleString('es-AR', { minimumFractionDigits: 0 })}</span>
                                                     </div>
                                                 </div>
 
-                                                <div className="flex justify-between items-center mb-6">
-                                                    <h4 className="text-[10px] font-bold text-[#354763]/40 uppercase tracking-[0.2em] flex items-center gap-2">
-                                                        <Tag size={12} className="text-[#aab799]" /> Desglose de Partes Actualizado
+                                                <div className="flex justify-between items-end mb-6 border-b-2 border-black pb-2">
+                                                    <h4 className="text-lg font-black text-black uppercase tracking-tight flex items-center gap-3">
+                                                        <Tag size={20} strokeWidth={2.5} /> DESGLOSE DE PARTES
                                                     </h4>
-                                                    <div className="text-[10px] text-[#354763]/30 font-bold tracking-wider italic">
-                                                        Sincronizado con costos actuales
+                                                    <div className="text-[10px] text-black/50 font-bold uppercase tracking-widest hidden sm:block">
+                                                        SINCRONIZADO CON COSTOS ACTUALES
                                                     </div>
                                                 </div>
                                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                                     {bomItems.map((item: any, idx) => (
-                                                        <div key={idx} className="flex justify-between items-center p-3 rounded-xl bg-[#ebecdf]/20 border border-transparent hover:border-[#354763]/5 transition-all">
-                                                            <div className="flex flex-col gap-0.5">
-                                                                <span className="text-xs font-bold text-[#354763]">{item.name}</span>
-                                                                <span className="text-[10px] font-bold text-[#354763]/30">${item.unitCostARS.toLocaleString('es-AR')} c/u</span>
+                                                        <div key={idx} className="flex justify-between items-center p-4 bg-white border-2 border-black hover:bg-black/5 transition-colors group/item">
+                                                            <div className="flex flex-col">
+                                                                <span className="text-xs font-black text-black uppercase group-hover/item:text-blue-600 transition-colors">{item.name}</span>
+                                                                <span className="text-[10px] font-bold text-black/50 uppercase">${item.unitCostARS.toLocaleString('es-AR')} C/U</span>
                                                             </div>
-                                                            <div className="text-right">
-                                                                <div className="text-[10px] font-black bg-[#354763] text-white px-2 py-0.5 rounded-md inline-block mb-1">x{item.quantity}</div>
-                                                                <div className="text-xs font-black text-[#354763]">${item.totalCostARS.toLocaleString('es-AR')}</div>
+                                                            <div className="text-right flex flex-col items-end">
+                                                                <div className="text-[10px] font-black bg-black text-white px-2 py-0.5 mb-1">x{item.quantity}</div>
+                                                                <div className="text-sm font-black text-black">${item.totalCostARS.toLocaleString('es-AR')}</div>
                                                             </div>
                                                         </div>
                                                     ))}

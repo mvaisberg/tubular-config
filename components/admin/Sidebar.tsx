@@ -30,12 +30,17 @@ export default function Sidebar() {
     }
 
     return (
-        <aside className="w-64 bg-[#ebecdf] border-r border-[#354763]/10 flex flex-col">
-            <div className="p-8 border-b border-[#354763]/10 flex flex-col items-center gap-4">
-                <img src="/brandbook/logo/logo-azul.svg" alt="Tubular Logo" className="w-32" />
-                <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#354763]/40">Admin Panel</span>
+        <aside className="w-64 bg-white border-r border-black flex flex-col shrink-0">
+            <div className="p-8 border-b border-black flex flex-col items-start gap-1">
+                <Link href="/brandbook/identidad.pdf" target="_blank">
+                    <h1 className="text-3xl font-black tracking-tighter uppercase relative group cursor-pointer text-black">
+                        Tubular
+                        <span className="absolute -bottom-2 left-0 w-full h-[2px] bg-blue-600 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+                    </h1>
+                </Link>
+                <span className="text-[10px] uppercase font-bold text-black/50 tracking-widest mt-2">Admin Panel</span>
             </div>
-            <nav className="flex-1 p-4 space-y-1">
+            <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href;
                     const Icon = item.icon;
@@ -43,31 +48,31 @@ export default function Sidebar() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-bold transition-all ${isActive
-                                ? "bg-[#354763] text-white shadow-md shadow-[#354763]/20"
-                                : "text-[#354763]/70 hover:bg-[#354763]/5 hover:text-[#354763]"
+                            className={`flex items-center gap-3 px-4 py-3 text-xs uppercase tracking-widest font-bold transition-all border ${isActive
+                                    ? "bg-black text-white border-black"
+                                    : "text-black border-transparent hover:border-black"
                                 }`}
                         >
-                            <Icon size={18} />
+                            <Icon size={14} strokeWidth={isActive ? 2.5 : 2} />
                             {item.name}
                         </Link>
                     );
                 })}
             </nav>
-            <div className="p-4 space-y-2 border-t border-[#354763]/10">
+            <div className="p-4 space-y-2 border-t border-black">
                 <a
                     href="/brandbook/identidad.pdf"
                     target="_blank"
-                    className="flex items-center gap-3 px-4 py-3 text-xs font-bold text-[#354763]/60 hover:text-[#354763] transition-colors"
+                    className="flex items-center gap-3 px-4 py-3 text-xs uppercase tracking-widest font-bold text-black border border-transparent hover:border-black transition-all"
                 >
-                    <Settings size={16} />
-                    Manual de Marca
+                    <Settings size={14} strokeWidth={2} />
+                    Manual
                 </a>
                 <button
                     onClick={handleLogout}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    className="flex w-full items-center gap-3 px-4 py-3 text-xs uppercase tracking-widest font-bold text-white bg-black hover:bg-blue-600 transition-colors"
                 >
-                    <LogOut size={18} />
+                    <LogOut size={14} strokeWidth={2} />
                     Logout
                 </button>
             </div>

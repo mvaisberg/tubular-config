@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useConfigStore } from '@/lib/store';
 import { ModuleConfig } from '@/lib/types';
-import { Plus, Trash2, RotateCcw, Target, Save, ShoppingBag, Layout } from 'lucide-react';
+import { Plus, Trash2, RotateCcw, Target, Save, ShoppingBag, Layout, Ruler } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useSearchParams } from 'next/navigation';
 import { SaveModal } from './SaveModal';
@@ -18,6 +18,8 @@ export const Toolbar = () => {
     const triggerCameraReset = useConfigStore((state) => state.actions.triggerCameraReset);
     const environment = useConfigStore((state) => state.environment);
     const setEnvironment = useConfigStore((state) => state.actions.setEnvironment);
+    const showDimensions = useConfigStore((state) => state.showDimensions);
+    const toggleDimensions = useConfigStore((state) => state.actions.toggleDimensions);
 
     const toggleEnvironment = () => {
         if (environment === 'none') setEnvironment('modern');
@@ -95,93 +97,104 @@ export const Toolbar = () => {
     };
 
     return (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm p-4 rounded-full shadow-lg border border-gray-100 flex gap-4 items-center">
-            {modules.length === 0 ? (
-                <button onClick={() => addModule({
-                    id: crypto.randomUUID(),
-                    position: { x: 0, y: 0, z: 0 },
-                    size: { w: 750, h: 350, d: 350 },
-                    color: 'white',
-                    material: 'steel',
-                    hasPanel: { top: true, bottom: true, left: true, right: true, front: false, back: true }
-                })} className="px-4 py-2 bg-black text-white rounded-full hover:bg-black/90 font-medium">
-                    Comenzar Configuración
-                </button>
-            ) : (
-                <>
-                    <button
-                        onClick={() => setModalData({ isOpen: true, type: "quote" })}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#354763] text-white rounded-full hover:bg-[#354763]/90 font-medium transition-colors"
-                        title="Guardar Cotización"
-                    >
-                        <Save size={18} />
-                        Cotizar
+        <>
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm p-4 rounded-full shadow-lg border border-gray-100 flex gap-4 items-center">
+                {modules.length === 0 ? (
+                    <button onClick={() => addModule({
+                        id: crypto.randomUUID(),
+                        position: { x: 0, y: 0, z: 0 },
+                        size: { w: 750, h: 350, d: 350 },
+                        color: 'white',
+                        material: 'steel',
+                        hasPanel: { top: true, bottom: true, left: true, right: true, front: false, back: true }
+                    })} className="px-4 py-2 bg-black text-white rounded-full hover:bg-black/90 font-medium">
+                        Comenzar Configuración
                     </button>
-
-                    {isAdmin && (
+                ) : (
+                    <>
                         <button
-                            onClick={() => setModalData({ isOpen: true, type: "product" })}
-                            className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-full hover:bg-black/90 font-medium transition-colors"
-                            title="Guardar como Producto"
+                            onClick={() => setModalData({ isOpen: true, type: "quote" })}
+                            className="flex items-center gap-2 px-4 py-2 bg-[#354763] text-white rounded-full hover:bg-[#354763]/90 font-medium transition-colors"
+                            title="Guardar Cotización"
                         >
-                            <ShoppingBag size={18} />
-                            Guardar Producto
+                            <Save size={18} />
+                            Cotizar
                         </button>
-                    )}
 
-                    <div className="h-6 w-px bg-gray-200 mx-2" />
-                </>
-            )}
+                        {isAdmin && (
+                            <button
+                                onClick={() => setModalData({ isOpen: true, type: "product" })}
+                                className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-full hover:bg-black/90 font-medium transition-colors"
+                                title="Guardar como Producto"
+                            >
+                                <ShoppingBag size={18} />
+                                Guardar Producto
+                            </button>
+                        )}
 
-            {selectedModuleId && (() => {
-                const selectedModule = modules.find(m => m.id === selectedModuleId);
-                const hasModuleAbove = selectedModule ? modules.some(m =>
-                    Math.abs(m.position.x - selectedModule.position.x) < 1 &&
-                    Math.abs(m.position.y - (selectedModule.position.y + selectedModule.size.h)) < 1 &&
-                    Math.abs(m.position.z - selectedModule.position.z) < 1
-                ) : false;
+                        <div className="h-6 w-px bg-gray-200 mx-2" />
+                    </>
+                )}
 
-                return (
-                    <button
-                        onClick={() => !hasModuleAbove && removeModule(selectedModuleId)}
-                        disabled={hasModuleAbove}
-                        className={`p-2 rounded-full transition-colors ${hasModuleAbove
-                            ? 'text-gray-300 cursor-not-allowed'
-                            : 'text-red-500 hover:bg-red-50'
-                            }`}
-                        title={hasModuleAbove ? "No se puede eliminar porque sostiene otro módulo" : "Eliminar módulo"}
-                    >
-                        <Trash2 size={20} />
-                    </button>
-                );
-            })()}
+                {selectedModuleId && (() => {
+                    const selectedModule = modules.find(m => m.id === selectedModuleId);
+                    const hasModuleAbove = selectedModule ? modules.some(m =>
+                        Math.abs(m.position.x - selectedModule.position.x) < 1 &&
+                        Math.abs(m.position.y - (selectedModule.position.y + selectedModule.size.h)) < 1 &&
+                        Math.abs(m.position.z - selectedModule.position.z) < 1
+                    ) : false;
 
-            <button
-                onClick={toggleEnvironment}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${environment !== 'none' ? 'bg-[#354763] text-white shadow-md' : 'text-[#354763] hover:bg-gray-100'}`}
-                title="Cambiar Ambiente"
-            >
-                <Layout size={18} />
-                <span>Ambientar</span>
-            </button>
+                    return (
+                        <button
+                            onClick={() => !hasModuleAbove && removeModule(selectedModuleId)}
+                            disabled={hasModuleAbove}
+                            className={`p-2 rounded-full transition-colors ${hasModuleAbove
+                                ? 'text-gray-300 cursor-not-allowed'
+                                : 'text-red-500 hover:bg-red-50'
+                                }`}
+                            title={hasModuleAbove ? "No se puede eliminar porque sostiene otro módulo" : "Eliminar módulo"}
+                        >
+                            <Trash2 size={20} />
+                        </button>
+                    );
+                })()}
 
-            <div className="h-6 w-px bg-gray-200 mx-2" />
+                <button
+                    onClick={toggleEnvironment}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${environment !== 'none' ? 'bg-[#354763] text-white shadow-md' : 'text-[#354763] hover:bg-gray-100'}`}
+                    title="Cambiar Ambiente"
+                >
+                    <Layout size={18} />
+                    <span>Ambientar</span>
+                </button>
 
-            <button
-                onClick={reset}
-                className="p-2 text-red-500 hover:bg-red-50 rounded-full"
-                title="Reset All"
-            >
-                <RotateCcw size={20} />
-            </button>
+                <button
+                    onClick={toggleDimensions}
+                    className={`p-2 rounded-full transition-colors ${showDimensions ? 'bg-[#354763] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+                    title="Mostrar Medidas"
+                >
+                    <Ruler size={20} />
+                </button>
 
-            <button
-                onClick={triggerCameraReset}
-                className="p-2 text-gray-500 hover:bg-gray-100 rounded-full"
-                title="Center Camera"
-            >
-                <Target size={20} />
-            </button>
+                <div className="h-6 w-px bg-gray-200 mx-2" />
+
+                <button
+                    onClick={reset}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-full"
+                    title="Reset All"
+                >
+                    <RotateCcw size={20} />
+                </button>
+
+                <button
+                    onClick={triggerCameraReset}
+                    className="p-2 text-gray-500 hover:bg-gray-100 rounded-full"
+                    title="Center Camera"
+                >
+                    <Target size={20} />
+                </button>
+
+            </div>
 
             <SaveModal
                 isOpen={modalData.isOpen}
@@ -191,6 +204,6 @@ export const Toolbar = () => {
                 onClose={() => setModalData(prev => ({ ...prev, isOpen: false }))}
                 onSave={onSave}
             />
-        </div>
+        </>
     );
 };

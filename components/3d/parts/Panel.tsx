@@ -31,19 +31,14 @@ export const Panel = ({ position, orientation, width, height, color = 'white' }:
 
     const args = useMemo(() => {
         // Geometry args: width, height, depth
-        // xy: w, h, thickness
-        // xz: w, thickness, h (depth)
-        // yz: thickness, w (height), h (depth) -- wait.
-        // If orientation is yz, width is usually "depth" of module, height is "height" of module?
-        // Let's map it:
-        // xy implies Flat on Z axis. dimensions are x and y.
-        // xz implies Flat on Y axis. dimensions are x and z.
-        // yz implies Flat on X axis. dimensions are y and z.
+        // Subtract 19mm (tube diameter) so the panel sits inside the frame without z-fighting the tubes.
+        const insetW = Math.max(1, width - 19) * 0.001;
+        const insetH = Math.max(1, height - 19) * 0.001;
 
         switch (orientation) {
-            case 'xy': return [width * 0.001, height * 0.001, thickness] as [number, number, number];
-            case 'xz': return [width * 0.001, thickness, height * 0.001] as [number, number, number];
-            case 'yz': return [thickness, height * 0.001, width * 0.001] as [number, number, number];
+            case 'xy': return [insetW, insetH, thickness] as [number, number, number];
+            case 'xz': return [insetW, thickness, insetH] as [number, number, number];
+            case 'yz': return [thickness, insetH, insetW] as [number, number, number];
         }
     }, [orientation, width, height]);
 

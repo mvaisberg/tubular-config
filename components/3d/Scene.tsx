@@ -32,9 +32,10 @@ const CameraController = () => {
 };
 
 export default function Scene() {
+    const selectModule = useConfigStore((state) => state.actions.selectModule);
     return (
         <div className="w-full h-full">
-            <Canvas shadows camera={{ position: [2, 2, 2], fov: 50 }}>
+            <Canvas shadows camera={{ position: [2, 2, 2], fov: 50 }} onPointerMissed={() => selectModule(null)}>
                 <Suspense fallback={null}>
                     <RoomEnvironment />
                     <CameraController />

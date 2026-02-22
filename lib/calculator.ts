@@ -125,10 +125,20 @@ export function generateParts(modules: ModuleConfig[]): DerivedPart[] {
         }
 
         // Left Panel (YZ) at x
-        if (mod.hasPanel.left) {
+        // Check if there is a module to our left (whose right edge touches our left edge)
+        const hasLeftNeighborTouching = modules.some(m =>
+            Math.abs((m.position.x + m.size.w) - x) < 1 &&
+            Math.abs(m.position.y - y) < 1 &&
+            Math.abs(m.position.z - z) < 1
+        );
+
+        // If there's a left neighbor, we omit our left panel. 
+        // The partition is controlled by the right panel of the left module.
+        if (mod.hasPanel.left && !hasLeftNeighborTouching) {
             // dimensions: depth=d, height=h. 
             addPanel(x, y, z, 'yz', d, h);
         }
+
         // Right Panel (YZ) at x + w
         if (mod.hasPanel.right) {
             addPanel(x + w, y, z, 'yz', d, h);

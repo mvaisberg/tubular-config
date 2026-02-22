@@ -19,25 +19,20 @@ export default async function ProductsAdminPage() {
     const { data: settings } = await supabase.from("settings").select("*").eq("id", 1).single();
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
+        <div className="max-w-6xl space-y-8 pb-32">
+            <header className="mb-12 border-b border-black pb-4 flex justify-between items-end">
                 <div>
-                    <h1 className="text-2xl font-bold">Productos Preconfigurados</h1>
-                    <p className="text-sm text-gray-500">Muebles con configuración fija y precios dinámicos según el costo de partes.</p>
+                    <h1 className="text-4xl font-black tracking-tight uppercase">Productos Fijos</h1>
+                    <p className="text-black/60 text-xs font-bold uppercase tracking-widest mt-1">Configuraciones guardadas y precios dinámicos</p>
                 </div>
-                {/* 
-                  To create a new product, we can either have a modal here 
-                  or a link to the configurator with a "Save as Product" flag.
-                  For simplicity, let's link to the home with a special admin mode.
-                */}
                 <Link
                     href="/?admin=true"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all shadow-md active:scale-95"
+                    className="flex items-center gap-2 bg-black text-white px-4 py-3 text-xs font-black uppercase tracking-widest hover:bg-blue-600 transition-colors shadow-[4px_4px_0px_#000]"
                 >
-                    <Plus size={18} />
-                    Nuevo Producto
+                    <Plus size={14} strokeWidth={2.5} />
+                    NUEVO PRODUCTO
                 </Link>
-            </div>
+            </header>
 
             <ProductsTable
                 initialProducts={products || []}

@@ -18,22 +18,22 @@ export default function QuotesTable({ quotes: initialQuotes }: QuotesTableProps)
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+        <div className="overflow-x-auto bg-white border border-black shadow-[8px_8px_0px_#000]">
+            <table className="min-w-full divide-y divide-black">
+                <thead className="bg-black">
                     <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total ARS</th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                        <th className="px-6 py-4 text-left text-[10px] font-black text-white uppercase tracking-[0.2em]">ID</th>
+                        <th className="px-6 py-4 text-left text-[10px] font-black text-white uppercase tracking-[0.2em]">Fecha</th>
+                        <th className="px-6 py-4 text-left text-[10px] font-black text-white uppercase tracking-[0.2em]">Cliente</th>
+                        <th className="px-6 py-4 text-right text-[10px] font-black text-white uppercase tracking-[0.2em]">Total ARS</th>
+                        <th className="px-6 py-4 text-right text-[10px] font-black text-white uppercase tracking-[0.2em] w-32">Acciones</th>
                     </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white divide-y divide-black/20">
                     {initialQuotes.length === 0 && (
                         <tr>
-                            <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                                No hay cotizaciones guardadas aún.
+                            <td colSpan={5} className="px-6 py-12 text-center text-black/40 text-xs font-bold uppercase tracking-widest">
+                                NO HAY COTIZACIONES GUARDADAS AÚN.
                             </td>
                         </tr>
                     )}
@@ -44,61 +44,59 @@ export default function QuotesTable({ quotes: initialQuotes }: QuotesTableProps)
                         const hasBom = bom && Object.keys(bom).length > 0;
 
                         return (
-                            <>
-                                <tr key={quote.id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 whitespace-nowrap text-xs font-mono text-gray-400">
+                            <div key={quote.id} className="contents group">
+                                <tr className={`hover:bg-black/5 transition-colors ${isExpanded ? 'bg-black/5' : ''}`}>
+                                    <td className="px-6 py-5 whitespace-nowrap text-[10px] font-bold text-black/40 uppercase tracking-widest">
                                         {quote.id.split('-')[0]}...
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        {format(new Date(quote.created_at), "dd MMM yyyy HH:mm", { locale: es })}
+                                    <td className="px-6 py-5 whitespace-nowrap text-xs font-black text-black uppercase">
+                                        {format(new Date(quote.created_at), "dd MMM yyyy HH:mm", { locale: es }).toUpperCase()}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        {quote.client_name || "Sin Nombre"}
+                                    <td className="px-6 py-5 whitespace-nowrap text-xs font-black text-black uppercase">
+                                        {quote.client_name || "SIN NOMBRE"}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-gray-900">
-                                        ${Number(quote.total_price_ars || 0).toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                    <td className="px-6 py-5 whitespace-nowrap text-sm text-right font-black text-black">
+                                        ${Number(quote.total_price_ars || 0).toLocaleString('es-AR', { minimumFractionDigits: 0 })}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                        <button
-                                            onClick={() => toggleExpand(quote.id)}
-                                            className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-md transition-colors ${isExpanded ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                                }`}
-                                            title="Ver Partes"
-                                        >
-                                            <Package size={14} />
-                                            Detalle
-                                            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                                        </button>
-                                        <Link
-                                            href={`/?quote=${quote.id}`}
-                                            target="_blank"
-                                            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-900 bg-blue-50 px-3 py-1.5 rounded-md transition-colors"
-                                        >
-                                            <ExternalLink size={14} />
-                                            Abrir 3D
-                                        </Link>
+                                    <td className="px-6 py-5 whitespace-nowrap text-right align-middle">
+                                        <div className="flex justify-end gap-2 items-center">
+                                            <button
+                                                onClick={() => toggleExpand(quote.id)}
+                                                className={`p-2 border transition-colors ${isExpanded ? 'bg-black text-white border-black' : 'text-black border-transparent hover:border-black'}`}
+                                                title="Ver Partes"
+                                            >
+                                                {isExpanded ? <ChevronUp size={16} strokeWidth={2.5} /> : <ChevronDown size={16} strokeWidth={2.5} />}
+                                            </button>
+                                            <Link
+                                                href={`/?quote=${quote.id}`}
+                                                target="_blank"
+                                                className="text-black hover:text-blue-600 inline-flex items-center gap-1 p-2 border border-transparent hover:border-black transition-colors"
+                                            >
+                                                <ExternalLink size={16} strokeWidth={2.5} />
+                                            </Link>
+                                        </div>
                                     </td>
                                 </tr>
                                 {isExpanded && (
-                                    <tr className="bg-gray-50">
-                                        <td colSpan={5} className="px-6 py-4">
-                                            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-inner">
-                                                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                                    <Package size={12} /> Desglose de Partes
+                                    <tr>
+                                        <td colSpan={5} className="p-0 border-b-2 border-black">
+                                            <div className="bg-white p-8 shadow-inner border-t-2 border-black">
+                                                <h4 className="text-lg font-black text-black uppercase tracking-tight flex items-center gap-3 mb-6 border-b-2 border-black pb-2">
+                                                    <Package size={20} strokeWidth={2.5} /> DESGLOSE DE PARTES
                                                 </h4>
                                                 {!hasBom ? (
-                                                    <p className="text-sm text-gray-400 italic">Esta cotización antigua no tiene desglose de partes guardado.</p>
+                                                    <p className="text-xs font-bold text-black/40 uppercase tracking-widest">Esta cotización antigua no tiene desglose de partes guardado.</p>
                                                 ) : (
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                                         {Object.values(bom).map((item: any, idx) => (
-                                                            <div key={idx} className="flex justify-between items-center p-2 border-b border-gray-100 text-sm">
+                                                            <div key={idx} className="flex justify-between items-center p-4 bg-white border-2 border-black hover:bg-black/5 transition-colors group/item">
                                                                 <div className="flex flex-col">
-                                                                    <span className="font-semibold text-gray-800">{item.name}</span>
-                                                                    <span className="text-xs text-gray-400">Unit: ${item.unitCostARS.toLocaleString('es-AR')}</span>
+                                                                    <span className="text-xs font-black text-black uppercase group-hover/item:text-blue-600 transition-colors">{item.name}</span>
+                                                                    <span className="text-[10px] font-bold text-black/50 uppercase">UNIT: ${item.unitCostARS.toLocaleString('es-AR')}</span>
                                                                 </div>
-                                                                <div className="text-right">
-                                                                    <div className="font-mono bg-gray-100 px-2 py-0.5 rounded text-xs inline-block mb-1">x{item.quantity}</div>
-                                                                    <div className="font-bold text-gray-900">${item.totalCostARS.toLocaleString('es-AR')}</div>
+                                                                <div className="text-right flex flex-col items-end">
+                                                                    <div className="text-[10px] font-black bg-black text-white px-2 py-0.5 mb-1">x{item.quantity}</div>
+                                                                    <div className="text-sm font-black text-black">${item.totalCostARS.toLocaleString('es-AR')}</div>
                                                                 </div>
                                                             </div>
                                                         ))}
@@ -108,7 +106,7 @@ export default function QuotesTable({ quotes: initialQuotes }: QuotesTableProps)
                                         </td>
                                     </tr>
                                 )}
-                            </>
+                            </div>
                         );
                     })}
                 </tbody>

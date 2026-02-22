@@ -132,7 +132,7 @@ export default function SettingsPage() {
     };
 
     const addFixedCost = async () => {
-        const newCost = { name: "Nuevo Costo", amount: 0 };
+        const newCost = { name: "NUEVO COSTO", amount: 0 };
         const { data, error } = await supabase.from("fixed_costs").insert(newCost).select().single();
         if (data) setFixedCosts([...fixedCosts, data]);
     };
@@ -147,58 +147,56 @@ export default function SettingsPage() {
         setFixedCosts(fixedCosts.filter(c => c.id !== id));
     };
 
-    if (loading) return <div className="p-12 text-[#354763]/50 font-bold animate-pulse uppercase tracking-widest">Cargando configuración...</div>;
+    if (loading) return <div className="p-12 text-black font-black uppercase tracking-[0.2em] animate-pulse">Cargando...</div>;
 
     return (
-        <div className="max-w-5xl space-y-8 pb-20">
-            <header className="flex justify-between items-center bg-[#ebecdf] p-8 rounded-3xl border border-[#354763]/10 shadow-sm">
+        <div className="max-w-6xl space-y-8 pb-32">
+            <header className="flex flex-col md:flex-row md:justify-between md:items-end border-b border-black pb-4 gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-[#354763] tracking-tighter uppercase italic">Configuración Estratégica</h1>
-                    <p className="text-[#354763]/60 text-sm font-bold uppercase tracking-widest mt-1">Variables de Pricing y Estructura de Costos</p>
+                    <h1 className="text-4xl font-black text-black tracking-tight uppercase">Configuración</h1>
+                    <p className="text-black/60 text-xs font-bold uppercase tracking-widest mt-1">Variables y Costos Estratégicos</p>
                 </div>
-                <div className="text-right">
-                    <p className="text-[10px] font-black text-[#354763]/30 uppercase tracking-[0.2em]">Última Actualización</p>
-                    <p className="text-xs font-bold text-[#354763]">{lastUpdated || "Nunca"}</p>
+                <div className="text-left md:text-right border-l-2 border-black pl-4">
+                    <p className="text-[10px] font-black text-black/50 uppercase tracking-[0.2em]">Última Actualización</p>
+                    <p className="text-sm font-black text-black uppercase">{lastUpdated || "NUNCA"}</p>
                 </div>
             </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* DIVISAS */}
-                <section className="bg-white p-8 rounded-3xl border border-[#354763]/10 shadow-sm space-y-6">
-                    <div className="flex justify-between items-center">
+                <section className="bg-white border border-black p-6 md:p-8 relative group">
+                    <div className="absolute top-0 left-0 w-2 h-full bg-black scale-y-0 group-hover:scale-y-100 transition-transform origin-top z-10"></div>
+                    <div className="flex justify-between items-center mb-6 border-b border-black pb-4">
                         <div className="flex items-center gap-3">
-                            <div className="p-3 bg-blue-50 rounded-2xl text-blue-600">
-                                <RefreshCw size={24} />
-                            </div>
-                            <h2 className="text-xl font-black text-[#354763] uppercase tracking-tight">Divisas</h2>
+                            <h2 className="text-xl font-black text-black uppercase tracking-tight">Divisas</h2>
                         </div>
                         <button
                             onClick={handleSyncUsd}
                             disabled={syncing}
-                            className="text-[10px] font-black bg-[#354763] text-white px-4 py-2 rounded-xl hover:opacity-90 disabled:opacity-50 transition-all uppercase tracking-widest"
+                            className="bg-black text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 hover:bg-blue-600 transition-colors disabled:opacity-50"
                         >
-                            {syncing ? "Sincronizando..." : "Sincronizar Dólar (Oficial + 3%)"}
+                            {syncing ? "SYNC..." : "SYNC DÓLAR"}
                         </button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-[#354763]/40 uppercase tracking-widest ml-1">Dólar Oficial (Venta)</label>
-                            <div className="relative">
-                                <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-[#354763]/30" size={16} />
+                    <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-2 group/input">
+                            <label className="text-[10px] font-black text-black uppercase tracking-widest transition-colors group-focus-within/input:text-blue-600">Dólar Oficial (Venta)</label>
+                            <div className="relative border border-black group-focus-within/input:border-blue-600 transition-colors bg-white">
+                                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-black" size={14} strokeWidth={2.5} />
                                 <input
                                     type="number" value={usdOfficial} onChange={e => setUsdOfficial(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-4 bg-[#ebecdf]/30 border border-[#354763]/10 rounded-2xl font-bold text-[#354763] focus:outline-none focus:ring-2 focus:ring-[#354763]/20"
+                                    className="w-full pl-8 pr-4 py-3 bg-transparent font-black text-black focus:outline-none rounded-none text-sm"
                                 />
                             </div>
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-[#354763]/40 uppercase tracking-widest ml-1">Dólar Aplicado (+Mgn)</label>
-                            <div className="relative">
-                                <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-[#354763]/30" size={16} />
+                        <div className="space-y-2 group/input">
+                            <label className="text-[10px] font-black text-black uppercase tracking-widest transition-colors group-focus-within/input:text-blue-600">Dólar Aplicado (+Mgn)</label>
+                            <div className="relative border border-black group-focus-within/input:border-blue-600 transition-colors bg-white">
+                                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-black" size={14} strokeWidth={2.5} />
                                 <input
                                     type="number" value={usdExchangeRate} onChange={e => setUsdExchangeRate(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-4 bg-[#354763] border border-[#354763]/10 rounded-2xl font-black text-white focus:outline-none focus:ring-2 focus:ring-[#354763]/40 shadow-lg shadow-[#354763]/20"
+                                    className="w-full pl-8 pr-4 py-3 bg-transparent font-black text-black focus:outline-none rounded-none text-sm"
                                 />
                             </div>
                         </div>
@@ -206,130 +204,119 @@ export default function SettingsPage() {
                 </section>
 
                 {/* LOGISTICA Y MARGEN */}
-                <section className="bg-white p-8 rounded-3xl border border-[#354763]/10 shadow-sm space-y-6">
-                    <div className="flex items-center gap-3">
-                        <div className="p-3 bg-green-50 rounded-2xl text-[#aab799]">
-                            <Truck size={24} />
-                        </div>
-                        <h2 className="text-xl font-black text-[#354763] uppercase tracking-tight">Logística y Margen</h2>
+                <section className="bg-white border border-black p-6 md:p-8 relative group">
+                    <div className="absolute top-0 left-0 w-2 h-full bg-black scale-y-0 group-hover:scale-y-100 transition-transform origin-top z-10"></div>
+                    <div className="flex items-center gap-3 mb-6 border-b border-black pb-4">
+                        <h2 className="text-xl font-black text-black uppercase tracking-tight">Logística y Margen</h2>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-[#354763]/40 uppercase tracking-widest ml-1">Costo de Envío ($)</label>
+                    <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-2 group/input">
+                            <label className="text-[10px] font-black text-black uppercase tracking-widest transition-colors group-focus-within/input:text-blue-600">Envío ($)</label>
                             <input
                                 type="number" value={shippingCost} onChange={e => setShippingCost(e.target.value)}
-                                className="w-full px-4 py-4 bg-[#ebecdf]/30 border border-[#354763]/10 rounded-2xl font-bold text-[#354763] focus:outline-none focus:ring-2 focus:ring-[#354763]/20"
+                                className="w-full px-4 py-3 border border-black focus:border-blue-600 font-black text-black focus:outline-none rounded-none bg-white text-sm"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-[#aab799] uppercase tracking-widest ml-1">Margen Objetivo (%)</label>
+                        <div className="space-y-2 group/input">
+                            <label className="text-[10px] font-black text-black uppercase tracking-widest transition-colors group-focus-within/input:text-blue-600">Margen (%)</label>
                             <input
                                 type="number" value={targetMarginPercent} onChange={e => setTargetMarginPercent(e.target.value)}
-                                className="w-full px-4 py-4 bg-[#aab799]/10 border border-[#aab799]/30 rounded-2xl font-black text-[#354763] focus:outline-none focus:ring-2 focus:ring-[#aab799]/40"
+                                className="w-full px-4 py-3 border border-black focus:border-blue-600 font-black text-black focus:outline-none rounded-none bg-white text-sm"
                             />
                         </div>
                     </div>
                 </section>
 
                 {/* IMPUESTOS Y COMISIONES */}
-                <section className="bg-white p-8 rounded-3xl border border-[#354763]/10 shadow-sm space-y-6 lg:col-span-2">
-                    <div className="flex items-center gap-3">
-                        <div className="p-3 bg-orange-50 rounded-2xl text-orange-600">
-                            <Percent size={24} />
-                        </div>
-                        <h2 className="text-xl font-black text-[#354763] uppercase tracking-tight">Comisiones e Impuestos</h2>
+                <section className="bg-white border border-black p-6 md:p-8 lg:col-span-2 relative group">
+                    <div className="absolute top-0 left-0 w-2 h-full bg-black scale-y-0 group-hover:scale-y-100 transition-transform origin-top z-10"></div>
+                    <div className="flex items-center gap-3 mb-6 border-b border-black pb-4">
+                        <h2 className="text-xl font-black text-black uppercase tracking-tight">Comisiones e Impuestos</h2>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-[#354763]/40 uppercase tracking-widest ml-1">Comisión Transacción (%)</label>
+                        <div className="space-y-2 group/input">
+                            <label className="text-[10px] font-black text-black uppercase tracking-widest transition-colors group-focus-within/input:text-blue-600">Com. Transac. (%)</label>
                             <input
                                 type="number" step="0.01" value={transactionFeePercent} onChange={e => setTransactionFeePercent(e.target.value)}
-                                className="w-full px-4 py-4 bg-[#ebecdf]/30 border border-[#354763]/10 rounded-2xl font-bold text-[#354763]"
+                                className="w-full px-4 py-3 border border-black focus:border-blue-600 font-black text-black focus:outline-none rounded-none bg-white text-sm"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-[#354763]/40 uppercase tracking-widest ml-1">IVA s/ Comisión (%)</label>
+                        <div className="space-y-2 group/input">
+                            <label className="text-[10px] font-black text-black uppercase tracking-widest transition-colors group-focus-within/input:text-blue-600">IVA s/ Comis. (%)</label>
                             <input
                                 type="number" value={transactionFeeIvaPercent} onChange={e => setTransactionFeeIvaPercent(e.target.value)}
-                                className="w-full px-4 py-4 bg-[#ebecdf]/30 border border-[#354763]/10 rounded-2xl font-bold text-[#354763]"
+                                className="w-full px-4 py-3 border border-black focus:border-blue-600 font-black text-black focus:outline-none rounded-none bg-white text-sm"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-[#354763]/40 uppercase tracking-widest ml-1">Interés 6 Cuotas (%)</label>
+                        <div className="space-y-2 group/input">
+                            <label className="text-[10px] font-black text-black uppercase tracking-widest transition-colors group-focus-within/input:text-blue-600">Interés 6C (%)</label>
                             <input
                                 type="number" value={installments6Percent} onChange={e => setInstallments6Percent(e.target.value)}
-                                className="w-full px-4 py-4 bg-[#ebecdf]/30 border border-[#354763]/10 rounded-2xl font-bold text-[#354763]"
+                                className="w-full px-4 py-3 border border-black focus:border-blue-600 font-black text-black focus:outline-none rounded-none bg-white text-sm"
                             />
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-black text-[#354763]/40 uppercase tracking-widest ml-1">IVA General (%)</label>
+                        <div className="space-y-2 group/input">
+                            <label className="text-[10px] font-black text-black uppercase tracking-widest transition-colors group-focus-within/input:text-blue-600">IVA Gral. (%)</label>
                             <input
                                 type="number" value={ivaPercent} onChange={e => setIvaPercent(e.target.value)}
-                                className="w-full px-4 py-4 bg-[#ebecdf]/30 border border-[#354763]/10 rounded-2xl font-bold text-[#354763]"
+                                className="w-full px-4 py-3 border border-black focus:border-blue-600 font-black text-black focus:outline-none rounded-none bg-white text-sm"
                             />
                         </div>
                     </div>
                 </section>
 
                 {/* COSTOS FIJOS */}
-                <section className="bg-white p-8 rounded-3xl border border-[#354763]/10 shadow-sm space-y-6 lg:col-span-2">
-                    <div className="flex justify-between items-center">
+                <section className="bg-white border border-black p-6 md:p-8 lg:col-span-2 relative group flex flex-col">
+                    <div className="absolute top-0 left-0 w-2 h-full bg-black scale-y-0 group-hover:scale-y-100 transition-transform origin-top z-10"></div>
+                    <div className="flex justify-between items-center mb-6 border-b border-black pb-4">
                         <div className="flex items-center gap-3">
-                            <div className="p-3 bg-purple-50 rounded-2xl text-purple-600">
-                                <Calculator size={24} />
-                            </div>
-                            <h2 className="text-xl font-black text-[#354763] uppercase tracking-tight">Estructura de Costos Fijos</h2>
+                            <h2 className="text-xl font-black text-black uppercase tracking-tight">Estructura de Costos Fijos</h2>
                         </div>
                         <button
                             onClick={addFixedCost}
-                            className="flex items-center gap-2 text-[10px] font-black bg-[#354763]/5 text-[#354763] px-4 py-2 rounded-xl hover:bg-[#354763] hover:text-white transition-all uppercase tracking-widest"
+                            className="bg-black text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 hover:bg-blue-600 transition-colors flex items-center gap-2"
                         >
-                            <Plus size={14} />
-                            Agregar Costo
+                            <Plus size={14} strokeWidth={2.5} />
+                            AÑADIR
                         </button>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-2 mb-6 flex-1">
                         {fixedCosts.length === 0 ? (
-                            <p className="text-center py-10 text-xs font-bold text-[#354763]/20 uppercase tracking-widest italic border-2 border-dashed border-[#354763]/5 rounded-3xl">No hay costos fijos registrados</p>
+                            <p className="text-center py-10 text-xs font-black text-black/20 uppercase tracking-widest border border-dashed border-black/20">VACÍO</p>
                         ) : (
                             fixedCosts.map(cost => (
-                                <div key={cost.id} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center p-4 bg-[#ebecdf]/20 rounded-2xl border border-transparent hover:border-[#354763]/10 transition-all">
-                                    <div className="md:col-span-8">
+                                <div key={cost.id} className="flex relative border-b border-black/10 focus-within:border-blue-600 transition-colors group/row">
+                                    <input
+                                        type="text" value={cost.name}
+                                        onChange={e => updateFixedCost(cost.id, { name: e.target.value })}
+                                        className="flex-1 bg-transparent py-3 font-bold text-black border-none focus:outline-none text-sm uppercase placeholder:text-black/30"
+                                        placeholder="CONCEPTO"
+                                    />
+                                    <div className="relative w-32 md:w-48 border-l border-black/10 group-focus-within/row:border-blue-600 flex items-center px-3">
+                                        <span className="text-[10px] font-black text-black/40 mr-2">$</span>
                                         <input
-                                            type="text" value={cost.name}
-                                            onChange={e => updateFixedCost(cost.id, { name: e.target.value })}
-                                            className="w-full bg-transparent font-bold text-[#354763] border-none focus:ring-0 text-sm uppercase"
+                                            type="number" value={cost.amount}
+                                            onChange={e => updateFixedCost(cost.id, { amount: parseFloat(e.target.value) })}
+                                            className="w-full bg-transparent py-3 font-black text-black border-none focus:outline-none text-right"
                                         />
                                     </div>
-                                    <div className="md:col-span-3">
-                                        <div className="relative">
-                                            <span className="absolute left-0 top-1/2 -translate-y-1/2 text-[10px] font-black text-[#354763]/30">$</span>
-                                            <input
-                                                type="number" value={cost.amount}
-                                                onChange={e => updateFixedCost(cost.id, { amount: parseFloat(e.target.value) })}
-                                                className="w-full bg-transparent pl-4 py-1 font-black text-[#354763] border-none focus:ring-0 text-right"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="md:col-span-1 flex justify-end">
-                                        <button
-                                            onClick={() => deleteFixedCost(cost.id)}
-                                            className="p-2 text-red-300 hover:text-red-500 transition-colors"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
+                                    <button
+                                        onClick={() => deleteFixedCost(cost.id)}
+                                        className="w-12 flex items-center justify-center text-black/20 hover:text-red-600 hover:bg-black/5 transition-colors border-l border-black/10 group-focus-within/row:border-blue-600"
+                                    >
+                                        <Trash2 size={16} strokeWidth={2} />
+                                    </button>
                                 </div>
                             ))
                         )}
                     </div>
                     {fixedCosts.length > 0 && (
-                        <div className="flex justify-between items-center p-6 bg-[#354763] rounded-2xl shadow-xl shadow-[#354763]/10">
-                            <span className="text-xs font-black text-white/50 uppercase tracking-widest">Total Gastos Fijos</span>
-                            <span className="text-2xl font-black text-white italic">
+                        <div className="flex justify-between items-center p-6 bg-black mt-auto">
+                            <span className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Total Gastos</span>
+                            <span className="text-2xl font-black text-white">
                                 ${fixedCosts.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString('es-AR')}
                             </span>
                         </div>
@@ -337,14 +324,14 @@ export default function SettingsPage() {
                 </section>
             </div>
 
-            <div className="fixed bottom-8 right-8 z-50">
+            <div className="fixed bottom-0 left-0 lg:left-64 right-0 p-6 pointer-events-none flex justify-end z-50">
                 <button
                     onClick={handleSaveSettings}
                     disabled={saving}
-                    className="flex items-center gap-3 px-8 py-4 bg-[#aab799] text-white font-black rounded-2xl shadow-2xl hover:bg-[#99a688] transition-all transform active:scale-95 disabled:opacity-50 uppercase tracking-widest text-sm"
+                    className="pointer-events-auto flex items-center gap-3 px-8 py-4 bg-blue-600 text-white font-black hover:bg-black transition-colors disabled:opacity-50 uppercase tracking-widest text-xs shadow-[8px_8px_0px_#000]"
                 >
-                    {saving ? <RefreshCw className="animate-spin" size={20} /> : <Save size={20} />}
-                    {saving ? "Guardando..." : "Guardar Cambios"}
+                    {saving ? <RefreshCw className="animate-spin" size={16} strokeWidth={2.5} /> : <Save size={16} strokeWidth={2.5} />}
+                    {saving ? "GUARDANDO..." : "GUARDAR CAMBIOS"}
                 </button>
             </div>
         </div>

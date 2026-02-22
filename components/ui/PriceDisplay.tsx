@@ -17,19 +17,14 @@ export const PriceDisplay = () => {
             </h3>
 
             <div className="space-y-4 mb-6">
-                <div className="flex justify-between items-center text-xs font-bold text-[#354763]/40 tracking-wider">
-                    <span>LISTA / TARJETA:</span>
-                    <span className="font-mono italic">${totalPrice.toLocaleString('es-AR', { minimumFractionDigits: 0 })}</span>
-                </div>
-
-                <div className="bg-white/40 p-4 rounded-xl space-y-3 border border-[#354763]/5 shadow-inner">
+                <div className="bg-white/40 p-4 rounded-xl space-y-4 border border-[#354763]/5 shadow-inner">
                     <div className="flex justify-between items-center group">
                         <div className="flex flex-col">
-                            <span className="text-[10px] font-black text-[#354763] uppercase tracking-tighter">Efectivo</span>
-                            <span className="text-[9px] font-bold text-[#354763]/30 uppercase tracking-widest">20% OFF</span>
+                            <span className="text-[10px] font-black text-[#354763] uppercase tracking-tighter">6 Cuotas Sin Interés</span>
+                            <span className="text-[9px] font-bold text-[#354763]/30 uppercase tracking-widest">Precio de Lista: ${totalPrice.toLocaleString('es-AR')}</span>
                         </div>
-                        <span className="text-xl font-black text-[#354763] drop-shadow-sm transition-transform group-hover:scale-105">
-                            ${(totalPrice * 0.8).toLocaleString('es-AR', { minimumFractionDigits: 0 })}
+                        <span className="text-lg font-black text-[#354763] transition-transform group-hover:scale-105">
+                            ${(totalPrice / 6).toLocaleString('es-AR', { minimumFractionDigits: 0 })}
                         </span>
                     </div>
 
@@ -42,6 +37,18 @@ export const PriceDisplay = () => {
                         </div>
                         <span className="text-lg font-black text-[#354763] transition-transform group-hover:scale-105">
                             ${(totalPrice * 0.9).toLocaleString('es-AR', { minimumFractionDigits: 0 })}
+                        </span>
+                    </div>
+
+                    <div className="h-px bg-[#354763]/5 w-full" />
+
+                    <div className="flex justify-between items-center group">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-[#354763] uppercase tracking-tighter">Efectivo</span>
+                            <span className="text-[9px] font-bold text-[#354763]/30 uppercase tracking-widest">15% OFF</span>
+                        </div>
+                        <span className="text-lg font-black text-[#354763] transition-transform group-hover:scale-105">
+                            ${(totalPrice * 0.85).toLocaleString('es-AR', { minimumFractionDigits: 0 })}
                         </span>
                     </div>
                 </div>

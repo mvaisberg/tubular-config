@@ -40,6 +40,7 @@ interface ConfigState {
     selectedModuleId: string | null
     cameraResetVersion: number
     environment: 'none' | 'modern' | 'industrial'
+    showDimensions: boolean
     actions: {
         addModule: (module: ModuleConfig) => void
         removeModule: (id: string) => void
@@ -50,6 +51,7 @@ interface ConfigState {
         selectModule: (id: string | null) => void
         setModules: (modules: ModuleConfig[]) => void
         setEnvironment: (env: 'none' | 'modern' | 'industrial') => void
+        toggleDimensions: () => void
         reset: () => void
         fetchPartsData: () => Promise<void>
         fetchSettings: () => Promise<void>
@@ -76,10 +78,12 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     selectedModuleId: null,
     cameraResetVersion: 0,
     environment: 'none',
+    showDimensions: true,
     actions: {
         selectModule: (id) => set({ selectedModuleId: id }),
         triggerCameraReset: () => set((state) => ({ cameraResetVersion: state.cameraResetVersion + 1 })),
         setEnvironment: (env) => set({ environment: env }),
+        toggleDimensions: () => set((state) => ({ showDimensions: !state.showDimensions })),
         setModules: (modules) => {
             set({ modules, selectedModuleId: null });
             get().actions.calculatePrice();
