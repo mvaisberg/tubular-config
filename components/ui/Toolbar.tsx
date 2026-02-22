@@ -7,6 +7,7 @@ import { Plus, Trash2, RotateCcw, Target, Save, ShoppingBag, Layout, Ruler } fro
 import { createClient } from '@/lib/supabase/client';
 import { useSearchParams } from 'next/navigation';
 import { SaveModal } from './SaveModal';
+import { Share2 } from 'lucide-react';
 
 export const Toolbar = () => {
     const selectedModuleId = useConfigStore((state) => state.selectedModuleId);
@@ -29,10 +30,9 @@ export const Toolbar = () => {
 
     const [isSaving, setIsSaving] = useState(false);
     const [isSavingProduct, setIsSavingProduct] = useState(false);
-    const [modalData, setModalData] = useState<{ isOpen: boolean; type: "quote" | "product" }>({
-        isOpen: false,
-        type: "quote"
-    });
+    const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+    const [shareLink, setShareLink] = useState<string | null>(null);
+    const [copied, setCopied] = useState(false);
 
     const supabase = createClient();
     const searchParams = useSearchParams();
@@ -58,42 +58,44 @@ export const Toolbar = () => {
         // ...
     };
 
-    const onSave = async (formData: { name: string; sku?: string; description?: string }) => {
+    const saveConfiguration = async () => {
         if (modules.length === 0) return;
+        setIsSaving(true);
+        const bomSummary = useConfigStore.getState().bomSummary;
+        const finalConfiguration = { modules, bom: bomSummary };
+        const { data, error } = await supabase.from('quotes').insert([{
+            client_name: 'Configuración Guardada',
+            configuration: finalConfiguration,
+            total_price_ars: totalPrice,
+            total_price_usd: totalPrice / (useConfigStore.getState().settings?.usd_exchange_rate || 1000)
+        }]).select('id').single();
 
-        if (modalData.type === "quote") {
-            setIsSaving(true);
-            const bomSummary = useConfigStore.getState().bomSummary;
-            const finalConfiguration = { modules, bom: bomSummary };
-            const { error } = await supabase.from('quotes').insert([{
-                client_name: formData.name,
-                configuration: finalConfiguration,
-                total_price_ars: totalPrice,
-                total_price_usd: totalPrice / (useConfigStore.getState().settings?.usd_exchange_rate || 1000)
-            }]);
-            if (error) alert("Error al guardar cotización");
-            else {
-                alert("Cotización guardada exitosamente");
-                setModalData(prev => ({ ...prev, isOpen: false }));
-            }
-            setIsSaving(false);
-        } else {
-            setIsSavingProduct(true);
-            const { error } = await supabase.from('preconfigured_products').insert([{
-                name: formData.name,
-                sku: formData.sku || `PROD-${Date.now()}`,
-                description: formData.description,
-                configuration: modules,
-            }]);
-
-            if (error) {
-                alert("Error al guardar producto");
-            } else {
-                alert("Producto guardado exitosamente");
-                setModalData(prev => ({ ...prev, isOpen: false }));
-            }
-            setIsSavingProduct(false);
+        setIsSaving(false);
+        if (error) {
+            alert("Error al guardar la configuración.");
+        } else if (data) {
+            setShareLink(`${window.location.origin}/?quote=${data.id}`);
+            setCopied(false);
         }
+    };
+
+    const onSaveProduct = async (formData: { name: string; sku?: string; description?: string }) => {
+        if (modules.length === 0) return;
+        setIsSavingProduct(true);
+        const { error } = await supabase.from('preconfigured_products').insert([{
+            name: formData.name,
+            sku: formData.sku || `PROD-${Date.now()}`,
+            description: formData.description,
+            configuration: modules,
+        }]);
+
+        if (error) {
+            alert("Error al guardar producto");
+        } else {
+            alert("Producto guardado exitosamente");
+            setIsProductModalOpen(false);
+        }
+        setIsSavingProduct(false);
     };
 
     return (
@@ -113,17 +115,22 @@ export const Toolbar = () => {
                 ) : (
                     <>
                         <button
-                            onClick={() => setModalData({ isOpen: true, type: "quote" })}
-                            className="flex items-center gap-2 px-4 py-2 bg-[#354763] text-white rounded-full hover:bg-[#354763]/90 font-medium transition-colors"
-                            title="Guardar Cotización"
+                            onClick={saveConfiguration}
+                            disabled={isSaving}
+                            className="flex items-center gap-2 px-4 py-2 bg-[#354763] text-white rounded-full hover:bg-[#354763]/90 font-medium transition-colors disabled:opacity-50"
+                            title="Haz click para obtener un enlace único a este diseño"
                         >
-                            <Save size={18} />
-                            Cotizar
+                            {isSaving ? (
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <Share2 size={18} />
+                            )}
+                            Guardar configuración
                         </button>
 
                         {isAdmin && (
                             <button
-                                onClick={() => setModalData({ isOpen: true, type: "product" })}
+                                onClick={() => setIsProductModalOpen(true)}
                                 className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-full hover:bg-black/90 font-medium transition-colors"
                                 title="Guardar como Producto"
                             >
@@ -197,13 +204,53 @@ export const Toolbar = () => {
             </div>
 
             <SaveModal
-                isOpen={modalData.isOpen}
-                type={modalData.type}
-                title={modalData.type === "product" ? "Guardar Nuevo Producto" : "Nueva Cotización"}
-                isSaving={modalData.type === "product" ? isSavingProduct : isSaving}
-                onClose={() => setModalData(prev => ({ ...prev, isOpen: false }))}
-                onSave={onSave}
+                isOpen={isProductModalOpen}
+                type="product"
+                title="Guardar Nuevo Producto"
+                isSaving={isSavingProduct}
+                onClose={() => setIsProductModalOpen(false)}
+                onSave={onSaveProduct}
             />
+
+            {shareLink && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#354763]/40 backdrop-blur-sm p-4 animate-in fade-in">
+                    <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl space-y-4 animate-in zoom-in-95">
+                        <div className="flex items-center gap-3 text-[#354763]">
+                            <Share2 size={24} />
+                            <h3 className="text-xl font-black tracking-tight">¡Configuración Guardada!</h3>
+                        </div>
+                        <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                            Copiá este enlace único para guardar o compartir tu diseño en cualquier momento.
+                        </p>
+
+                        <div className="flex items-center gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200 shadow-inner">
+                            <input
+                                readOnly
+                                value={shareLink}
+                                className="bg-transparent flex-1 text-[11px] font-mono text-slate-600 outline-none"
+                                onClick={(e) => (e.target as HTMLInputElement).select()}
+                            />
+                            <button
+                                onClick={() => {
+                                    navigator.clipboard.writeText(shareLink);
+                                    setCopied(true);
+                                    setTimeout(() => setCopied(false), 2000);
+                                }}
+                                className="px-4 py-2 bg-[#354763] text-white text-xs font-bold uppercase tracking-widest rounded-lg hover:bg-[#2a3850] transition-colors whitespace-nowrap shadow-lg shadow-[#354763]/20"
+                            >
+                                {copied ? 'Copiado!' : 'Copiar'}
+                            </button>
+                        </div>
+
+                        <button
+                            onClick={() => setShareLink(null)}
+                            className="w-full pt-4 pb-1 text-xs font-bold text-slate-400 hover:text-[#354763] transition-colors"
+                        >
+                            Cerrar ventana
+                        </button>
+                    </div>
+                </div>
+            )}
         </>
     );
 };
