@@ -3,6 +3,7 @@
 import { useThree } from '@react-three/fiber';
 import { useEffect } from 'react';
 import * as THREE from 'three';
+import { Environment } from '@react-three/drei';
 
 export const RoomEnvironment = () => {
     const { scene } = useThree();
@@ -33,11 +34,14 @@ export const RoomEnvironment = () => {
         <group>
             {createRoom()}
 
+            {/* Entorno invisible para generar reflejos hiper realistas hiper cromados en los metales sin manchar el fondo simple */}
+            <Environment preset="studio" background={false} />
+
             {/* Iluminación básica estilo catálogo con sombras */}
-            <hemisphereLight intensity={1.5} groundColor="#d0d0d0" color="#ffffff" />
+            <hemisphereLight intensity={1.0} groundColor="#d0d0d0" color="#ffffff" />
             <directionalLight
                 position={[5, 10, 5]}
-                intensity={2.5}
+                intensity={2.0}
                 castShadow
                 shadow-mapSize={[2048, 2048]}
                 shadow-bias={-0.0001}

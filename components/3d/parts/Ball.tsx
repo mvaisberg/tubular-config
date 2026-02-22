@@ -16,9 +16,9 @@ export const Ball = ({ position, hasFoot }: { position: [number, number, number]
             <mesh castShadow receiveShadow>
                 <sphereGeometry args={[0.0125, 32, 32]} />
                 <meshStandardMaterial
-                    color="#f5f5f5"
-                    metalness={0.3}
-                    roughness={0.1}
+                    color="#ffffff"
+                    metalness={1.0}
+                    roughness={0.05}
                 />
             </mesh>
             {hasFoot && (
