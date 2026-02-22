@@ -1,78 +1,63 @@
 "use client";
 
 import { useConfigStore } from '@/lib/store';
-import { Environment } from '@react-three/drei';
+import { useEffect, useRef } from 'react';
+import { useThree } from '@react-three/fiber';
+import * as THREE from 'three';
+import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+
+const HDR_MAP: Record<string, string> = {
+    'none': '/hdr/living.hdr',
+    'modern': '/hdr/living.hdr',
+    'industrial': '/hdr/living.hdr',
+};
 
 export const RoomEnvironment = () => {
     const environment = useConfigStore((state) => state.environment);
+    const { gl, scene } = useThree();
+    const pmremGenerator = useRef<THREE.PMREMGenerator | null>(null);
+    const currentEnvMap = useRef<THREE.Texture | null>(null);
 
-    if (environment === 'none') {
-        return (
-            <>
-                <Environment preset="studio" />
-                <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.001, 0]} receiveShadow>
-                    <planeGeometry args={[20, 20]} />
-                    <meshStandardMaterial color="#f0f0f0" roughness={1} />
-                </mesh>
-            </>
-        );
-    }
+    useEffect(() => {
+        pmremGenerator.current = new THREE.PMREMGenerator(gl);
+        pmremGenerator.current.compileEquirectangularShader();
 
-    if (environment === 'modern') {
-        return (
-            <group>
-                <Environment preset="apartment" />
+        return () => {
+            pmremGenerator.current?.dispose();
+        };
+    }, [gl]);
 
-                {/* Floor: Light Wood */}
-                <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.001, 0]} receiveShadow>
-                    <planeGeometry args={[20, 20]} />
-                    <meshStandardMaterial color="#e8e0d5" roughness={0.8} metalness={0.1} />
-                </mesh>
+    useEffect(() => {
+        const loadEnvironment = (hdrPath: string) => {
+            new RGBELoader().load(hdrPath, (texture) => {
+                if (pmremGenerator.current) {
+                    const envMap = pmremGenerator.current.fromEquirectangular(texture).texture;
 
-                {/* Corner Walls */}
-                <group position={[0, 0, -0.5]}>
-                    {/* Back Wall */}
-                    <mesh position={[0, 2.5, 0]} receiveShadow>
-                        <planeGeometry args={[10, 5]} />
-                        <meshStandardMaterial color="#fafafa" />
-                    </mesh>
-                    {/* Left Wall */}
-                    <mesh rotation={[0, Math.PI / 2, 0]} position={[-5, 2.5, 5]} receiveShadow>
-                        <planeGeometry args={[10, 5]} />
-                        <meshStandardMaterial color="#f0f0f0" />
-                    </mesh>
-                </group>
+                    if (currentEnvMap.current) {
+                        currentEnvMap.current.dispose();
+                    }
+                    currentEnvMap.current = envMap;
 
-                {/* Warm Lighting from side */}
-                <pointLight position={[3, 4, 3]} intensity={40} color="#ffdfba" castShadow shadow-mapSize={[1024, 1024]} />
-                <ambientLight intensity={0.7} />
-            </group>
-        );
-    }
+                    scene.environment = envMap;
+                    scene.background = envMap;
+                }
+                texture.dispose();
+            });
+        };
 
-    if (environment === 'industrial') {
-        return (
-            <group>
-                <Environment preset="warehouse" />
+        const changeEnvironment = (name: string) => {
+            const path = HDR_MAP[name] || '/hdr/living.hdr';
+            loadEnvironment(path);
+        };
 
-                {/* Floor: Polished Concrete */}
-                <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.001, 0]} receiveShadow>
-                    <planeGeometry args={[20, 20]} />
-                    <meshStandardMaterial color="#333333" roughness={0.1} metalness={0.5} />
-                </mesh>
+        changeEnvironment(environment);
 
-                {/* Back Wall: Concrete / Dark */}
-                <mesh position={[0, 2.5, -1]} receiveShadow>
-                    <planeGeometry args={[10, 5]} />
-                    <meshStandardMaterial color="#1a1a1a" roughness={0.9} />
-                </mesh>
+    }, [environment, scene]);
 
-                {/* Contrast Lighting */}
-                <spotLight position={[4, 6, 4]} angle={0.4} penumbra={1} intensity={80} castShadow shadow-mapSize={[1024, 1024]} />
-                <ambientLight intensity={0.3} />
-            </group>
-        );
-    }
-
-    return null;
+    return (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.001, 0]} receiveShadow>
+            <planeGeometry args={[100, 100]} />
+            <shadowMaterial opacity={0.6} />
+        </mesh>
+    );
 };

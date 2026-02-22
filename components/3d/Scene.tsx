@@ -6,6 +6,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { RoomEnvironment } from "./RoomEnvironment";
 import { FurnitureController } from "./FurnitureController";
+import * as THREE from 'three';
 
 const CameraController = () => {
     // ... existing CameraController ...
@@ -35,7 +36,20 @@ export default function Scene() {
     const selectModule = useConfigStore((state) => state.actions.selectModule);
     return (
         <div className="w-full h-full">
-            <Canvas shadows camera={{ position: [2, 2, 2], fov: 50 }} onPointerMissed={() => selectModule(null)}>
+            <Canvas
+                shadows
+                gl={{ toneMapping: THREE.ACESFilmicToneMapping }}
+                camera={{ position: [2, 2, 2], fov: 50 }}
+                onPointerMissed={() => selectModule(null)}
+                onCreated={({ gl }) => {
+                    // Safe injection for both older and newer ThreeJS
+                    if ('physicallyCorrectLights' in gl) {
+                        (gl as any).physicallyCorrectLights = true;
+                    } else {
+                        (gl as any).useLegacyLights = false;
+                    }
+                }}
+            >
                 <Suspense fallback={null}>
                     <RoomEnvironment />
                     <CameraController />

@@ -13,17 +13,17 @@ export const Ball = ({ position, hasFoot }: { position: [number, number, number]
 
     return (
         <group position={pos}>
-            <mesh>
+            <mesh castShadow receiveShadow>
                 <sphereGeometry args={[0.0125, 32, 32]} />
                 <meshStandardMaterial color="#ffffff" metalness={1} roughness={0.05} />
             </mesh>
             {hasFoot && (
                 <group position={[0, -0.0125, 0]}>
-                    <mesh position={[0, -0.01, 0]}>
+                    <mesh position={[0, -0.01, 0]} castShadow receiveShadow>
                         <cylinderGeometry args={[0.005, 0.005, 0.02, 12]} />
                         <meshStandardMaterial color="#333" />
                     </mesh>
-                    <mesh position={[0, -0.02, 0]}>
+                    <mesh position={[0, -0.02, 0]} castShadow receiveShadow>
                         <cylinderGeometry args={[0.015, 0.015, 0.005, 32]} />
                         <meshStandardMaterial color="#111" />
                     </mesh>

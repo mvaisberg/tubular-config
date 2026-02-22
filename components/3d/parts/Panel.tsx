@@ -82,7 +82,7 @@ export const Panel = ({ position, orientation, width, height, color = 'white' }:
     const { color: threeColor, opacity, transparent, metalness, roughness } = getColorParams(color);
 
     return (
-        <mesh position={offset as [number, number, number]}>
+        <mesh position={offset as [number, number, number]} castShadow receiveShadow>
             <boxGeometry args={args} />
             <meshStandardMaterial
                 color={threeColor}
