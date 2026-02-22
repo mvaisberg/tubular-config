@@ -134,12 +134,12 @@ export const Sidebar = () => {
     );
 
     return (
-        <div className="h-full w-[360px] bg-white shadow-2xl border-r border-[#354763]/10 p-6 overflow-y-auto flex-shrink-0 z-10">
-            <div className="flex flex-col items-center mb-6 gap-2">
-                <img src="/brandbook/logo/logo-azul.svg" alt="Tubular" className="w-28 mb-2" />
+        <div className="h-full w-[360px] bg-white shadow-2xl border-r border-[#354763]/10 p-5 overflow-y-auto flex-shrink-0 z-10">
+            <div className="flex flex-col items-center mb-4 gap-2">
+                <img src="/brandbook/logo/logo-azul.svg" alt="Tubular" className="w-28 mb-1" />
             </div>
 
-            <h2 className="text-xl font-bold mb-8 text-[#354763] tracking-tight">Personalización</h2>
+            <h2 className="text-xl font-bold mb-5 text-[#354763] tracking-tight">Personalización</h2>
 
             {/* Material */}
             <div className="mb-4">
@@ -160,16 +160,16 @@ export const Sidebar = () => {
                 </div>
             </div>
 
-            <div className="h-px w-full bg-[#354763]/5 my-6" />
+            <div className="h-px w-full bg-[#354763]/5 my-5" />
 
             {selectedModuleId ? (
                 <>
 
                     {/* Steel Configuration */}
                     {currentMaterial === 'steel' && (
-                        <div className="mb-8">
-                            <h3 className="text-[10px] uppercase tracking-widest font-extrabold text-black mb-4 ml-1">Paneles</h3>
-                            <div className="flex flex-col gap-3">
+                        <div className="mb-5">
+                            <h3 className="text-[10px] uppercase tracking-widest font-extrabold text-black mb-3 ml-1">Paneles</h3>
+                            <div className="flex flex-col gap-2">
                                 {[
                                     { key: 'back', label: 'Panel Trasero' },
                                     { key: 'left', label: 'Panel Izquierdo' },
@@ -195,13 +195,13 @@ export const Sidebar = () => {
                     )}
 
                     {/* Dimensions */}
-                    <div className="mb-8">
-                        <h3 className="text-[10px] uppercase tracking-widest font-extrabold text-black mb-4 ml-1">Dimensiones</h3>
+                    <div className="mb-5">
+                        <h3 className="text-[10px] uppercase tracking-widest font-extrabold text-black mb-3 ml-1">Dimensiones</h3>
 
-                        <div className="space-y-6">
+                        <div className="space-y-4">
                             <div>
-                                <label className="block text-[10px] font-bold text-black mb-2.5 ml-1">ANCHO (COLUMNA)</label>
-                                <div className="flex gap-2.5">
+                                <label className="block text-[10px] uppercase tracking-widest font-extrabold text-black mb-2.5 ml-1">ANCHO (COLUMNA)</label>
+                                <div className="flex gap-2">
                                     {[350, 750].map((w) => (
                                         <button
                                             key={w}
@@ -218,8 +218,8 @@ export const Sidebar = () => {
                             </div>
 
                             <div>
-                                <label className="block text-[10px] font-bold text-black mb-2.5 ml-1">ALTO (FILA)</label>
-                                <div className="flex gap-2.5">
+                                <label className="block text-[10px] uppercase tracking-widest font-extrabold text-black mb-2.5 ml-1">ALTO (FILA)</label>
+                                <div className="flex gap-2">
                                     {[350, 750].map((h) => (
                                         <button
                                             key={h}
@@ -238,17 +238,17 @@ export const Sidebar = () => {
                     </div>
                 </>
             ) : (
-                <div className="p-6 bg-[#354763]/10 border-2 border-dashed border-[#354763]/20 rounded-2xl text-center mb-8">
+                <div className="p-5 bg-[#354763]/10 border-2 border-dashed border-[#354763]/20 rounded-2xl text-center mb-5">
                     <p className="text-black text-sm font-bold leading-relaxed">Selecciona un módulo en la vista 3D para editar sus dimensiones y estilo.</p>
                 </div>
             )}
 
-            <div className="h-px w-full bg-[#354763]/5 my-6" />
+            <div className="h-px w-full bg-[#354763]/5 my-5" />
 
             {/* Colors */}
             <div>
-                <h3 className="text-[10px] uppercase tracking-widest font-extrabold text-black mb-5 ml-1">Color</h3>
-                <div className="grid grid-cols-2 gap-3">
+                <h3 className="text-[10px] uppercase tracking-widest font-extrabold text-black mb-3 ml-1">Color</h3>
+                <div className="grid grid-cols-2 gap-2">
                     {currentColors.map((col) => (
                         <button
                             key={col.value}
