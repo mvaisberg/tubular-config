@@ -1,63 +1,51 @@
 "use client";
 
-import { useConfigStore } from '@/lib/store';
-import { useEffect, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
+import { useEffect } from 'react';
 import * as THREE from 'three';
-import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
-
-const HDR_MAP: Record<string, string> = {
-    'none': '/hdr/living.hdr',
-    'modern': '/hdr/living.hdr',
-    'industrial': '/hdr/living.hdr',
-};
 
 export const RoomEnvironment = () => {
-    const environment = useConfigStore((state) => state.environment);
-    const { gl, scene } = useThree();
-    const pmremGenerator = useRef<THREE.PMREMGenerator | null>(null);
-    const currentEnvMap = useRef<THREE.Texture | null>(null);
+    const { scene } = useThree();
 
     useEffect(() => {
-        pmremGenerator.current = new THREE.PMREMGenerator(gl);
-        pmremGenerator.current.compileEquirectangularShader();
+        // Fondo color sólido gris muy claro
+        scene.background = new THREE.Color('#f5f5f5');
+    }, [scene]);
 
-        return () => {
-            pmremGenerator.current?.dispose();
-        };
-    }, [gl]);
+    // Función createRoom() para agregar piso y pared trasera simples
+    const createRoom = () => (
+        <group>
+            {/* Piso que recibe sombras */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+                <planeGeometry args={[50, 50]} />
+                <meshStandardMaterial color="#eeeeee" roughness={0.8} />
+            </mesh>
 
-    useEffect(() => {
-        const loadEnvironment = (hdrPath: string) => {
-            new RGBELoader().load(hdrPath, (texture) => {
-                if (pmremGenerator.current) {
-                    const envMap = pmremGenerator.current.fromEquirectangular(texture).texture;
-
-                    if (currentEnvMap.current) {
-                        currentEnvMap.current.dispose();
-                    }
-                    currentEnvMap.current = envMap;
-
-                    scene.environment = envMap;
-                    scene.background = envMap;
-                }
-                texture.dispose();
-            });
-        };
-
-        const changeEnvironment = (name: string) => {
-            const path = HDR_MAP[name] || '/hdr/living.hdr';
-            loadEnvironment(path);
-        };
-
-        changeEnvironment(environment);
-
-    }, [environment, scene]);
+            {/* Pared trasera simple (opcional para dar límite visual) */}
+            <mesh position={[0, 5, -5]} receiveShadow>
+                <planeGeometry args={[50, 10]} />
+                <meshStandardMaterial color="#f5f5f5" roughness={1} />
+            </mesh>
+        </group>
+    );
 
     return (
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.001, 0]} receiveShadow>
-            <planeGeometry args={[100, 100]} />
-            <shadowMaterial opacity={0.6} />
-        </mesh>
+        <group>
+            {createRoom()}
+
+            {/* Iluminación básica estilo catálogo con sombras */}
+            <hemisphereLight intensity={0.5} groundColor="#d0d0d0" color="#ffffff" />
+            <directionalLight
+                position={[5, 10, 5]}
+                intensity={1}
+                castShadow
+                shadow-mapSize={[2048, 2048]}
+                shadow-bias={-0.0001}
+            />
+            <directionalLight
+                position={[-5, 5, 2]}
+                intensity={0.3}
+            />
+        </group>
     );
 };

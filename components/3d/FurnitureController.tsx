@@ -2,7 +2,8 @@
 
 import { useConfigStore } from '@/lib/store';
 import { generateParts } from '@/lib/calculator';
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
+import * as THREE from 'three';
 import { Ball } from './parts/Ball';
 import { Tube } from './parts/Tube';
 import { Panel } from './parts/Panel';
@@ -60,81 +61,103 @@ export const FurnitureController = () => {
         };
     }, [modules]);
 
+    const groupRef = useRef<THREE.Group>(null);
+
+    useEffect(() => {
+        const fixModelToFloor = (model: THREE.Group) => {
+            // Reset position to measure fresh bounds
+            model.position.y = 0;
+            model.updateMatrixWorld(true);
+
+            const box = new THREE.Box3().setFromObject(model);
+            if (box.min.y < Infinity) {
+                // Shift the model up so the lowest point rests exactly on Y=0
+                model.position.y = -box.min.y;
+            }
+        };
+
+        if (groupRef.current) {
+            fixModelToFloor(groupRef.current);
+        }
+    }); // Run on every render to ensure it stays grounded if parts change
+
     return (
         <group position={[bounds?.centerX || 0, 0, bounds?.centerZ || 0]}>
-            {parts.map((part: DerivedPart) => {
-                if (part.type === 'ball') {
-                    return <Ball key={part.id} position={part.position} hasFoot={part.hasFoot} />;
-                }
-                if (part.type === 'tube') {
-                    return (
-                        <Tube
-                            key={part.id}
-                            position={part.position}
-                            length={part.length || 0}
-                            orientation={(part.orientation as any) || 'y'}
-                        />
-                    );
-                }
-                if (part.type === 'panel') {
-                    // cast orientation to specific panel type
-                    const orient = part.orientation as 'xy' | 'xz' | 'yz';
-                    return (
-                        <Panel
-                            key={part.id}
-                            position={part.position}
-                            orientation={orient}
-                            width={part.dimensions?.width || 0}
-                            height={part.dimensions?.height || 0}
-                            color={part.color}
-                        />
-                    );
-                }
-                return null;
-            })}
+            <group ref={groupRef}>
+                {parts.map((part: DerivedPart) => {
+                    if (part.type === 'ball') {
+                        return <Ball key={part.id} position={part.position} hasFoot={part.hasFoot} />;
+                    }
+                    if (part.type === 'tube') {
+                        return (
+                            <Tube
+                                key={part.id}
+                                position={part.position}
+                                length={part.length || 0}
+                                orientation={(part.orientation as any) || 'y'}
+                            />
+                        );
+                    }
+                    if (part.type === 'panel') {
+                        // cast orientation to specific panel type
+                        const orient = part.orientation as 'xy' | 'xz' | 'yz';
+                        return (
+                            <Panel
+                                key={part.id}
+                                position={part.position}
+                                orientation={orient}
+                                width={part.dimensions?.width || 0}
+                                height={part.dimensions?.height || 0}
+                                color={part.color}
+                            />
+                        );
+                    }
+                    return null;
+                })}
 
-            {/* HitBoxes for selection */}
-            {modules.map((mod) => (
-                <ModuleHitBox key={mod.id} module={mod} />
-            ))}
+                {/* HitBoxes for selection */}
+                {modules.map((mod) => (
+                    <ModuleHitBox key={mod.id} module={mod} />
+                ))}
 
-            {/* Overall Dimensions Overlay */}
-            {showDimensions && bounds && (
-                <group>
-                    {/* Width line (front bottom edge) */}
-                    <mesh position={[(bounds.minX + bounds.maxX) / 2, bounds.minY + 0.01, bounds.maxZ + 0.06]} rotation={[0, 0, Math.PI / 2]}>
-                        <cylinderGeometry args={[0.002, 0.002, bounds.maxX - bounds.minX]} />
-                        <meshBasicMaterial color="#354763" />
-                    </mesh>
-                    <Billboard position={[(bounds.minX + bounds.maxX) / 2, bounds.minY + 0.01, bounds.maxZ + 0.12]}>
-                        <Text fontSize={0.05} color="#354763" outlineWidth={0.002} outlineColor="white">
-                            {bounds.width}mm
-                        </Text>
-                    </Billboard>
+                {/* Overall Dimensions Overlay */}
+                {showDimensions && bounds && (
+                    <group>
+                        {/* Width line (front bottom edge) */}
+                        <mesh position={[(bounds.minX + bounds.maxX) / 2, bounds.minY + 0.01, bounds.maxZ + 0.06]} rotation={[0, 0, Math.PI / 2]}>
+                            <cylinderGeometry args={[0.002, 0.002, bounds.maxX - bounds.minX]} />
+                            <meshBasicMaterial color="#354763" />
+                        </mesh>
+                        <Billboard position={[(bounds.minX + bounds.maxX) / 2, bounds.minY + 0.01, bounds.maxZ + 0.12]}>
+                            <Text fontSize={0.05} color="#354763" outlineWidth={0.002} outlineColor="white">
+                                {bounds.width}mm
+                            </Text>
+                        </Billboard>
 
-                    {/* Height line (left front edge) */}
-                    <mesh position={[bounds.minX - 0.06, (bounds.minY + bounds.maxY) / 2, bounds.maxZ + 0.06]}>
-                        <cylinderGeometry args={[0.002, 0.002, bounds.maxY - bounds.minY]} />
-                        <meshBasicMaterial color="#354763" />
-                    </mesh>
-                    <Billboard position={[bounds.minX - 0.12, (bounds.minY + bounds.maxY) / 2, bounds.maxZ + 0.06]}>
-                        <Text fontSize={0.05} color="#354763" outlineWidth={0.002} outlineColor="white">
-                            {bounds.height}mm
-                        </Text>
-                    </Billboard>
+                        {/* Height line (left front edge) */}
+                        <mesh position={[bounds.minX - 0.06, (bounds.minY + bounds.maxY) / 2, bounds.maxZ + 0.06]}>
+                            <cylinderGeometry args={[0.002, 0.002, bounds.maxY - bounds.minY]} />
+                            <meshBasicMaterial color="#354763" />
+                        </mesh>
+                        <Billboard position={[bounds.minX - 0.12, (bounds.minY + bounds.maxY) / 2, bounds.maxZ + 0.06]}>
+                            <Text fontSize={0.05} color="#354763" outlineWidth={0.002} outlineColor="white">
+                                {bounds.height}mm
+                            </Text>
+                        </Billboard>
 
-                    {/* Depth line (right bottom edge) */}
-                    <mesh position={[bounds.maxX + 0.06, bounds.minY + 0.01, (bounds.minZ + bounds.maxZ) / 2]} rotation={[Math.PI / 2, 0, 0]}>
-                        <cylinderGeometry args={[0.002, 0.002, bounds.maxZ - bounds.minZ]} />
-                        <meshBasicMaterial color="#354763" />
-                    </mesh>
-                    <Billboard position={[bounds.maxX + 0.12, bounds.minY + 0.01, (bounds.minZ + bounds.maxZ) / 2]}>
-                        <Text fontSize={0.05} color="#354763" outlineWidth={0.002} outlineColor="white">
-                            {bounds.depth}mm
-                        </Text>
-                    </Billboard>
-                </group>
-            )}
+                        {/* Depth line (right bottom edge) */}
+                        <mesh position={[bounds.maxX + 0.06, bounds.minY + 0.01, (bounds.minZ + bounds.maxZ) / 2]} rotation={[Math.PI / 2, 0, 0]}>
+                            <cylinderGeometry args={[0.002, 0.002, bounds.maxZ - bounds.minZ]} />
+                            <meshBasicMaterial color="#354763" />
+                        </mesh>
+                        <Billboard position={[bounds.maxX + 0.12, bounds.minY + 0.01, (bounds.minZ + bounds.maxZ) / 2]}>
+                            <Text fontSize={0.05} color="#354763" outlineWidth={0.002} outlineColor="white">
+                                {bounds.depth}mm
+                            </Text>
+                        </Billboard>
+                    </group>
+                )}
+            </group>
         </group>
     );
 };

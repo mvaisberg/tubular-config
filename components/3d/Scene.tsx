@@ -38,26 +38,14 @@ export default function Scene() {
         <div className="w-full h-full">
             <Canvas
                 shadows
-                gl={{ toneMapping: THREE.ACESFilmicToneMapping }}
                 camera={{ position: [2, 2, 2], fov: 50 }}
                 onPointerMissed={() => selectModule(null)}
-                onCreated={({ gl }) => {
-                    // Safe injection for both older and newer ThreeJS
-                    if ('physicallyCorrectLights' in gl) {
-                        (gl as any).physicallyCorrectLights = true;
-                    } else {
-                        (gl as any).useLegacyLights = false;
-                    }
-                }}
             >
                 <Suspense fallback={null}>
                     <RoomEnvironment />
                     <CameraController />
 
-                    {/* USM feet raise the unit by ~35-40mm. Shifting up so y=0 is floor. */}
-                    <group position={[0, 0.035, 0]}>
-                        <FurnitureController />
-                    </group>
+                    <FurnitureController />
                 </Suspense>
             </Canvas>
         </div>
