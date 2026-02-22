@@ -40,13 +40,10 @@ export const Tube = ({ position, length, orientation }: TubeProps) => {
     return (
         <mesh position={centerPos} rotation={rotation} castShadow receiveShadow>
             <cylinderGeometry args={[radius, radius, visualLength, 32]} />
-            <meshPhysicalMaterial
-                color="#f8f8f8"
-                metalness={0.6}
-                roughness={0.2}
-                clearcoat={1.0}
-                clearcoatRoughness={0.15}
-                reflectivity={1}
+            <meshStandardMaterial
+                color="#f5f5f5"
+                metalness={0.3}
+                roughness={0.1}
             />
         </mesh>
     );

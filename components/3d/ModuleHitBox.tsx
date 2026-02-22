@@ -163,9 +163,11 @@ export const ModuleHitBox = ({ module }: { module: ModuleConfig }) => {
 
     // Button positions (meters)
     // Right: cx + w/2 + offset
-    const rightPos: [number, number, number] = [((x + w) * 0.001) + 0.02, cy, cz];
-    const leftPos: [number, number, number] = [(x * 0.001) - 0.02, cy, cz];
-    const topPos: [number, number, number] = [cx, ((y + h) * 0.001) + 0.02, cz];
+    const frontZ = (z + d) * 0.001 + 0.04; // Bring entirely to the front
+
+    const rightPos: [number, number, number] = [((x + w) * 0.001) + 0.02, cy, frontZ];
+    const leftPos: [number, number, number] = [(x * 0.001) - 0.02, cy, frontZ];
+    const topPos: [number, number, number] = [cx, ((y + h) * 0.001) + 0.02, frontZ];
 
     // Dimensions
     const args: [number, number, number] = [w * 0.001, h * 0.001, d * 0.001];
@@ -191,7 +193,7 @@ export const ModuleHitBox = ({ module }: { module: ModuleConfig }) => {
                     color="#354763"
                     transparent
                     opacity={isSelected ? 0.15 : hovered ? 0.05 : 0}
-                    wireframe={isSelected}
+                    wireframe={false}
                 />
             </mesh>
 
