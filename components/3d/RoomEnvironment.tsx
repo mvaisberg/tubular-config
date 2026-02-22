@@ -34,17 +34,17 @@ export const RoomEnvironment = () => {
             {createRoom()}
 
             {/* Iluminación básica estilo catálogo con sombras */}
-            <hemisphereLight intensity={0.5} groundColor="#d0d0d0" color="#ffffff" />
+            <hemisphereLight intensity={1.5} groundColor="#d0d0d0" color="#ffffff" />
             <directionalLight
                 position={[5, 10, 5]}
-                intensity={1}
+                intensity={2.5}
                 castShadow
                 shadow-mapSize={[2048, 2048]}
                 shadow-bias={-0.0001}
             />
             <directionalLight
                 position={[-5, 5, 2]}
-                intensity={0.3}
+                intensity={1.0}
             />
         </group>
     );

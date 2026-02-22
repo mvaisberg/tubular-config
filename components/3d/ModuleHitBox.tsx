@@ -163,9 +163,9 @@ export const ModuleHitBox = ({ module }: { module: ModuleConfig }) => {
 
     // Button positions (meters)
     // Right: cx + w/2 + offset
-    const rightPos: [number, number, number] = [((x + w) * 0.001), cy, cz];
-    const leftPos: [number, number, number] = [(x * 0.001), cy, cz];
-    const topPos: [number, number, number] = [cx, ((y + h) * 0.001), cz];
+    const rightPos: [number, number, number] = [((x + w) * 0.001) + 0.02, cy, cz];
+    const leftPos: [number, number, number] = [(x * 0.001) - 0.02, cy, cz];
+    const topPos: [number, number, number] = [cx, ((y + h) * 0.001) + 0.02, cz];
 
     // Dimensions
     const args: [number, number, number] = [w * 0.001, h * 0.001, d * 0.001];

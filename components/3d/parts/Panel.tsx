@@ -66,9 +66,9 @@ export const Panel = ({ position, orientation, width, height, color = 'white' }:
         // Steel
         // Use higher metalness for shine, lower roughness for sharpness.
         // Use slightly brighter colors or ensure lighting hits them.
-        if (colorName === 'black') return { color: '#1C1C1C', opacity: 1, transparent: false, metalness: 0.6, roughness: 0.3 }; // RAL 9011
-        if (colorName === 'white') return { color: '#F4F4F0', opacity: 1, transparent: false, metalness: 0.4, roughness: 0.3 }; // RAL 9010
-        if (colorName === 'beige') return { color: '#A4957D', opacity: 1, transparent: false, metalness: 0.4, roughness: 0.3 }; // RAL 1019
+        if (colorName === 'black') return { color: '#1C1C1C', opacity: 1, transparent: false, metalness: 0.1, roughness: 0.4 }; // RAL 9011
+        if (colorName === 'white') return { color: '#FFFFFF', opacity: 1, transparent: false, metalness: 0.05, roughness: 0.3 }; // RAL 9010
+        if (colorName === 'beige') return { color: '#A4957D', opacity: 1, transparent: false, metalness: 0.05, roughness: 0.4 }; // RAL 1019
 
         // Acrylic - Make them pop more.
         if (colorName === 'transparent') return { color: '#E0F7FA', opacity: 0.2, transparent: true, metalness: 0.1, roughness: 0.05, transmission: 0.95, thickness: 0.5 };
