@@ -15,7 +15,14 @@ export const Ball = ({ position, hasFoot }: { position: [number, number, number]
         <group position={pos}>
             <mesh castShadow receiveShadow>
                 <sphereGeometry args={[0.0125, 32, 32]} />
-                <meshStandardMaterial color="#ffffff" metalness={1} roughness={0.05} />
+                <meshPhysicalMaterial
+                    color="#cccccc"
+                    metalness={0.85}
+                    roughness={0.1}
+                    clearcoat={1.0}
+                    clearcoatRoughness={0.1}
+                    reflectivity={1}
+                />
             </mesh>
             {hasFoot && (
                 <group position={[0, -0.0125, 0]}>
