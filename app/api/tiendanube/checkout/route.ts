@@ -9,7 +9,7 @@ export async function POST(req: Request) {
         // Si no las tenés, debés primero hacer el flujo OAuth (App ID / Client Secret).
         const storeId = process.env.TIENDANUBE_STORE_ID;
         const accessToken = process.env.TIENDANUBE_ACCESS_TOKEN;
-        const userAgent = process.env.TIENDANUBE_USER_AGENT || "TubularApp (admin@tubular.com.ar)";
+        const userAgent = process.env.TIENDANUBE_USER_AGENT || "Tubular (info@tubular.com.ar)";
 
         if (!storeId || !accessToken) {
             console.error("Faltan credenciales de Tiendanube (TIENDANUBE_STORE_ID o TIENDANUBE_ACCESS_TOKEN)");
