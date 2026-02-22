@@ -12,31 +12,38 @@ export const PriceDisplay = () => {
         <>
             {isRedirecting && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/95 backdrop-blur-md">
-                    <div className="flex flex-col items-center max-w-lg text-center p-8 space-y-8">
-                        <div className="flex items-center gap-6">
+                    <style>{`
+                        @keyframes slideRight {
+                            0% { transform: translateX(-100%); opacity: 0; }
+                            20% { opacity: 1; }
+                            80% { opacity: 1; }
+                            100% { transform: translateX(300%); opacity: 0; }
+                        }
+                    `}</style>
+                    <div className="flex flex-col items-center max-w-5xl text-center p-8 space-y-16 mt-[-10vh]">
+                        <div className="flex items-center gap-10">
                             {/* Tubular Logo */}
-                            <div className="w-40 h-40 bg-white rounded-3xl shadow-xl flex items-center justify-center p-6 border border-[#354763]/10">
+                            <div className="w-80 h-80 bg-white rounded-[3rem] shadow-2xl flex items-center justify-center p-12 border border-[#354763]/10 relative">
                                 <img src="/brandbook/logo/logo-azul.svg" alt="Tubular" className="w-full object-contain" />
                             </div>
 
                             {/* Animated Transfer Indicator */}
-                            <div className="flex flex-col items-center justify-center w-20 relative">
-                                <div className="flex gap-2">
-                                    <div className="w-3 h-3 rounded-full bg-[#354763] animate-bounce" style={{ animationDelay: '0ms' }} />
-                                    <div className="w-3 h-3 rounded-full bg-[#354763] animate-bounce" style={{ animationDelay: '150ms' }} />
-                                    <div className="w-3 h-3 rounded-full bg-[#354763] animate-bounce" style={{ animationDelay: '300ms' }} />
+                            <div className="flex flex-col items-center justify-center w-48 relative gap-4">
+                                <div className="w-full h-3 bg-[#354763]/10 rounded-full relative overflow-hidden shadow-inner">
+                                    <div className="absolute top-0 bottom-0 left-0 w-1/3 bg-[#354763] rounded-full animate-[slideRight_1.5s_ease-in-out_infinite]" />
                                 </div>
+                                <span className="text-sm font-black text-[#354763] tracking-widest uppercase opacity-80">Transfiriendo</span>
                             </div>
 
                             {/* Tiendanube Logo */}
-                            <div className="w-40 h-40 bg-white rounded-3xl shadow-xl flex items-center justify-center p-6 border border-[#354763]/10">
-                                <img src="/tiendanube.svg" alt="Tiendanube" className="w-20 h-20 object-contain" />
+                            <div className="w-80 h-80 bg-white rounded-[3rem] shadow-2xl flex items-center justify-center p-12 border border-[#354763]/10 relative">
+                                <img src="/tiendanube.svg" alt="Tiendanube" className="w-48 h-48 object-contain" />
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <h2 className="text-2xl font-black text-[#354763] tracking-tight">Preparando tu carrito en Tiendanube...</h2>
-                            <p className="text-slate-500 font-medium leading-relaxed max-w-md mx-auto">
+                        <div className="space-y-4">
+                            <h2 className="text-4xl font-black text-[#354763] tracking-tighter">Preparando tu carrito en Tiendanube...</h2>
+                            <p className="text-xl text-slate-500 font-medium leading-relaxed max-w-2xl mx-auto">
                                 Te estamos redirigiendo para que puedas cargar tus datos de envío y realizar el pago de forma segura.
                             </p>
                         </div>
