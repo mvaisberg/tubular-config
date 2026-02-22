@@ -8,6 +8,40 @@ export const PriceDisplay = () => {
     const totalPrice = useConfigStore((state) => state.totalPrice);
     const [isRedirecting, setIsRedirecting] = useState(false);
 
+    const handleCheckout = async () => {
+        if (modules.length === 0) return;
+        setIsRedirecting(true);
+
+        try {
+            const res = await fetch('/api/tiendanube/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ modules, totalPrice })
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                console.error("Error al procesar checkout", data.error);
+                alert("Uy, tuvimos un problema al preparar tu carrito (Avisanos por WhatsApp).");
+                setIsRedirecting(false);
+                return;
+            }
+
+            if (data.checkoutUrl) {
+                // Redirect user exactly to TN's checkout URL
+                window.location.href = data.checkoutUrl;
+            } else {
+                alert("Ocurrió un problema de enlace con Tiendanube.");
+                setIsRedirecting(false);
+            }
+
+        } catch (error) {
+            console.error("Connection error trying to checkout:", error);
+            alert("Error de conexión al procesar la compra.");
+            setIsRedirecting(false);
+        }
+    };
+
     return (
         <>
             {isRedirecting && (
@@ -100,7 +134,7 @@ export const PriceDisplay = () => {
                 <button
                     type="button"
                     className="w-full py-4 px-6 bg-[#354763] text-white font-bold text-sm tracking-widest uppercase rounded-xl hover:bg-[#2a3850] transition-colors shadow-lg shadow-[#354763]/20 flex justify-center items-center"
-                    onClick={() => setIsRedirecting(true)}
+                    onClick={handleCheckout}
                 >
                     Comprar
                 </button>
