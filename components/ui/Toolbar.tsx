@@ -136,7 +136,7 @@ export const Toolbar = () => {
                     </>
                 )}
 
-                {selectedModuleId && (() => {
+                {selectedModuleId && modules.length > 1 && (() => {
                     const selectedModule = modules.find(m => m.id === selectedModuleId);
                     const hasModuleAbove = selectedModule ? modules.some(m =>
                         Math.abs(m.position.x - selectedModule.position.x) < 1 &&

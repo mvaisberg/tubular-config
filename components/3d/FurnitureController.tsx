@@ -8,7 +8,7 @@ import { Tube } from './parts/Tube';
 import { Panel } from './parts/Panel';
 import { ModuleHitBox } from './ModuleHitBox';
 import { DerivedPart } from '@/lib/types';
-import { Line, Text } from '@react-three/drei';
+import { Line, Text, Billboard } from '@react-three/drei';
 
 export const FurnitureController = () => {
     const modules = useConfigStore((state) => state.modules);
@@ -53,7 +53,7 @@ export const FurnitureController = () => {
             minZ: minZ * 0.001,
             maxZ: maxZ * 0.001,
             width: maxX - minX,
-            height: maxY - minY,
+            height: (maxY - minY) + 40,
             depth: maxZ - minZ,
             centerX,
             centerZ
@@ -110,14 +110,11 @@ export const FurnitureController = () => {
                         color="#354763"
                         lineWidth={2}
                     />
-                    <Text
-                        position={[(bounds.minX + bounds.maxX) / 2, bounds.minY - 0.06, bounds.maxZ + 0.09]}
-                        fontSize={0.05}
-                        color="#354763"
-                        anchorY="top"
-                    >
-                        {bounds.width}mm
-                    </Text>
+                    <Billboard position={[(bounds.minX + bounds.maxX) / 2, bounds.minY - 0.06, bounds.maxZ + 0.15]}>
+                        <Text fontSize={0.05} color="#354763" outlineWidth={0.002} outlineColor="white">
+                            {bounds.width}mm
+                        </Text>
+                    </Billboard>
 
                     {/* Height line (left front edge) */}
                     <Line
@@ -128,15 +125,11 @@ export const FurnitureController = () => {
                         color="#354763"
                         lineWidth={2}
                     />
-                    <Text
-                        position={[bounds.minX - 0.09, (bounds.minY + bounds.maxY) / 2, bounds.maxZ + 0.06]}
-                        fontSize={0.05}
-                        color="#354763"
-                        anchorX="right"
-                        rotation={[0, 0, Math.PI / 2]}
-                    >
-                        {bounds.height}mm
-                    </Text>
+                    <Billboard position={[bounds.minX - 0.15, (bounds.minY + bounds.maxY) / 2, bounds.maxZ + 0.06]}>
+                        <Text fontSize={0.05} color="#354763" outlineWidth={0.002} outlineColor="white">
+                            {bounds.height}mm
+                        </Text>
+                    </Billboard>
 
                     {/* Depth line (right bottom edge) */}
                     <Line
@@ -147,15 +140,11 @@ export const FurnitureController = () => {
                         color="#354763"
                         lineWidth={2}
                     />
-                    <Text
-                        position={[bounds.maxX + 0.09, bounds.minY - 0.06, (bounds.minZ + bounds.maxZ) / 2]}
-                        fontSize={0.05}
-                        color="#354763"
-                        anchorX="left"
-                        rotation={[-Math.PI / 2, 0, 0]}
-                    >
-                        {bounds.depth}mm
-                    </Text>
+                    <Billboard position={[bounds.maxX + 0.15, bounds.minY - 0.06, (bounds.minZ + bounds.maxZ) / 2]}>
+                        <Text fontSize={0.05} color="#354763" outlineWidth={0.002} outlineColor="white">
+                            {bounds.depth}mm
+                        </Text>
+                    </Billboard>
                 </group>
             )}
         </group>

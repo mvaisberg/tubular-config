@@ -127,19 +127,23 @@ export const Sidebar = () => {
         if (p.left && p.right && !p.back) return 'no-back';
         return 'all'; // Default/Fallback
     };
-    const currentSteelStyle = getSteelStyle();
+    const hasLeftNeighbor = modules.some(m =>
+        Math.abs((m.position.x + m.size.w) - targetModule.position.x) < 1 &&
+        Math.abs(m.position.y - targetModule.position.y) < 1 &&
+        Math.abs(m.position.z - targetModule.position.z) < 1
+    );
 
     return (
-        <div className="h-full w-[450px] bg-white shadow-2xl border-r border-[#354763]/10 p-8 overflow-y-auto flex-shrink-0 z-10">
+        <div className="h-full w-[360px] bg-white shadow-2xl border-r border-[#354763]/10 p-6 overflow-y-auto flex-shrink-0 z-10">
             <div className="flex flex-col items-center mb-6 gap-2">
-                <img src="/brandbook/logo/logo-azul.svg" alt="Tubular" className="w-32 mb-2" />
+                <img src="/brandbook/logo/logo-azul.svg" alt="Tubular" className="w-28 mb-2" />
             </div>
 
             <h2 className="text-xl font-bold mb-8 text-[#354763] tracking-tight">Personalización</h2>
 
             {/* Material */}
             <div className="mb-4">
-                <h3 className="text-sm font-semibold text-black uppercase tracking-wider mb-3">Tipo de mueble</h3>
+                <h3 className="text-[10px] uppercase tracking-widest font-extrabold text-black mb-4 ml-1">Tipo de mueble</h3>
                 <div className="flex gap-2">
                     {MATERIAL_OPTIONS.map((opt) => (
                         <button
@@ -170,20 +174,22 @@ export const Sidebar = () => {
                                     { key: 'back', label: 'Panel Trasero' },
                                     { key: 'left', label: 'Panel Izquierdo' },
                                     { key: 'right', label: 'Panel Derecho' }
-                                ].map(panel => (
-                                    <label key={panel.key} className="flex items-center justify-between p-3 rounded-xl border-2 border-[#354763]/5 bg-white shadow-sm hover:border-[#354763]/20 cursor-pointer transition-all">
-                                        <span className="text-sm font-bold text-black">{panel.label}</span>
-                                        <div className="relative inline-flex items-center cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                className="sr-only peer"
-                                                checked={targetModule.hasPanel[panel.key as keyof typeof targetModule.hasPanel] as boolean}
-                                                onChange={(e) => handleUpdate({ hasPanel: { ...targetModule.hasPanel, [panel.key]: e.target.checked } })}
-                                            />
-                                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#354763]"></div>
-                                        </div>
-                                    </label>
-                                ))}
+                                ]
+                                    .filter(panel => !(panel.key === 'left' && hasLeftNeighbor))
+                                    .map(panel => (
+                                        <label key={panel.key} className="flex items-center justify-between p-3 rounded-xl border-2 border-[#354763]/5 bg-white shadow-sm hover:border-[#354763]/20 cursor-pointer transition-all">
+                                            <span className="text-sm font-bold text-black">{panel.label}</span>
+                                            <div className="relative inline-flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    className="sr-only peer"
+                                                    checked={targetModule.hasPanel[panel.key as keyof typeof targetModule.hasPanel] as boolean}
+                                                    onChange={(e) => handleUpdate({ hasPanel: { ...targetModule.hasPanel, [panel.key]: e.target.checked } })}
+                                                />
+                                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#354763]"></div>
+                                            </div>
+                                        </label>
+                                    ))}
                             </div>
                         </div>
                     )}
