@@ -12,12 +12,34 @@ export const PriceDisplay = () => {
         <>
             {isRedirecting && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/95 backdrop-blur-md">
-                    <div className="flex flex-col items-center max-w-lg text-center p-8 space-y-6">
-                        <div className="w-16 h-16 border-4 border-[#354763]/20 border-t-[#354763] rounded-full animate-spin"></div>
-                        <h2 className="text-2xl font-black text-[#354763] tracking-tight">Preparando tu carrito...</h2>
-                        <p className="text-slate-500 font-medium leading-relaxed">
-                            Te estamos redirigiendo a Tiendanube para que puedas cargar tus datos de envío y realizar el pago de forma 100% segura.
-                        </p>
+                    <div className="flex flex-col items-center max-w-lg text-center p-8 space-y-8">
+                        <div className="flex items-center gap-6">
+                            {/* Tubular Logo */}
+                            <div className="w-24 h-24 bg-white rounded-2xl shadow-xl flex items-center justify-center p-4 border border-[#354763]/10">
+                                <img src="/brandbook/logo/logo-azul.svg" alt="Tubular" className="w-full object-contain" />
+                            </div>
+
+                            {/* Animated Transfer Indicator */}
+                            <div className="flex flex-col items-center justify-center w-16 relative">
+                                <div className="flex gap-1">
+                                    <div className="w-2 h-2 rounded-full bg-[#354763] animate-bounce" style={{ animationDelay: '0ms' }} />
+                                    <div className="w-2 h-2 rounded-full bg-[#354763] animate-bounce" style={{ animationDelay: '150ms' }} />
+                                    <div className="w-2 h-2 rounded-full bg-[#354763] animate-bounce" style={{ animationDelay: '300ms' }} />
+                                </div>
+                            </div>
+
+                            {/* Tiendanube Logo */}
+                            <div className="w-24 h-24 bg-white rounded-2xl shadow-xl flex items-center justify-center p-4 border border-[#354763]/10">
+                                <img src="/tiendanube.svg" alt="Tiendanube" className="w-12 h-12 object-contain" />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <h2 className="text-2xl font-black text-[#354763] tracking-tight">Preparando tu carrito...</h2>
+                            <p className="text-slate-500 font-medium leading-relaxed max-w-md mx-auto">
+                                Te estamos redirigiendo a Tiendanube para que puedas cargar tus datos de envío y realizar el pago de forma segura.
+                            </p>
+                        </div>
                     </div>
                 </div>
             )}
@@ -33,8 +55,8 @@ export const PriceDisplay = () => {
                 <div className="space-y-4 mb-8">
                     <div className="bg-white/40 p-4 rounded-xl space-y-4 border border-[#354763]/10 shadow-inner">
                         <div className="flex justify-between items-center group">
-                            <div className="flex flex-col">
-                                <span className="text-[10px] font-black text-[#354763] uppercase tracking-tighter">6 Cuotas Sin Interés</span>
+                            <div className="flex flex-col gap-0.5">
+                                <span className="text-xs font-black text-[#354763] uppercase">6 Cuotas Sin Interés</span>
                                 <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Precio de Lista: ${totalPrice.toLocaleString('es-AR')}</span>
                             </div>
                             <span className="text-lg font-black text-[#354763] transition-transform group-hover:scale-105">
@@ -45,8 +67,8 @@ export const PriceDisplay = () => {
                         <div className="h-px bg-[#354763]/10 w-full" />
 
                         <div className="flex justify-between items-center group">
-                            <div className="flex flex-col">
-                                <span className="text-[10px] font-black text-[#354763] uppercase tracking-tighter">Transferencia</span>
+                            <div className="flex flex-col gap-0.5">
+                                <span className="text-xs font-black text-[#354763] uppercase">Transferencia</span>
                                 <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">10% OFF</span>
                             </div>
                             <span className="text-lg font-black text-[#354763] transition-transform group-hover:scale-105">
@@ -57,8 +79,8 @@ export const PriceDisplay = () => {
                         <div className="h-px bg-[#354763]/10 w-full" />
 
                         <div className="flex justify-between items-center group">
-                            <div className="flex flex-col">
-                                <span className="text-[10px] font-black text-[#354763] uppercase tracking-tighter">Efectivo</span>
+                            <div className="flex flex-col gap-0.5">
+                                <span className="text-xs font-black text-[#354763] uppercase">Efectivo</span>
                                 <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">15% OFF</span>
                             </div>
                             <span className="text-lg font-black text-[#354763] transition-transform group-hover:scale-105">
