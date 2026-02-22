@@ -2,23 +2,53 @@
 
 import { ModuleConfig } from '@/lib/types';
 import { useConfigStore } from '@/lib/store';
-import { useRef, useState } from 'react';
-import { Html } from '@react-three/drei';
+import { useRef, useState, useEffect } from 'react';
+import { Billboard, Text } from '@react-three/drei';
 
 const AddButton = ({ position, onClick, direction }: { position: [number, number, number], onClick: () => void, direction: string }) => {
+    const [hovered, setHovered] = useState(false);
+
+    useEffect(() => {
+        if (hovered) document.body.style.cursor = 'pointer';
+        else document.body.style.cursor = 'auto';
+        return () => { document.body.style.cursor = 'auto'; };
+    }, [hovered]);
+
     return (
-        <Html position={position} center transform>
-            <button
+        <Billboard position={position}>
+            <group
                 onClick={(e) => {
                     e.stopPropagation();
                     onClick();
                 }}
-                className="w-1.2 h-1.2 bg-[#354763] text-white rounded-full flex items-center justify-center hover:bg-[#354763]/80 shadow-sm text-[6px] font-bold leading-none cursor-pointer p-0"
-                title={`Add ${direction}`}
+                onPointerOver={(e) => {
+                    e.stopPropagation();
+                    setHovered(true);
+                }}
+                onPointerOut={(e) => {
+                    setHovered(false);
+                }}
             >
-                +
-            </button>
-        </Html>
+                <mesh>
+                    {/* Radius 0.04m = 80mm diameter */}
+                    <circleGeometry args={[0.04, 32]} />
+                    <meshBasicMaterial
+                        color={hovered ? "#2a3850" : "#354763"}
+                        transparent
+                        opacity={0.9}
+                    />
+                </mesh>
+                <Text
+                    position={[0, 0, 0.001]}
+                    fontSize={0.06}
+                    color="white"
+                    anchorX="center"
+                    anchorY="middle"
+                >
+                    +
+                </Text>
+            </group>
+        </Billboard>
     );
 };
 
