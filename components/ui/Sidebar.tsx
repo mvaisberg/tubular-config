@@ -133,6 +133,8 @@ export const Sidebar = () => {
         Math.abs(m.position.z - targetModule.position.z) < 1
     );
 
+    const is750x750 = targetModule.size.w === 750 && targetModule.size.h === 750;
+
     return (
         <div className="h-full w-[360px] bg-white shadow-2xl border-r border-[#354763]/10 p-5 overflow-y-auto flex-shrink-0 z-10">
             <div className="flex flex-col items-center mb-4 gap-2">
@@ -176,20 +178,30 @@ export const Sidebar = () => {
                                     { key: 'right', label: 'Panel Derecho' }
                                 ]
                                     .filter(panel => !(panel.key === 'left' && hasLeftNeighbor))
-                                    .map(panel => (
-                                        <label key={panel.key} className="flex items-center justify-between p-3 rounded-xl border-2 border-[#354763]/5 bg-white shadow-sm hover:border-[#354763]/20 cursor-pointer transition-all">
-                                            <span className="text-sm font-bold text-black">{panel.label}</span>
-                                            <div className="relative inline-flex items-center cursor-pointer">
-                                                <input
-                                                    type="checkbox"
-                                                    className="sr-only peer"
-                                                    checked={targetModule.hasPanel[panel.key as keyof typeof targetModule.hasPanel] as boolean}
-                                                    onChange={(e) => handleUpdate({ hasPanel: { ...targetModule.hasPanel, [panel.key]: e.target.checked } })}
-                                                />
-                                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#354763]"></div>
-                                            </div>
-                                        </label>
-                                    ))}
+                                    .map(panel => {
+                                        const isDisabled = panel.key === 'back' && is750x750;
+                                        return (
+                                            <label
+                                                key={panel.key}
+                                                className={`flex items-center justify-between p-3 rounded-xl border-2 border-[#354763]/5 bg-white shadow-sm transition-all ${isDisabled ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:border-[#354763]/20 cursor-pointer'}`}
+                                            >
+                                                <div className="flex flex-col">
+                                                    <span className="text-sm font-bold text-black">{panel.label}</span>
+                                                    {isDisabled && <span className="text-[9px] text-[#354763]/60 font-bold uppercase tracking-tight">No disponible 750x750</span>}
+                                                </div>
+                                                <div className="relative inline-flex items-center cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        className="sr-only peer"
+                                                        disabled={isDisabled}
+                                                        checked={targetModule.hasPanel[panel.key as keyof typeof targetModule.hasPanel] as boolean}
+                                                        onChange={(e) => handleUpdate({ hasPanel: { ...targetModule.hasPanel, [panel.key]: e.target.checked } })}
+                                                    />
+                                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#354763]"></div>
+                                                </div>
+                                            </label>
+                                        );
+                                    })}
                             </div>
                         </div>
                     )}

@@ -38,6 +38,7 @@ export default function Scene() {
         <div className="w-full h-full">
             <Canvas
                 shadows
+                gl={{ preserveDrawingBuffer: true }}
                 camera={{ position: [2, 2, 2], fov: 50 }}
                 onPointerMissed={() => selectModule(null)}
             >

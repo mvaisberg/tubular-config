@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { ModuleConfig, DerivedPart } from './types'
+import { ModuleConfig, DerivedPart, Dimension } from './types'
 import { createClient } from './supabase/client'
 import { generateParts } from './calculator'
 import { calculatePricing, BOMItem } from './pricing'
@@ -60,6 +60,22 @@ interface ConfigState {
     }
 }
 
+const enforceModuleConstraints = (module: ModuleConfig): ModuleConfig => {
+    const is750x750 = module.size.w === 750 && module.size.h === 750;
+
+    if (is750x750 && module.hasPanel.back) {
+        return {
+            ...module,
+            hasPanel: {
+                ...module.hasPanel,
+                back: false
+            }
+        };
+    }
+
+    return module;
+};
+
 export const useConfigStore = create<ConfigState>((set, get) => ({
     modules: [{
         id: 'initial-module',
@@ -95,7 +111,7 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
         updateModule: (id, updates) => {
             set((state) => ({
                 modules: state.modules.map((m) =>
-                    m.id === id ? { ...m, ...updates } : m
+                    m.id === id ? enforceModuleConstraints({ ...m, ...updates }) : m
                 ),
             }));
             get().actions.calculatePrice();
@@ -114,7 +130,7 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
             const updatedModules = state.modules.map(m => {
                 // If in the same column (start X is same), update width
                 if (m.position.x === currentX) {
-                    return { ...m, size: { ...m.size, w: newWidth } };
+                    return enforceModuleConstraints({ ...m, size: { ...m.size, w: newWidth as Dimension } });
                 }
                 // If after this column, shift X position
                 if (m.position.x > currentX) {
@@ -141,7 +157,7 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
             const updatedModules = state.modules.map(m => {
                 // If in the same row (start Y is same), update height
                 if (m.position.y === currentY) {
-                    return { ...m, size: { ...m.size, h: newHeight } };
+                    return enforceModuleConstraints({ ...m, size: { ...m.size, h: newHeight as Dimension } });
                 }
                 // If above this row, shift Y position
                 if (m.position.y > currentY) {
@@ -155,7 +171,7 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
         },
         updateAllModules: (updates) => {
             set((state) => ({
-                modules: state.modules.map((m) => ({ ...m, ...updates })),
+                modules: state.modules.map((m) => enforceModuleConstraints({ ...m, ...updates })),
             }));
             get().actions.calculatePrice();
         },
@@ -174,7 +190,7 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
                     size: { w: 750, h: 350, d: 350 },
                     color: 'white',
                     material: 'steel',
-                    hasPanel: { top: true, bottom: true, left: true, right: true, front: false, back: true }
+                    hasPanel: { top: true, bottom: true, left: true, right: true, front: false, back: false }
                 }],
                 selectedModuleId: null,
                 totalPrice: 0 // Will be recalculated

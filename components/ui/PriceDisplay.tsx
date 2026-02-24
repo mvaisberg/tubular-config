@@ -6,23 +6,43 @@ import { useMemo, useState } from 'react';
 export const PriceDisplay = () => {
     const modules = useConfigStore((state) => state.modules);
     const totalPrice = useConfigStore((state) => state.totalPrice);
+    const settings = useConfigStore((state) => state.settings);
     const [isRedirecting, setIsRedirecting] = useState(false);
 
     const handleCheckout = async () => {
         if (modules.length === 0) return;
         setIsRedirecting(true);
 
+        // Try to capture a thumbnail of the 3D canvas
+        let imageDataUrl = null;
+        try {
+            const canvas = document.querySelector('canvas');
+            if (canvas) {
+                imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            }
+        } catch (e) {
+            console.error("No se pudo capturar la imagen del canvas", e);
+        }
+
         try {
             const res = await fetch('/api/tiendanube/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ modules, totalPrice })
+                body: JSON.stringify({
+                    modules,
+                    totalPrice,
+                    imageDataUrl,
+                    usdExchangeRate: settings?.usd_exchange_rate || 1000
+                })
             });
             const data = await res.json();
 
             if (!res.ok) {
                 console.error("Error al procesar checkout", data.error);
-                alert("Uy, tuvimos un problema al preparar tu carrito (Avisanos por WhatsApp).");
+                if (data.details) {
+                    console.error("Detalles del error TR:", data.details);
+                }
+                alert(`Uy, tuvimos un problema al preparar tu carrito:\n\n${data.error || "Avisanos por WhatsApp."}`);
                 setIsRedirecting(false);
                 return;
             }
@@ -98,10 +118,10 @@ export const PriceDisplay = () => {
                         <div className="flex justify-between items-center group">
                             <div className="flex flex-col gap-0.5">
                                 <span className="text-xs font-black text-[#354763] uppercase">6 Cuotas Sin Interés</span>
-                                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Precio de Lista: ${totalPrice.toLocaleString('es-AR')}</span>
+                                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Precio de Lista: ${Math.round(totalPrice).toLocaleString('es-AR', { maximumFractionDigits: 0 })}</span>
                             </div>
                             <span className="text-lg font-black text-[#354763] transition-transform group-hover:scale-105">
-                                ${(totalPrice / 6).toLocaleString('es-AR', { minimumFractionDigits: 0 })}
+                                ${Math.round(totalPrice / 6).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                             </span>
                         </div>
 
@@ -113,7 +133,7 @@ export const PriceDisplay = () => {
                                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">10% OFF</span>
                             </div>
                             <span className="text-lg font-black text-[#354763] transition-transform group-hover:scale-105">
-                                ${(totalPrice * 0.9).toLocaleString('es-AR', { minimumFractionDigits: 0 })}
+                                ${Math.round(totalPrice * 0.9).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                             </span>
                         </div>
 
@@ -125,7 +145,7 @@ export const PriceDisplay = () => {
                                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">15% OFF</span>
                             </div>
                             <span className="text-lg font-black text-[#354763] transition-transform group-hover:scale-105">
-                                ${(totalPrice * 0.85).toLocaleString('es-AR', { minimumFractionDigits: 0 })}
+                                ${Math.round(totalPrice * 0.85).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                             </span>
                         </div>
                     </div>

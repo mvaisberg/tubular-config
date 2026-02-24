@@ -66,8 +66,8 @@ export const Toolbar = () => {
         const { data, error } = await supabase.from('quotes').insert([{
             client_name: 'Configuración Guardada',
             configuration: finalConfiguration,
-            total_price_ars: totalPrice,
-            total_price_usd: totalPrice / (useConfigStore.getState().settings?.usd_exchange_rate || 1000)
+            total_price_ars: Math.round(totalPrice),
+            total_price_usd: Math.round(totalPrice / (useConfigStore.getState().settings?.usd_exchange_rate || 1000))
         }]).select('id').single();
 
         setIsSaving(false);

@@ -76,16 +76,16 @@ export default function ProductsTable({ initialProducts, partsData, settings }: 
                                         </span>
                                     </td>
                                     <td className="px-6 py-5 whitespace-nowrap text-xs text-right font-bold text-black/60">
-                                        ${pricing.totalCost.toLocaleString('es-AR')}
+                                        ${Math.round(pricing.totalCost).toLocaleString('es-AR', { maximumFractionDigits: 0 })}
                                     </td>
                                     <td className="px-6 py-5 whitespace-nowrap text-xs text-right font-bold text-black/40 line-through">
-                                        ${pricing.totalPrice.toLocaleString('es-AR', { minimumFractionDigits: 0 })}
+                                        ${Math.round(pricing.totalPrice).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                                     </td>
                                     <td className="px-6 py-5 whitespace-nowrap text-xs text-right font-black text-black bg-black/5">
-                                        ${(pricing.totalPrice * 0.9).toLocaleString('es-AR', { minimumFractionDigits: 0 })}
+                                        ${Math.round(pricing.totalPrice * 0.9).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                                     </td>
                                     <td className="px-6 py-5 whitespace-nowrap text-sm text-right font-black text-white bg-blue-600 border-l border-r border-black">
-                                        ${(pricing.totalPrice * 0.8).toLocaleString('es-AR', { minimumFractionDigits: 0 })}
+                                        ${Math.round(pricing.totalPrice * 0.8).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                                     </td>
                                     <td className="px-6 py-5 whitespace-nowrap text-right align-middle">
                                         <div className="flex justify-end gap-2 items-center">
@@ -126,11 +126,11 @@ export default function ProductsTable({ initialProducts, partsData, settings }: 
                                                     </div>
                                                     <div className="bg-white p-6 border-2 border-black shadow-[4px_4px_0px_#000]">
                                                         <span className="text-[10px] font-black text-black/50 uppercase tracking-[0.2em] block mb-2 border-b border-black/20 pb-2">Utilidad Bruta</span>
-                                                        <span className="text-2xl font-black">${pricing.metrics.grossProfit.toLocaleString('es-AR', { minimumFractionDigits: 0 })}</span>
+                                                        <span className="text-2xl font-black">${Math.round(pricing.metrics.grossProfit).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
                                                     </div>
                                                     <div className="bg-white p-6 border-2 border-black shadow-[4px_4px_0px_#000]">
                                                         <span className="text-[10px] font-black text-black/50 uppercase tracking-[0.2em] block mb-2 border-b border-black/20 pb-2">Recaudación Real</span>
-                                                        <span className="text-2xl font-black text-blue-600">${pricing.metrics.realRevenue.toLocaleString('es-AR', { minimumFractionDigits: 0 })}</span>
+                                                        <span className="text-2xl font-black text-blue-600">${Math.round(pricing.metrics.realRevenue).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
                                                     </div>
                                                 </div>
 
@@ -147,11 +147,11 @@ export default function ProductsTable({ initialProducts, partsData, settings }: 
                                                         <div key={idx} className="flex justify-between items-center p-4 bg-white border-2 border-black hover:bg-black/5 transition-colors group/item">
                                                             <div className="flex flex-col">
                                                                 <span className="text-xs font-black text-black uppercase group-hover/item:text-blue-600 transition-colors">{item.name}</span>
-                                                                <span className="text-[10px] font-bold text-black/50 uppercase">${item.unitCostARS.toLocaleString('es-AR')} C/U</span>
+                                                                <span className="text-[10px] font-bold text-black/50 uppercase">${Math.round(item.unitCostARS).toLocaleString('es-AR', { maximumFractionDigits: 0 })} C/U</span>
                                                             </div>
                                                             <div className="text-right flex flex-col items-end">
                                                                 <div className="text-[10px] font-black bg-black text-white px-2 py-0.5 mb-1">x{item.quantity}</div>
-                                                                <div className="text-sm font-black text-black">${item.totalCostARS.toLocaleString('es-AR')}</div>
+                                                                <div className="text-sm font-black text-black">${Math.round(item.totalCostARS).toLocaleString('es-AR', { maximumFractionDigits: 0 })}</div>
                                                             </div>
                                                         </div>
                                                     ))}

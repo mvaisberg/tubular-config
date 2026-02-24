@@ -112,11 +112,11 @@ export function calculatePricing(
     const installment_fee = installments_6_percent * (1 + iva_percent / 100);
     const total_fee_percent = transaction_fee_real + installment_fee;
 
-    const base_price = productCost / (1 - target_margin_percent / 100);
+    const base_price = Math.round(productCost / (1 - target_margin_percent / 100));
     const price_plus_shipping = base_price + shipping_cost;
-    const final_price = price_plus_shipping / (1 - total_fee_percent / 100);
+    const final_price = Math.round(price_plus_shipping / (1 - total_fee_percent / 100));
 
-    const real_revenue = final_price * (1 - total_fee_percent / 100);
+    const real_revenue = Math.round(final_price * (1 - total_fee_percent / 100));
     const gross_profit = real_revenue - productCost - shipping_cost;
 
     const roas_break_even = gross_profit > 0 ? (final_price / gross_profit) : 0;
