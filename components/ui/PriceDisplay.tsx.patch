@@ -1,0 +1,25 @@
+--- /home/martin/Antigravity/Tubular/webapp/components/ui/PriceDisplay.tsx
++++ /home/martin/Antigravity/Tubular/webapp/components/ui/PriceDisplay.tsx
+@@ -10,7 +10,13 @@
+     const [isRedirecting, setIsRedirecting] = useState(false);
+ 
+     const handleCheckout = async () => {
+         if (modules.length === 0) return;
+         setIsRedirecting(true);
++        
++        // Try to get a thumbnail of the canvas
++        let imageDataUrl = null;
++        const canvas = document.querySelector('canvas');
++        if (canvas) {
++            imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
++        }
+ 
+         try {
+             const res = await fetch('/api/tiendanube/checkout', {
+@@ -17,7 +23,7 @@
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json' },
+-                body: JSON.stringify({ modules, totalPrice })
++                body: JSON.stringify({ modules, totalPrice, imageDataUrl })
+             });
+             const data = await res.json();

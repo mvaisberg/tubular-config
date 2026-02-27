@@ -23,9 +23,10 @@ export const Toolbar = () => {
     const toggleDimensions = useConfigStore((state) => state.actions.toggleDimensions);
 
     const toggleEnvironment = () => {
-        if (environment === 'none') setEnvironment('modern');
-        else if (environment === 'modern') setEnvironment('industrial');
-        else setEnvironment('none');
+        const envs: Array<'none' | 'env1' | 'env2'> = ['none', 'env1', 'env2'];
+        const availableEnvs = envs.filter(e => e !== environment);
+        const randomEnv = availableEnvs[Math.floor(Math.random() * availableEnvs.length)];
+        setEnvironment(randomEnv);
     };
 
     const [isSaving, setIsSaving] = useState(false);
@@ -100,7 +101,7 @@ export const Toolbar = () => {
 
     return (
         <>
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm p-4 rounded-full shadow-lg border border-gray-100 flex gap-4 items-center">
+            <div className="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md p-2 md:p-4 rounded-full shadow-2xl border border-[#354763]/10 flex gap-1.5 md:gap-4 items-center w-[95%] sm:w-auto overflow-x-auto no-scrollbar z-30 justify-start sm:justify-center">
                 {modules.length === 0 ? (
                     <button onClick={() => addModule({
                         id: crypto.randomUUID(),
@@ -112,59 +113,7 @@ export const Toolbar = () => {
                     })} className="px-4 py-2 bg-black text-white rounded-full hover:bg-black/90 font-medium">
                         Comenzar Configuración
                     </button>
-                ) : (
-                    <>
-                        <button
-                            onClick={saveConfiguration}
-                            disabled={isSaving}
-                            className="flex items-center gap-2 px-4 py-2 bg-[#354763] text-white rounded-full hover:bg-[#354763]/90 font-medium transition-colors disabled:opacity-50"
-                            title="Haz click para obtener un enlace único a este diseño"
-                        >
-                            {isSaving ? (
-                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : (
-                                <Share2 size={18} />
-                            )}
-                            Guardar configuración
-                        </button>
-
-                        {isAdmin && (
-                            <button
-                                onClick={() => setIsProductModalOpen(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-full hover:bg-black/90 font-medium transition-colors"
-                                title="Guardar como Producto"
-                            >
-                                <ShoppingBag size={18} />
-                                Guardar Producto
-                            </button>
-                        )}
-
-                        <div className="h-6 w-px bg-gray-200 mx-2" />
-                    </>
-                )}
-
-                {selectedModuleId && modules.length > 1 && (() => {
-                    const selectedModule = modules.find(m => m.id === selectedModuleId);
-                    const hasModuleAbove = selectedModule ? modules.some(m =>
-                        Math.abs(m.position.x - selectedModule.position.x) < 1 &&
-                        Math.abs(m.position.y - (selectedModule.position.y + selectedModule.size.h)) < 1 &&
-                        Math.abs(m.position.z - selectedModule.position.z) < 1
-                    ) : false;
-
-                    return (
-                        <button
-                            onClick={() => !hasModuleAbove && removeModule(selectedModuleId)}
-                            disabled={hasModuleAbove}
-                            className={`p-2 rounded-full transition-colors ${hasModuleAbove
-                                ? 'text-gray-300 cursor-not-allowed'
-                                : 'text-red-500 hover:bg-red-50'
-                                }`}
-                            title={hasModuleAbove ? "No se puede eliminar porque sostiene otro módulo" : "Eliminar módulo"}
-                        >
-                            <Trash2 size={20} />
-                        </button>
-                    );
-                })()}
+                ) : null}
 
                 <button
                     onClick={toggleEnvironment}

@@ -3,7 +3,8 @@
 import { ModuleConfig } from '@/lib/types';
 import { useConfigStore } from '@/lib/store';
 import { useRef, useState, useEffect } from 'react';
-import { Billboard, Text } from '@react-three/drei';
+import { Billboard, Text, Html } from '@react-three/drei';
+import { Trash2 } from 'lucide-react';
 
 const AddButton = ({ position, onClick, direction }: { position: [number, number, number], onClick: () => void, direction: string }) => {
     const [hovered, setHovered] = useState(false);
@@ -52,10 +53,49 @@ const AddButton = ({ position, onClick, direction }: { position: [number, number
     );
 };
 
+const DeleteButton = ({ position, onClick }: { position: [number, number, number], onClick: () => void }) => {
+    const [hovered, setHovered] = useState(false);
+
+    useEffect(() => {
+        if (hovered) document.body.style.cursor = 'pointer';
+        else document.body.style.cursor = 'auto';
+        return () => { document.body.style.cursor = 'auto'; };
+    }, [hovered]);
+
+    return (
+        <Billboard position={position}>
+            <group
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onClick();
+                }}
+                onPointerOver={(e) => {
+                    e.stopPropagation();
+                    setHovered(true);
+                }}
+                onPointerOut={(e) => {
+                    setHovered(false);
+                }}
+            >
+                <mesh>
+                    <circleGeometry args={[0.035, 32]} />
+                    <meshBasicMaterial
+                        color={hovered ? "#dc2626" : "#ef4444"}
+                    />
+                </mesh>
+                <Html center transform scale={0.06} zIndexRange={[100, 0]} style={{ pointerEvents: 'none' }}>
+                    <Trash2 size={24} color="#ffffff" />
+                </Html>
+            </group>
+        </Billboard>
+    );
+};
+
 export const ModuleHitBox = ({ module }: { module: ModuleConfig }) => {
     const selectedModuleId = useConfigStore((state) => state.selectedModuleId);
     const selectModule = useConfigStore((state) => state.actions.selectModule);
     const addModule = useConfigStore((state) => state.actions.addModule);
+    const removeModule = useConfigStore((state) => state.actions.removeModule);
     const modules = useConfigStore((state) => state.modules);
     const [hovered, setHovered] = useState(false);
 
@@ -167,7 +207,12 @@ export const ModuleHitBox = ({ module }: { module: ModuleConfig }) => {
 
     const rightPos: [number, number, number] = [((x + w) * 0.001) + 0.02, cy, frontZ];
     const leftPos: [number, number, number] = [(x * 0.001) - 0.02, cy, frontZ];
-    const topPos: [number, number, number] = [cx, ((y + h) * 0.001) + 0.02, frontZ];
+
+    // Position Top Add button based on whether Delete button is also shown
+    const showDeleteBtn = isSelected && modules.length > 1 && !hasTop;
+    // Increased separation from 0.04 to 0.055
+    const topPos: [number, number, number] = [showDeleteBtn ? cx - 0.055 : cx, ((y + h) * 0.001) + 0.02, frontZ];
+    const topPosDel: [number, number, number] = [cx + 0.055, ((y + h) * 0.001) + 0.02, frontZ];
 
     // Dimensions
     const args: [number, number, number] = [w * 0.001, h * 0.001, d * 0.001];
@@ -203,6 +248,10 @@ export const ModuleHitBox = ({ module }: { module: ModuleConfig }) => {
                     {!hasLeft && (y === 0 || hasNeighbor(-w, -h, 0)) && <AddButton position={leftPos} direction="left" onClick={() => handleAdd('left')} />}
                     {!hasTop && <AddButton position={topPos} direction="top" onClick={() => handleAdd('top')} />}
                 </>
+            )}
+
+            {showDeleteBtn && (
+                <DeleteButton position={topPosDel} onClick={() => removeModule(module.id)} />
             )}
         </group>
     );

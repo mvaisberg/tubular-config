@@ -136,7 +136,7 @@ export const Sidebar = () => {
     const is750x750 = targetModule.size.w === 750 && targetModule.size.h === 750;
 
     return (
-        <div className="h-full w-[360px] bg-white shadow-2xl border-r border-[#354763]/10 p-5 overflow-y-auto flex-shrink-0 z-10">
+        <div className="h-[45dvh] md:h-full w-full md:w-[360px] bg-white shadow-[0_-15px_40px_rgba(0,0,0,0.1)] md:shadow-2xl border-t md:border-t-0 border-r-0 md:border-r border-[#354763]/10 p-5 overflow-y-auto flex-shrink-0 z-20 relative">
             <div className="flex flex-col items-center mb-4 gap-2">
                 <img src="/brandbook/logo/logo-azul.svg" alt="Tubular" className="w-[135px] mb-1" />
             </div>

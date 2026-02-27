@@ -4,6 +4,8 @@ import { createClient } from './supabase/client'
 import { generateParts } from './calculator'
 import { calculatePricing, BOMItem } from './pricing'
 
+export type EnvironmentType = 'none' | 'env1' | 'env2';
+
 interface PartData {
     id: string
     sku: string
@@ -39,7 +41,7 @@ interface ConfigState {
     } | null;
     selectedModuleId: string | null
     cameraResetVersion: number
-    environment: 'none' | 'modern' | 'industrial'
+    environment: EnvironmentType
     showDimensions: boolean
     actions: {
         addModule: (module: ModuleConfig) => void
@@ -50,7 +52,7 @@ interface ConfigState {
         updateAllModules: (updates: Partial<ModuleConfig>) => void
         selectModule: (id: string | null) => void
         setModules: (modules: ModuleConfig[]) => void
-        setEnvironment: (env: 'none' | 'modern' | 'industrial') => void
+        setEnvironment: (env: EnvironmentType) => void
         toggleDimensions: () => void
         reset: () => void
         fetchPartsData: () => Promise<void>

@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { LayoutDashboard, Package, Settings, LogOut, FileText, ShoppingCart, Store } from "lucide-react";
+import { LayoutDashboard, Package, Settings, LogOut, FileText, ShoppingCart, Store, MessageSquare } from "lucide-react";
 
 const navItems = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { name: "Cotizaciones", href: "/admin/quotes", icon: FileText },
+    { name: "Contactos", href: "/admin/contacts", icon: MessageSquare },
     { name: "Productos", href: "/admin/products", icon: Store },
     { name: "Órdenes", href: "/admin/orders", icon: ShoppingCart },
     { name: "Parts & Costs", href: "/admin/parts", icon: Package },
@@ -49,8 +50,8 @@ export default function Sidebar() {
                             key={item.href}
                             href={item.href}
                             className={`flex items-center gap-3 px-4 py-3 text-xs uppercase tracking-widest font-bold transition-all border ${isActive
-                                    ? "bg-black text-white border-black"
-                                    : "text-black border-transparent hover:border-black"
+                                ? "bg-black text-white border-black"
+                                : "text-black border-transparent hover:border-black"
                                 }`}
                         >
                             <Icon size={14} strokeWidth={isActive ? 2.5 : 2} />

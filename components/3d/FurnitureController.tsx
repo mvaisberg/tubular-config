@@ -124,34 +124,58 @@ export const FurnitureController = () => {
                 {showDimensions && bounds && (
                     <group>
                         {/* Width line (front bottom edge) */}
-                        <mesh position={[(bounds.minX + bounds.maxX) / 2, bounds.minY + 0.01, bounds.maxZ + 0.06]} rotation={[0, 0, Math.PI / 2]}>
-                            <cylinderGeometry args={[0.002, 0.002, bounds.maxX - bounds.minX]} />
-                            <meshBasicMaterial color="#354763" />
-                        </mesh>
-                        <Billboard position={[(bounds.minX + bounds.maxX) / 2, bounds.minY + 0.01, bounds.maxZ + 0.12]}>
-                            <Text fontSize={0.05} color="#354763" outlineWidth={0.002} outlineColor="white">
+                        <Line
+                            points={[
+                                [bounds.minX, bounds.minY + 0.01, bounds.maxZ + 0.08],
+                                [bounds.maxX, bounds.minY + 0.01, bounds.maxZ + 0.08]
+                            ]}
+                            color="#354763"
+                            lineWidth={1.5}
+                        />
+                        {/* Ticks */}
+                        <Line points={[[bounds.minX, bounds.minY + 0.01, bounds.maxZ + 0.06], [bounds.minX, bounds.minY + 0.01, bounds.maxZ + 0.10]]} color="#354763" lineWidth={1.5} />
+                        <Line points={[[bounds.maxX, bounds.minY + 0.01, bounds.maxZ + 0.06], [bounds.maxX, bounds.minY + 0.01, bounds.maxZ + 0.10]]} color="#354763" lineWidth={1.5} />
+
+                        <Billboard position={[(bounds.minX + bounds.maxX) / 2, bounds.minY + 0.01, bounds.maxZ + 0.14]}>
+                            <Text fontSize={0.05} color="#354763" outlineWidth={0.003} outlineColor="white" fontWeight="bold">
                                 {bounds.width}mm
                             </Text>
                         </Billboard>
 
                         {/* Height line (left front edge) */}
-                        <mesh position={[bounds.minX - 0.06, (bounds.minY + bounds.maxY) / 2, bounds.maxZ + 0.06]}>
-                            <cylinderGeometry args={[0.002, 0.002, bounds.maxY - bounds.minY]} />
-                            <meshBasicMaterial color="#354763" />
-                        </mesh>
-                        <Billboard position={[bounds.minX - 0.12, (bounds.minY + bounds.maxY) / 2, bounds.maxZ + 0.06]}>
-                            <Text fontSize={0.05} color="#354763" outlineWidth={0.002} outlineColor="white">
+                        <Line
+                            points={[
+                                [bounds.minX - 0.08, bounds.minY, bounds.maxZ + 0.04],
+                                [bounds.minX - 0.08, bounds.maxY, bounds.maxZ + 0.04]
+                            ]}
+                            color="#354763"
+                            lineWidth={1.5}
+                        />
+                        {/* Ticks */}
+                        <Line points={[[bounds.minX - 0.06, bounds.minY, bounds.maxZ + 0.04], [bounds.minX - 0.10, bounds.minY, bounds.maxZ + 0.04]]} color="#354763" lineWidth={1.5} />
+                        <Line points={[[bounds.minX - 0.06, bounds.maxY, bounds.maxZ + 0.04], [bounds.minX - 0.10, bounds.maxY, bounds.maxZ + 0.04]]} color="#354763" lineWidth={1.5} />
+
+                        <Billboard position={[bounds.minX - 0.15, (bounds.minY + bounds.maxY) / 2, bounds.maxZ + 0.04]}>
+                            <Text fontSize={0.05} color="#354763" outlineWidth={0.003} outlineColor="white" fontWeight="bold">
                                 {bounds.height}mm
                             </Text>
                         </Billboard>
 
                         {/* Depth line (right bottom edge) */}
-                        <mesh position={[bounds.maxX + 0.06, bounds.minY + 0.01, (bounds.minZ + bounds.maxZ) / 2]} rotation={[Math.PI / 2, 0, 0]}>
-                            <cylinderGeometry args={[0.002, 0.002, bounds.maxZ - bounds.minZ]} />
-                            <meshBasicMaterial color="#354763" />
-                        </mesh>
-                        <Billboard position={[bounds.maxX + 0.12, bounds.minY + 0.01, (bounds.minZ + bounds.maxZ) / 2]}>
-                            <Text fontSize={0.05} color="#354763" outlineWidth={0.002} outlineColor="white">
+                        <Line
+                            points={[
+                                [bounds.maxX + 0.08, bounds.minY + 0.01, bounds.minZ],
+                                [bounds.maxX + 0.08, bounds.minY + 0.01, bounds.maxZ]
+                            ]}
+                            color="#354763"
+                            lineWidth={1.5}
+                        />
+                        {/* Ticks */}
+                        <Line points={[[bounds.maxX + 0.06, bounds.minY + 0.01, bounds.minZ], [bounds.maxX + 0.10, bounds.minY + 0.01, bounds.minZ]]} color="#354763" lineWidth={1.5} />
+                        <Line points={[[bounds.maxX + 0.06, bounds.minY + 0.01, bounds.maxZ], [bounds.maxX + 0.10, bounds.minY + 0.01, bounds.maxZ]]} color="#354763" lineWidth={1.5} />
+
+                        <Billboard position={[bounds.maxX + 0.15, bounds.minY + 0.01, (bounds.minZ + bounds.maxZ) / 2]}>
+                            <Text fontSize={0.05} color="#354763" outlineWidth={0.003} outlineColor="white" fontWeight="bold">
                                 {bounds.depth}mm
                             </Text>
                         </Billboard>
