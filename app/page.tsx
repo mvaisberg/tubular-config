@@ -54,7 +54,9 @@ export default function Home() {
       </Suspense>
       <div className="flex-1 relative h-[55dvh] md:h-full shrink-0 md:shrink">
         <Scene />
-        <PriceDisplay />
+        <div className="hidden md:block">
+          <PriceDisplay />
+        </div>
         <Suspense fallback={null}>
           <Toolbar />
         </Suspense>

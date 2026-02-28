@@ -3,11 +3,12 @@
 import { useState } from 'react';
 import { useConfigStore } from '@/lib/store';
 import { ModuleConfig } from '@/lib/types';
-import { Plus, Trash2, RotateCcw, Target, Save, ShoppingBag, Layout, Ruler } from 'lucide-react';
+import { Plus, Trash2, RotateCcw, Target, Save, ShoppingBag, Layout, Ruler, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useSearchParams } from 'next/navigation';
 import { SaveModal } from './SaveModal';
 import { Share2 } from 'lucide-react';
+import { useProgress } from '@react-three/drei';
 
 export const Toolbar = () => {
     const selectedModuleId = useConfigStore((state) => state.selectedModuleId);
@@ -21,6 +22,7 @@ export const Toolbar = () => {
     const setEnvironment = useConfigStore((state) => state.actions.setEnvironment);
     const showDimensions = useConfigStore((state) => state.showDimensions);
     const toggleDimensions = useConfigStore((state) => state.actions.toggleDimensions);
+    const { active, progress } = useProgress();
 
     const toggleEnvironment = () => {
         const envs: Array<'none' | 'env1' | 'env2'> = ['none', 'env1', 'env2'];
@@ -117,11 +119,12 @@ export const Toolbar = () => {
 
                 <button
                     onClick={toggleEnvironment}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${environment !== 'none' ? 'bg-[#354763] text-white shadow-md' : 'text-[#354763] hover:bg-gray-100'}`}
+                    disabled={active}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${environment !== 'none' ? 'bg-[#354763] text-white shadow-md' : 'text-[#354763] hover:bg-gray-100'} ${active ? 'opacity-70 cursor-not-allowed' : ''}`}
                     title="Cambiar Ambiente"
                 >
-                    <Layout size={18} />
-                    <span>Ambientar</span>
+                    {active ? <Loader2 className="animate-spin" size={18} /> : <Layout size={18} />}
+                    <span>{active ? 'Cargando...' : 'Ambientar'}</span>
                 </button>
 
                 <button

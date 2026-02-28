@@ -3,6 +3,7 @@
 import { useConfigStore } from '@/lib/store';
 import { ModuleConfig, ModuleMaterial, Dimension } from '@/lib/types';
 import { useMemo } from 'react';
+import { PriceDisplay } from './PriceDisplay';
 
 const MATERIAL_OPTIONS = [
     { value: 'steel', label: 'Acero' },
@@ -278,6 +279,10 @@ export const Sidebar = () => {
                         </button>
                     ))}
                 </div>
+            </div>
+
+            <div className="block md:hidden mt-8 mb-4">
+                <PriceDisplay className="w-full relative z-10" />
             </div>
         </div>
     );

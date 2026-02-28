@@ -3,7 +3,7 @@
 import { useConfigStore } from '@/lib/store';
 import { useMemo, useState } from 'react';
 
-export const PriceDisplay = () => {
+export const PriceDisplay = ({ className }: { className?: string }) => {
     const modules = useConfigStore((state) => state.modules);
     const totalPrice = useConfigStore((state) => state.totalPrice);
     const settings = useConfigStore((state) => state.settings);
@@ -107,7 +107,7 @@ export const PriceDisplay = () => {
                 </div>
             )}
 
-            <div className="absolute top-4 left-4 right-4 md:left-auto md:w-80 bg-white/95 backdrop-blur-md p-4 md:p-6 rounded-2xl shadow-xl md:shadow-2xl border border-[#354763]/10 max-h-[40vh] md:max-h-[85vh] overflow-y-auto z-10 transition-all duration-300">
+            <div className={`${className === undefined ? 'absolute top-4 left-4 right-4 md:left-auto md:w-80 max-h-[40vh] md:max-h-[85vh] overflow-y-auto z-10' : className} bg-white/95 backdrop-blur-md p-4 md:p-6 rounded-2xl shadow-xl md:shadow-2xl border border-[#354763]/10 transition-all duration-300`}>
                 <h3 className="text-sm font-bold mb-6 flex items-center justify-between text-[#354763] tracking-widest uppercase">
                     <span>Resumen</span>
                     <span className="text-[10px] bg-[#354763] text-white px-3 py-1 rounded-full font-black">
