@@ -30,6 +30,7 @@ const WoodFloor = () => {
                 map={colorMap}
                 normalMap={normalMap}
                 roughnessMap={roughnessMap}
+                envMapIntensity={0}
             />
         </mesh>
     );
@@ -59,6 +60,7 @@ const WoodFloor2 = () => {
                 map={colorMap}
                 normalMap={normalMap}
                 roughnessMap={roughnessMap}
+                envMapIntensity={0}
             />
         </mesh>
     );
@@ -88,6 +90,7 @@ const WoodFloor3 = () => {
                 map={colorMap}
                 normalMap={normalMap}
                 roughnessMap={roughnessMap}
+                envMapIntensity={0}
             />
         </mesh>
     );
@@ -114,7 +117,7 @@ export const RoomEnvironment = () => {
                         <WoodFloor />
                         <mesh position={[0, 5, -5]} receiveShadow>
                             <planeGeometry args={[50, 10]} />
-                            <meshStandardMaterial color="#ffffff" roughness={1} />
+                            <meshStandardMaterial color="#ffffff" roughness={1} envMapIntensity={0} />
                         </mesh>
                     </group>
                 );
@@ -124,7 +127,7 @@ export const RoomEnvironment = () => {
                         <WoodFloor2 />
                         <mesh position={[0, 5, -5]} receiveShadow>
                             <planeGeometry args={[50, 10]} />
-                            <meshStandardMaterial color="#eeeeee" roughness={1} />
+                            <meshStandardMaterial color="#eeeeee" roughness={1} envMapIntensity={0} />
                         </mesh>
                     </group>
                 );
@@ -134,7 +137,7 @@ export const RoomEnvironment = () => {
                         <WoodFloor3 />
                         <mesh position={[0, 5, -5]} receiveShadow>
                             <planeGeometry args={[50, 10]} />
-                            <meshStandardMaterial color="#f0f0f0" roughness={1} />
+                            <meshStandardMaterial color="#f0f0f0" roughness={1} envMapIntensity={0} />
                         </mesh>
                     </group>
                 );
@@ -159,13 +162,13 @@ export const RoomEnvironment = () => {
                 far={1}
             />
 
-            {/* Balanced ambient — just enough to fill deep shadows */}
-            <ambientLight intensity={0.4} />
+            {/* Soft ambient — just enough to fill deep shadows without washing out */}
+            <ambientLight intensity={0.3} />
 
-            {/* Key light — main shadow caster with high-res shadow map */}
+            {/* Key light — main shadow caster, moderate intensity */}
             <directionalLight
                 position={[5, 8, 5]}
-                intensity={1.5}
+                intensity={0.8}
                 castShadow
                 shadow-mapSize-width={2048}
                 shadow-mapSize-height={2048}
@@ -178,9 +181,9 @@ export const RoomEnvironment = () => {
                 shadow-bias={-0.0001}
             />
             {/* Fill light — softer, opposite side */}
-            <directionalLight position={[-4, 6, -3]} intensity={0.6} />
-            {/* Rim / top light — subtle separation from background */}
-            <directionalLight position={[0, 10, -5]} intensity={0.4} />
+            <directionalLight position={[-4, 6, -3]} intensity={0.3} />
+            {/* Rim / top light — subtle separation */}
+            <directionalLight position={[0, 10, -5]} intensity={0.2} />
         </group>
     );
 };

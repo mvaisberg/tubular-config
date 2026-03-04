@@ -66,9 +66,9 @@ export const Panel = ({ position, orientation, width, height, color = 'white' }:
         // Steel
         // Use higher metalness for shine, lower roughness for sharpness.
         // Use slightly brighter colors or ensure lighting hits them.
-        if (colorName === 'black') return { color: '#1C1C1C', opacity: 1, transparent: false, metalness: 0.1, roughness: 0.5, envMapIntensity: 0.4 };
-        if (colorName === 'white') return { color: '#FFFFFF', opacity: 1, transparent: false, metalness: 0.05, roughness: 0.4, envMapIntensity: 0.3 };
-        if (colorName === 'beige') return { color: '#a48f7a', opacity: 1, transparent: false, metalness: 0.05, roughness: 0.5, envMapIntensity: 0.4 };
+        if (colorName === 'black') return { color: '#1C1C1C', opacity: 1, transparent: false, metalness: 0.05, roughness: 0.6, envMapIntensity: 0.15 };
+        if (colorName === 'white') return { color: '#FFFFFF', opacity: 1, transparent: false, metalness: 0.02, roughness: 0.5, envMapIntensity: 0.1 };
+        if (colorName === 'beige') return { color: '#a48f7a', opacity: 1, transparent: false, metalness: 0.02, roughness: 0.6, envMapIntensity: 0.15 };
 
         // Acrylic - Make them pop more and act like tinted glass.
         if (colorName === 'transparent') return { color: '#ffffff', opacity: 1, transparent: true, metalness: 0.1, roughness: 0.05, transmission: 1.0, thickness: 0.05, ior: 1.5, clearcoat: 1.0, envMapIntensity: 0.6 };
