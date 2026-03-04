@@ -126,18 +126,22 @@ export const FurnitureController = () => {
                         {/* Width line (front bottom edge) */}
                         <Line
                             points={[
-                                [bounds.minX, bounds.minY + 0.01, bounds.maxZ + 0.08],
-                                [bounds.maxX, bounds.minY + 0.01, bounds.maxZ + 0.08]
+                                [bounds.minX, bounds.minY + 0.005, bounds.maxZ + 0.05],
+                                [bounds.maxX, bounds.minY + 0.005, bounds.maxZ + 0.05]
                             ]}
                             color="#354763"
-                            lineWidth={1.5}
+                            lineWidth={1}
                         />
-                        {/* Ticks */}
-                        <Line points={[[bounds.minX, bounds.minY + 0.01, bounds.maxZ + 0.06], [bounds.minX, bounds.minY + 0.01, bounds.maxZ + 0.10]]} color="#354763" lineWidth={1.5} />
-                        <Line points={[[bounds.maxX, bounds.minY + 0.01, bounds.maxZ + 0.06], [bounds.maxX, bounds.minY + 0.01, bounds.maxZ + 0.10]]} color="#354763" lineWidth={1.5} />
+                        <Line points={[[bounds.minX, bounds.minY + 0.005, bounds.maxZ + 0.04], [bounds.minX, bounds.minY + 0.005, bounds.maxZ + 0.06]]} color="#354763" lineWidth={1} />
+                        <Line points={[[bounds.maxX, bounds.minY + 0.005, bounds.maxZ + 0.04], [bounds.maxX, bounds.minY + 0.005, bounds.maxZ + 0.06]]} color="#354763" lineWidth={1} />
 
-                        <Billboard position={[(bounds.minX + bounds.maxX) / 2, bounds.minY + 0.01, bounds.maxZ + 0.14]}>
-                            <Text fontSize={0.05} color="#354763" outlineWidth={0.003} outlineColor="white" fontWeight="bold">
+                        <Billboard position={[(bounds.minX + bounds.maxX) / 2, bounds.minY + 0.005, bounds.maxZ + 0.08]}>
+                            {/* Background pill */}
+                            <mesh position={[0, 0, -0.001]}>
+                                <planeGeometry args={[0.08, 0.022]} />
+                                <meshBasicMaterial color="#354763" transparent opacity={0.9} />
+                            </mesh>
+                            <Text fontSize={0.015} color="#ffffff" fontWeight="bold" anchorX="center" anchorY="middle">
                                 {bounds.width}mm
                             </Text>
                         </Billboard>
@@ -145,18 +149,21 @@ export const FurnitureController = () => {
                         {/* Height line (left front edge) */}
                         <Line
                             points={[
-                                [bounds.minX - 0.08, bounds.minY, bounds.maxZ + 0.04],
-                                [bounds.minX - 0.08, bounds.maxY, bounds.maxZ + 0.04]
+                                [bounds.minX - 0.05, bounds.minY, bounds.maxZ + 0.02],
+                                [bounds.minX - 0.05, bounds.maxY, bounds.maxZ + 0.02]
                             ]}
                             color="#354763"
-                            lineWidth={1.5}
+                            lineWidth={1}
                         />
-                        {/* Ticks */}
-                        <Line points={[[bounds.minX - 0.06, bounds.minY, bounds.maxZ + 0.04], [bounds.minX - 0.10, bounds.minY, bounds.maxZ + 0.04]]} color="#354763" lineWidth={1.5} />
-                        <Line points={[[bounds.minX - 0.06, bounds.maxY, bounds.maxZ + 0.04], [bounds.minX - 0.10, bounds.maxY, bounds.maxZ + 0.04]]} color="#354763" lineWidth={1.5} />
+                        <Line points={[[bounds.minX - 0.04, bounds.minY, bounds.maxZ + 0.02], [bounds.minX - 0.06, bounds.minY, bounds.maxZ + 0.02]]} color="#354763" lineWidth={1} />
+                        <Line points={[[bounds.minX - 0.04, bounds.maxY, bounds.maxZ + 0.02], [bounds.minX - 0.06, bounds.maxY, bounds.maxZ + 0.02]]} color="#354763" lineWidth={1} />
 
-                        <Billboard position={[bounds.minX - 0.15, (bounds.minY + bounds.maxY) / 2, bounds.maxZ + 0.04]}>
-                            <Text fontSize={0.05} color="#354763" outlineWidth={0.003} outlineColor="white" fontWeight="bold">
+                        <Billboard position={[bounds.minX - 0.09, (bounds.minY + bounds.maxY) / 2, bounds.maxZ + 0.02]}>
+                            <mesh position={[0, 0, -0.001]}>
+                                <planeGeometry args={[0.07, 0.022]} />
+                                <meshBasicMaterial color="#354763" transparent opacity={0.9} />
+                            </mesh>
+                            <Text fontSize={0.015} color="#ffffff" fontWeight="bold" anchorX="center" anchorY="middle">
                                 {bounds.height}mm
                             </Text>
                         </Billboard>
@@ -164,18 +171,21 @@ export const FurnitureController = () => {
                         {/* Depth line (right bottom edge) */}
                         <Line
                             points={[
-                                [bounds.maxX + 0.08, bounds.minY + 0.01, bounds.minZ],
-                                [bounds.maxX + 0.08, bounds.minY + 0.01, bounds.maxZ]
+                                [bounds.maxX + 0.05, bounds.minY + 0.005, bounds.minZ],
+                                [bounds.maxX + 0.05, bounds.minY + 0.005, bounds.maxZ]
                             ]}
                             color="#354763"
-                            lineWidth={1.5}
+                            lineWidth={1}
                         />
-                        {/* Ticks */}
-                        <Line points={[[bounds.maxX + 0.06, bounds.minY + 0.01, bounds.minZ], [bounds.maxX + 0.10, bounds.minY + 0.01, bounds.minZ]]} color="#354763" lineWidth={1.5} />
-                        <Line points={[[bounds.maxX + 0.06, bounds.minY + 0.01, bounds.maxZ], [bounds.maxX + 0.10, bounds.minY + 0.01, bounds.maxZ]]} color="#354763" lineWidth={1.5} />
+                        <Line points={[[bounds.maxX + 0.04, bounds.minY + 0.005, bounds.minZ], [bounds.maxX + 0.06, bounds.minY + 0.005, bounds.minZ]]} color="#354763" lineWidth={1} />
+                        <Line points={[[bounds.maxX + 0.04, bounds.minY + 0.005, bounds.maxZ], [bounds.maxX + 0.06, bounds.minY + 0.005, bounds.maxZ]]} color="#354763" lineWidth={1} />
 
-                        <Billboard position={[bounds.maxX + 0.15, bounds.minY + 0.01, (bounds.minZ + bounds.maxZ) / 2]}>
-                            <Text fontSize={0.05} color="#354763" outlineWidth={0.003} outlineColor="white" fontWeight="bold">
+                        <Billboard position={[bounds.maxX + 0.09, bounds.minY + 0.005, (bounds.minZ + bounds.maxZ) / 2]}>
+                            <mesh position={[0, 0, -0.001]}>
+                                <planeGeometry args={[0.07, 0.022]} />
+                                <meshBasicMaterial color="#354763" transparent opacity={0.9} />
+                            </mesh>
+                            <Text fontSize={0.015} color="#ffffff" fontWeight="bold" anchorX="center" anchorY="middle">
                                 {bounds.depth}mm
                             </Text>
                         </Billboard>
