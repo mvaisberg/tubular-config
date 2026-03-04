@@ -63,20 +63,18 @@ export const Panel = ({ position, orientation, width, height, color = 'white' }:
 
     // Color Mapping
     const getColorParams = (colorName: string) => {
-        // Steel
-        // Use higher metalness for shine, lower roughness for sharpness.
-        // Use slightly brighter colors or ensure lighting hits them.
-        if (colorName === 'black') return { color: '#1C1C1C', opacity: 1, transparent: false, metalness: 0.05, roughness: 0.6, envMapIntensity: 0.15 };
-        if (colorName === 'white') return { color: '#FFFFFF', opacity: 1, transparent: false, metalness: 0.02, roughness: 0.5, envMapIntensity: 0.1 };
-        if (colorName === 'beige') return { color: '#a48f7a', opacity: 1, transparent: false, metalness: 0.02, roughness: 0.6, envMapIntensity: 0.15 };
+        // Steel — unlit, pure flat color (meshBasicMaterial)
+        if (colorName === 'black') return { color: '#1C1C1C', isAcrylic: false };
+        if (colorName === 'white') return { color: '#FAFAFA', isAcrylic: false };
+        if (colorName === 'beige') return { color: '#a48f7a', isAcrylic: false };
 
-        // Acrylic - Make them pop more and act like tinted glass.
-        if (colorName === 'transparent') return { color: '#ffffff', opacity: 1, transparent: true, metalness: 0.1, roughness: 0.05, transmission: 1.0, thickness: 0.05, ior: 1.5, clearcoat: 1.0, envMapIntensity: 0.6 };
-        if (colorName === 'orange_translucent') return { color: '#FF5500', opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5, envMapIntensity: 0.6 };
-        if (colorName === 'blue_translucent') return { color: '#0044FF', opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5, envMapIntensity: 0.6 };
-        if (colorName === 'green_translucent') return { color: '#00D12D', opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5, envMapIntensity: 0.6 };
+        // Acrylic — lit with transmission (meshPhysicalMaterial)
+        if (colorName === 'transparent') return { color: '#ffffff', isAcrylic: true, opacity: 1, transparent: true, metalness: 0.1, roughness: 0.05, transmission: 1.0, thickness: 0.05, ior: 1.5, clearcoat: 1.0, envMapIntensity: 0.6 };
+        if (colorName === 'orange_translucent') return { color: '#FF5500', isAcrylic: true, opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5, envMapIntensity: 0.6 };
+        if (colorName === 'blue_translucent') return { color: '#0044FF', isAcrylic: true, opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5, envMapIntensity: 0.6 };
+        if (colorName === 'green_translucent') return { color: '#00D12D', isAcrylic: true, opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5, envMapIntensity: 0.6 };
 
-        return { color: colorName, opacity: 1, transparent: false, metalness: 0.5, roughness: 0.4, envMapIntensity: 0.4 };
+        return { color: colorName, isAcrylic: false };
     };
 
     const params = getColorParams(color);
@@ -84,18 +82,22 @@ export const Panel = ({ position, orientation, width, height, color = 'white' }:
     return (
         <mesh position={offset as [number, number, number]} castShadow receiveShadow>
             <boxGeometry args={args} />
-            <meshPhysicalMaterial
-                color={params.color}
-                metalness={params.metalness}
-                roughness={params.roughness}
-                transparent={params.transparent}
-                opacity={params.opacity}
-                transmission={params.transmission || 0}
-                thickness={params.thickness || 0}
-                ior={params.ior || 1.5}
-                clearcoat={params.clearcoat || 0}
-                envMapIntensity={params.envMapIntensity || 0.5}
-            />
+            {params.isAcrylic ? (
+                <meshPhysicalMaterial
+                    color={params.color}
+                    metalness={params.metalness}
+                    roughness={params.roughness}
+                    transparent={params.transparent}
+                    opacity={params.opacity}
+                    transmission={params.transmission || 0}
+                    thickness={params.thickness || 0}
+                    ior={params.ior || 1.5}
+                    clearcoat={params.clearcoat || 0}
+                    envMapIntensity={params.envMapIntensity || 0.5}
+                />
+            ) : (
+                <meshBasicMaterial color={params.color} />
+            )}
         </mesh>
     );
 };
