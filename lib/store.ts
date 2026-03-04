@@ -4,7 +4,7 @@ import { createClient } from './supabase/client'
 import { generateParts } from './calculator'
 import { calculatePricing, BOMItem } from './pricing'
 
-export type EnvironmentType = 'none' | 'env1' | 'env2';
+export type EnvironmentType = 'none' | 'env1' | 'env2' | 'env3';
 
 interface PartData {
     id: string
@@ -43,6 +43,7 @@ interface ConfigState {
     cameraResetVersion: number
     environment: EnvironmentType
     showDimensions: boolean
+    showAddButtons: boolean
     actions: {
         addModule: (module: ModuleConfig) => void
         removeModule: (id: string) => void
@@ -54,6 +55,7 @@ interface ConfigState {
         setModules: (modules: ModuleConfig[]) => void
         setEnvironment: (env: EnvironmentType) => void
         toggleDimensions: () => void
+        toggleAddButtons: () => void
         reset: () => void
         fetchPartsData: () => Promise<void>
         fetchSettings: () => Promise<void>
@@ -96,18 +98,20 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     selectedModuleId: null,
     cameraResetVersion: 0,
     environment: 'none',
-    showDimensions: true,
+    showDimensions: false,
+    showAddButtons: true,
     actions: {
         selectModule: (id) => set({ selectedModuleId: id }),
         triggerCameraReset: () => set((state) => ({ cameraResetVersion: state.cameraResetVersion + 1 })),
         setEnvironment: (env) => set({ environment: env }),
         toggleDimensions: () => set((state) => ({ showDimensions: !state.showDimensions })),
+        toggleAddButtons: () => set((state) => ({ showAddButtons: !state.showAddButtons })),
         setModules: (modules) => {
             set({ modules, selectedModuleId: null });
             get().actions.calculatePrice();
         },
         addModule: (module) => {
-            set((state) => ({ modules: [...state.modules, module], selectedModuleId: module.id }));
+            set((state) => ({ modules: [...state.modules, module] }));
             get().actions.calculatePrice();
         },
         updateModule: (id, updates) => {

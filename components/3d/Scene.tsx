@@ -1,7 +1,7 @@
 "use client";
 
 import { useConfigStore } from '@/lib/store';
-import { useRef, useEffect, Suspense } from 'react';
+import { useRef, useEffect, Suspense, useState } from 'react';
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { RoomEnvironment } from "./RoomEnvironment";
@@ -34,12 +34,21 @@ const CameraController = () => {
 
 export default function Scene() {
     const selectModule = useConfigStore((state) => state.actions.selectModule);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     return (
         <div className="w-full h-full">
             <Canvas
                 shadows
                 gl={{ preserveDrawingBuffer: true }}
-                camera={{ position: [2, 2, 2], fov: 50 }}
+                camera={{ position: isMobile ? [1.4, 1.4, 1.4] : [2, 2, 2], fov: 50 }}
                 onPointerMissed={() => selectModule(null)}
             >
                 <Suspense fallback={null}>

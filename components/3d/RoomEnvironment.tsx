@@ -64,6 +64,35 @@ const WoodFloor2 = () => {
     );
 };
 
+const WoodFloor3 = () => {
+    const [colorMap, normalMap, roughnessMap] = useTexture([
+        '/floor/floor3/WoodFloor052_1K-JPG_Color.jpg',
+        '/floor/floor3/WoodFloor052_1K-JPG_NormalDX.jpg',
+        '/floor/floor3/WoodFloor052_1K-JPG_Roughness.jpg'
+    ]);
+
+    useEffect(() => {
+        [colorMap, normalMap, roughnessMap].forEach((t) => {
+            t.wrapS = THREE.RepeatWrapping;
+            t.wrapT = THREE.RepeatWrapping;
+            t.repeat.set(40, 40);
+            t.needsUpdate = true;
+        });
+        colorMap.colorSpace = THREE.SRGBColorSpace;
+    }, [colorMap, normalMap, roughnessMap]);
+
+    return (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+            <planeGeometry args={[50, 50]} />
+            <meshStandardMaterial
+                map={colorMap}
+                normalMap={normalMap}
+                roughnessMap={roughnessMap}
+            />
+        </mesh>
+    );
+};
+
 export const RoomEnvironment = () => {
     const { scene } = useThree();
 
@@ -100,6 +129,16 @@ export const RoomEnvironment = () => {
                         </mesh>
                     </group>
                 );
+            case 'env3':
+                return (
+                    <group>
+                        <WoodFloor3 />
+                        <mesh position={[0, 5, -5]} receiveShadow>
+                            <planeGeometry args={[50, 10]} />
+                            <meshStandardMaterial color="#f0f0f0" roughness={1} />
+                        </mesh>
+                    </group>
+                );
             default:
                 return null;
         }
@@ -109,22 +148,15 @@ export const RoomEnvironment = () => {
         <group>
             {createRoom()}
 
-            {/* Entorno invisible para generar reflejos hiper realistas hiper cromados en los metales sin manchar el fondo simple */}
+            {/* Entorno invisible para generar reflejos realistas en los metales */}
             <Environment preset="studio" background={false} />
 
-            {/* Iluminación básica estilo catálogo con sombras */}
-            <hemisphereLight intensity={1.0} groundColor="#d0d0d0" color="#ffffff" />
-            <directionalLight
-                position={[5, 10, 5]}
-                intensity={2.0}
-                castShadow
-                shadow-mapSize={[2048, 2048]}
-                shadow-bias={-0.0001}
-            />
-            <directionalLight
-                position={[-5, 5, 2]}
-                intensity={1.0}
-            />
+            {/* Iluminación uniforme estilo catálogo — sin hotspots direccionales */}
+            <ambientLight intensity={2.5} />
+            {/* Luces suaves desde 3 ángulos para dar profundidad sin crear spotlight */}
+            <directionalLight position={[5, 8, 5]} intensity={0.4} />
+            <directionalLight position={[-5, 6, -3]} intensity={0.3} />
+            <directionalLight position={[0, 10, 0]} intensity={0.3} />
         </group>
     );
 };

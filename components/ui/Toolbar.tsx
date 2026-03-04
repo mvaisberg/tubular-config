@@ -22,10 +22,12 @@ export const Toolbar = () => {
     const setEnvironment = useConfigStore((state) => state.actions.setEnvironment);
     const showDimensions = useConfigStore((state) => state.showDimensions);
     const toggleDimensions = useConfigStore((state) => state.actions.toggleDimensions);
+    const showAddButtons = useConfigStore((state) => state.showAddButtons);
+    const toggleAddButtons = useConfigStore((state) => state.actions.toggleAddButtons);
     const { active, progress } = useProgress();
 
     const toggleEnvironment = () => {
-        const envs: Array<'none' | 'env1' | 'env2'> = ['none', 'env1', 'env2'];
+        const envs: Array<'none' | 'env1' | 'env2' | 'env3'> = ['none', 'env1', 'env2', 'env3'];
         const availableEnvs = envs.filter(e => e !== environment);
         const randomEnv = availableEnvs[Math.floor(Math.random() * availableEnvs.length)];
         setEnvironment(randomEnv);
@@ -120,11 +122,11 @@ export const Toolbar = () => {
                 <button
                     onClick={toggleEnvironment}
                     disabled={active}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${environment !== 'none' ? 'bg-[#354763] text-white shadow-md' : 'text-[#354763] hover:bg-gray-100'} ${active ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${environment !== 'none' ? 'bg-[#354763] text-white shadow-md' : 'text-[#354763] hover:bg-gray-100'} ${active ? 'opacity-50 cursor-not-allowed' : ''}`}
                     title="Cambiar Ambiente"
                 >
-                    {active ? <Loader2 className="animate-spin" size={18} /> : <Layout size={18} />}
-                    <span>{active ? 'Cargando...' : 'Ambientar'}</span>
+                    <Layout size={18} />
+                    <span>Ambientar</span>
                 </button>
 
                 <button
@@ -133,6 +135,14 @@ export const Toolbar = () => {
                     title="Mostrar Medidas"
                 >
                     <Ruler size={20} />
+                </button>
+
+                <button
+                    onClick={toggleAddButtons}
+                    className={`block md:hidden p-2 rounded-full transition-colors ${showAddButtons ? 'bg-[#354763] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+                    title="Agregar Módulos"
+                >
+                    <Plus size={20} />
                 </button>
 
                 <div className="h-6 w-px bg-gray-200 mx-2" />

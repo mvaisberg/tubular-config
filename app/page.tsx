@@ -1,8 +1,8 @@
 import Scene from "@/components/3d/Scene";
-import { PriceDisplay } from "@/components/ui/PriceDisplay";
 import { Toolbar } from "@/components/ui/Toolbar";
 import { Sidebar } from "@/components/ui/Sidebar";
 import { DataLoader } from "@/components/DataLoader";
+import { SceneLoader } from "@/components/ui/SceneLoader";
 import { Suspense } from "react";
 import { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
@@ -54,9 +54,7 @@ export default function Home() {
       </Suspense>
       <div className="flex-1 relative h-[55dvh] md:h-full shrink-0 md:shrink">
         <Scene />
-        <div className="hidden md:block">
-          <PriceDisplay />
-        </div>
+        <SceneLoader />
         <Suspense fallback={null}>
           <Toolbar />
         </Suspense>

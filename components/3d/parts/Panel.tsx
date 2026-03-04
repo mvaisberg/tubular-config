@@ -68,7 +68,7 @@ export const Panel = ({ position, orientation, width, height, color = 'white' }:
         // Use slightly brighter colors or ensure lighting hits them.
         if (colorName === 'black') return { color: '#1C1C1C', opacity: 1, transparent: false, metalness: 0.1, roughness: 0.4 }; // RAL 9011
         if (colorName === 'white') return { color: '#FFFFFF', opacity: 1, transparent: false, metalness: 0.05, roughness: 0.3 }; // RAL 9010
-        if (colorName === 'beige') return { color: '#A4957D', opacity: 1, transparent: false, metalness: 0.05, roughness: 0.4 }; // RAL 1019
+        if (colorName === 'beige') return { color: '#a48f7a', opacity: 1, transparent: false, metalness: 0.05, roughness: 0.4 };
 
         // Acrylic - Make them pop more and act like tinted glass.
         // Transmission handles the see-through part physically. Opacity provides the base color strength.

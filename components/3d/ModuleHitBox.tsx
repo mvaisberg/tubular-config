@@ -3,8 +3,8 @@
 import { ModuleConfig } from '@/lib/types';
 import { useConfigStore } from '@/lib/store';
 import { useRef, useState, useEffect } from 'react';
-import { Billboard, Text, Html } from '@react-three/drei';
-import { Trash2 } from 'lucide-react';
+import { Billboard, Html } from '@react-three/drei';
+import { Plus, Trash2 } from 'lucide-react';
 
 const AddButton = ({ position, onClick, direction }: { position: [number, number, number], onClick: () => void, direction: string }) => {
     const [hovered, setHovered] = useState(false);
@@ -17,8 +17,9 @@ const AddButton = ({ position, onClick, direction }: { position: [number, number
 
     return (
         <Billboard position={position}>
-            <group
-                onClick={(e) => {
+            {/* Single mesh: the clickable area IS the button */}
+            <mesh
+                onPointerDown={(e) => {
                     e.stopPropagation();
                     onClick();
                 }}
@@ -27,28 +28,20 @@ const AddButton = ({ position, onClick, direction }: { position: [number, number
                     setHovered(true);
                 }}
                 onPointerOut={(e) => {
+                    e.stopPropagation();
                     setHovered(false);
                 }}
             >
-                <mesh>
-                    {/* Radius 0.04m = 80mm diameter */}
-                    <circleGeometry args={[0.04, 32]} />
-                    <meshBasicMaterial
-                        color={hovered ? "#2a3850" : "#354763"}
-                        transparent
-                        opacity={0.9}
-                    />
-                </mesh>
-                <Text
-                    position={[0, 0, 0.001]}
-                    fontSize={0.06}
-                    color="white"
-                    anchorX="center"
-                    anchorY="middle"
-                >
-                    +
-                </Text>
-            </group>
+                <circleGeometry args={[0.04, 32]} />
+                <meshBasicMaterial
+                    color={hovered ? "#2a3850" : "#354763"}
+                    transparent
+                    opacity={0.9}
+                />
+            </mesh>
+            <Html center style={{ pointerEvents: 'none' }} zIndexRange={[100, 0]}>
+                <Plus size={18} color="#ffffff" strokeWidth={3} />
+            </Html>
         </Billboard>
     );
 };
@@ -64,8 +57,9 @@ const DeleteButton = ({ position, onClick }: { position: [number, number, number
 
     return (
         <Billboard position={position}>
-            <group
-                onClick={(e) => {
+            {/* Single mesh: the clickable area IS the button */}
+            <mesh
+                onPointerDown={(e) => {
                     e.stopPropagation();
                     onClick();
                 }}
@@ -74,19 +68,18 @@ const DeleteButton = ({ position, onClick }: { position: [number, number, number
                     setHovered(true);
                 }}
                 onPointerOut={(e) => {
+                    e.stopPropagation();
                     setHovered(false);
                 }}
             >
-                <mesh>
-                    <circleGeometry args={[0.035, 32]} />
-                    <meshBasicMaterial
-                        color={hovered ? "#dc2626" : "#ef4444"}
-                    />
-                </mesh>
-                <Html center transform scale={0.06} zIndexRange={[100, 0]} style={{ pointerEvents: 'none' }}>
-                    <Trash2 size={24} color="#ffffff" />
-                </Html>
-            </group>
+                <circleGeometry args={[0.04, 32]} />
+                <meshBasicMaterial
+                    color={hovered ? "#dc2626" : "#ef4444"}
+                />
+            </mesh>
+            <Html center style={{ pointerEvents: 'none' }} zIndexRange={[100, 0]}>
+                <Trash2 size={16} color="#ffffff" />
+            </Html>
         </Billboard>
     );
 };
@@ -97,7 +90,16 @@ export const ModuleHitBox = ({ module }: { module: ModuleConfig }) => {
     const addModule = useConfigStore((state) => state.actions.addModule);
     const removeModule = useConfigStore((state) => state.actions.removeModule);
     const modules = useConfigStore((state) => state.modules);
+    const showAddButtons = useConfigStore((state) => state.showAddButtons);
     const [hovered, setHovered] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     const isSelected = selectedModuleId === module.id;
 
@@ -242,7 +244,7 @@ export const ModuleHitBox = ({ module }: { module: ModuleConfig }) => {
                 />
             </mesh>
 
-            {(isSelected || hovered) && (
+            {(isMobile ? showAddButtons : (isSelected || hovered)) && (
                 <>
                     {!hasRight && (y === 0 || hasNeighbor(w, -h, 0)) && <AddButton position={rightPos} direction="right" onClick={() => handleAdd('right')} />}
                     {!hasLeft && (y === 0 || hasNeighbor(-w, -h, 0)) && <AddButton position={leftPos} direction="left" onClick={() => handleAdd('left')} />}
