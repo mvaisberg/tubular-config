@@ -66,18 +66,17 @@ export const Panel = ({ position, orientation, width, height, color = 'white' }:
         // Steel
         // Use higher metalness for shine, lower roughness for sharpness.
         // Use slightly brighter colors or ensure lighting hits them.
-        if (colorName === 'black') return { color: '#1C1C1C', opacity: 1, transparent: false, metalness: 0.1, roughness: 0.4 }; // RAL 9011
-        if (colorName === 'white') return { color: '#FFFFFF', opacity: 1, transparent: false, metalness: 0.05, roughness: 0.3 }; // RAL 9010
-        if (colorName === 'beige') return { color: '#a48f7a', opacity: 1, transparent: false, metalness: 0.05, roughness: 0.4 };
+        if (colorName === 'black') return { color: '#1C1C1C', opacity: 1, transparent: false, metalness: 0.1, roughness: 0.5, envMapIntensity: 0.4 };
+        if (colorName === 'white') return { color: '#FFFFFF', opacity: 1, transparent: false, metalness: 0.05, roughness: 0.4, envMapIntensity: 0.3 };
+        if (colorName === 'beige') return { color: '#a48f7a', opacity: 1, transparent: false, metalness: 0.05, roughness: 0.5, envMapIntensity: 0.4 };
 
         // Acrylic - Make them pop more and act like tinted glass.
-        // Transmission handles the see-through part physically. Opacity provides the base color strength.
-        if (colorName === 'transparent') return { color: '#ffffff', opacity: 1, transparent: true, metalness: 0.1, roughness: 0.05, transmission: 1.0, thickness: 0.05, ior: 1.5, clearcoat: 1.0 };
-        if (colorName === 'orange_translucent') return { color: '#FF5500', opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5 };
-        if (colorName === 'blue_translucent') return { color: '#0044FF', opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5 };
-        if (colorName === 'green_translucent') return { color: '#00D12D', opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5 };
+        if (colorName === 'transparent') return { color: '#ffffff', opacity: 1, transparent: true, metalness: 0.1, roughness: 0.05, transmission: 1.0, thickness: 0.05, ior: 1.5, clearcoat: 1.0, envMapIntensity: 0.6 };
+        if (colorName === 'orange_translucent') return { color: '#FF5500', opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5, envMapIntensity: 0.6 };
+        if (colorName === 'blue_translucent') return { color: '#0044FF', opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5, envMapIntensity: 0.6 };
+        if (colorName === 'green_translucent') return { color: '#00D12D', opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5, envMapIntensity: 0.6 };
 
-        return { color: colorName, opacity: 1, transparent: false, metalness: 0.5, roughness: 0.3 };
+        return { color: colorName, opacity: 1, transparent: false, metalness: 0.5, roughness: 0.4, envMapIntensity: 0.4 };
     };
 
     const params = getColorParams(color);
@@ -95,6 +94,7 @@ export const Panel = ({ position, orientation, width, height, color = 'white' }:
                 thickness={params.thickness || 0}
                 ior={params.ior || 1.5}
                 clearcoat={params.clearcoat || 0}
+                envMapIntensity={params.envMapIntensity || 0.5}
             />
         </mesh>
     );

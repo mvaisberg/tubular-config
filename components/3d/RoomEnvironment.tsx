@@ -3,7 +3,7 @@
 import { useThree } from '@react-three/fiber';
 import { useEffect } from 'react';
 import * as THREE from 'three';
-import { Environment, useTexture } from '@react-three/drei';
+import { Environment, useTexture, ContactShadows } from '@react-three/drei';
 import { useConfigStore } from '@/lib/store';
 
 const WoodFloor = () => {
@@ -99,7 +99,6 @@ export const RoomEnvironment = () => {
     const environmentConfig = useConfigStore((state) => state.environment);
 
     useEffect(() => {
-        // Fondo color sólido gris muy claro
         scene.background = new THREE.Color('#f5f5f5');
     }, [scene]);
 
@@ -148,15 +147,40 @@ export const RoomEnvironment = () => {
         <group>
             {createRoom()}
 
-            {/* Entorno invisible para generar reflejos realistas en los metales */}
+            {/* Environment map for realistic metallic reflections */}
             <Environment preset="studio" background={false} />
 
-            {/* Iluminación uniforme estilo catálogo — sin hotspots direccionales */}
-            <ambientLight intensity={2.5} />
-            {/* Luces suaves desde 3 ángulos para dar profundidad sin crear spotlight */}
-            <directionalLight position={[5, 8, 5]} intensity={0.4} />
-            <directionalLight position={[-5, 6, -3]} intensity={0.3} />
-            <directionalLight position={[0, 10, 0]} intensity={0.3} />
+            {/* Soft contact shadow under furniture — like Konektra's groundPlaneShadow */}
+            <ContactShadows
+                position={[0, 0.001, 0]}
+                opacity={0.4}
+                scale={10}
+                blur={2.5}
+                far={1}
+            />
+
+            {/* Balanced ambient — just enough to fill deep shadows */}
+            <ambientLight intensity={0.4} />
+
+            {/* Key light — main shadow caster with high-res shadow map */}
+            <directionalLight
+                position={[5, 8, 5]}
+                intensity={1.5}
+                castShadow
+                shadow-mapSize-width={2048}
+                shadow-mapSize-height={2048}
+                shadow-camera-near={0.1}
+                shadow-camera-far={20}
+                shadow-camera-left={-3}
+                shadow-camera-right={3}
+                shadow-camera-top={3}
+                shadow-camera-bottom={-3}
+                shadow-bias={-0.0001}
+            />
+            {/* Fill light — softer, opposite side */}
+            <directionalLight position={[-4, 6, -3]} intensity={0.6} />
+            {/* Rim / top light — subtle separation from background */}
+            <directionalLight position={[0, 10, -5]} intensity={0.4} />
         </group>
     );
 };
