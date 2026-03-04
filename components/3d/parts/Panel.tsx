@@ -70,9 +70,9 @@ export const Panel = ({ position, orientation, width, height, color = 'white' }:
 
         // Acrylic — lit with transmission (meshPhysicalMaterial)
         if (colorName === 'transparent') return { color: '#ffffff', isAcrylic: true, opacity: 1, transparent: true, metalness: 0.1, roughness: 0.05, transmission: 1.0, thickness: 0.05, ior: 1.5, clearcoat: 1.0, envMapIntensity: 0.6 };
-        if (colorName === 'orange_translucent') return { color: '#FF5500', isAcrylic: true, opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5, envMapIntensity: 0.6 };
-        if (colorName === 'blue_translucent') return { color: '#0044FF', isAcrylic: true, opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5, envMapIntensity: 0.6 };
-        if (colorName === 'green_translucent') return { color: '#00D12D', isAcrylic: true, opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5, envMapIntensity: 0.6 };
+        if (colorName === 'orange_translucent') return { color: '#E64A00', isAcrylic: true, opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5, envMapIntensity: 0.6 };
+        if (colorName === 'blue_translucent') return { color: '#0055A4', isAcrylic: true, opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5, envMapIntensity: 0.6 };
+        if (colorName === 'green_translucent') return { color: '#006B3C', isAcrylic: true, opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5, envMapIntensity: 0.6 };
 
         return { color: colorName, isAcrylic: false };
     };

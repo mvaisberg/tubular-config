@@ -16,10 +16,10 @@ const STEEL_COLORS = [
 ];
 
 const ACRYLIC_COLORS = [
-    { value: 'orange_translucent', label: 'Naranja', hex: '#FF9800', opacity: 0.5 },
+    { value: 'orange_translucent', label: 'Naranja', hex: '#E64A00', opacity: 0.5 },
     { value: 'transparent', label: 'Transparente', hex: '#E0F7FA', opacity: 0.3 },
-    { value: 'blue_translucent', label: 'Azul', hex: '#2196F3', opacity: 0.5 },
-    { value: 'green_translucent', label: 'Verde', hex: '#4CAF50', opacity: 0.5 },
+    { value: 'blue_translucent', label: 'Azul', hex: '#0055A4', opacity: 0.5 },
+    { value: 'green_translucent', label: 'Verde', hex: '#006B3C', opacity: 0.5 },
 ];
 
 export const Sidebar = () => {
