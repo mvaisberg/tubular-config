@@ -145,6 +145,16 @@ export const Toolbar = () => {
                     <Plus size={20} />
                 </button>
 
+                {isAdmin && (
+                    <button
+                        onClick={() => setIsProductModalOpen(true)}
+                        className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors"
+                        title="Guardar como Producto"
+                    >
+                        <Save size={20} />
+                    </button>
+                )}
+
                 <div className="h-6 w-px bg-gray-200 mx-2" />
 
                 <button
