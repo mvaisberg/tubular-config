@@ -274,7 +274,7 @@ export const Sidebar = () => {
                                             ]
                                                 .filter(panel => !(panel.key === 'left' && hasLeftNeighbor))
                                                 .map(panel => {
-                                                    const isDisabled = panel.key === 'back' && is750x750;
+                                                    const isDisabled = panel.key === 'back' && (is750x750 || targetModule.size.h === 200);
                                                     return (
                                                         <label
                                                             key={panel.key}
@@ -282,7 +282,9 @@ export const Sidebar = () => {
                                                         >
                                                             <div className="flex flex-col">
                                                                 <span className="text-sm font-bold text-black">{panel.label}</span>
-                                                                {isDisabled && <span className="text-[9px] text-[#354763]/60 font-bold uppercase tracking-tight">No disponible 750x750</span>}
+                                                                {isDisabled && <span className="text-[9px] text-[#354763]/60 font-bold uppercase tracking-tight">
+                                                                    {is750x750 && targetModule.size.h !== 200 ? 'No disponible 750x750' : 'No en esta medida'}
+                                                                </span>}
                                                             </div>
                                                             <div className="relative inline-flex items-center cursor-pointer">
                                                                 <input
@@ -327,7 +329,7 @@ export const Sidebar = () => {
                                         <div>
                                             <label className="block text-[10px] uppercase tracking-widest font-extrabold text-black mb-2.5 ml-1">ALTO (FILA)</label>
                                             <div className="flex gap-2">
-                                                {[350, 750].map((h) => (
+                                                {[200, 350, 750].map((h) => (
                                                     <button
                                                         key={h}
                                                         onClick={() => updateRowHeight(targetModule.id, h)}

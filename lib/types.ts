@@ -1,6 +1,6 @@
 export type Axis = 'x' | 'y' | 'z';
 
-export type Dimension = 100 | 250 | 350 | 395 | 500 | 750;
+export type Dimension = 100 | 200 | 250 | 350 | 395 | 500 | 750;
 
 export interface Coordinates {
     x: number;

@@ -66,8 +66,9 @@ interface ConfigState {
 
 const enforceModuleConstraints = (module: ModuleConfig): ModuleConfig => {
     const is750x750 = module.size.w === 750 && module.size.h === 750;
+    const isHeight200 = module.size.h === 200;
 
-    if (is750x750 && module.hasPanel.back) {
+    if ((is750x750 || isHeight200) && module.hasPanel.back) {
         return {
             ...module,
             hasPanel: {
