@@ -245,9 +245,9 @@ export const Sidebar = () => {
                                 <button
                                     key={opt.value}
                                     onClick={() => handleMaterialChange(opt.value as ModuleMaterial)}
-                                    className={`flex-1 py-2.5 px-4 cursor-pointer rounded-xl border-2 transition-all font-bold text-xs uppercase tracking-widest ${currentMaterial === opt.value
+                                    className={`flex-1 py-2 px-3 cursor-pointer rounded-xl border-2 transition-all font-bold text-xs uppercase tracking-widest ${currentMaterial === opt.value
                                         ? 'bg-[#354763] text-white border-[#354763] shadow-lg shadow-[#354763]/20'
-                                        : 'bg-white text-black/70 border-transparent hover:border-[#354763]/10 hover:bg-[#354763]/5'
+                                        : 'bg-[#f5f5f5] text-black/70 border-transparent hover:border-[#354763]/10 hover:bg-[#354763]/5'
                                         }`}
                                 >
                                     {opt.label}
@@ -265,7 +265,6 @@ export const Sidebar = () => {
                                 {/* Steel Configuration */}
                                 {currentMaterial === 'steel' && (
                                     <div className="mb-5">
-                                        <h3 className="text-sm uppercase tracking-widest font-extrabold text-black mb-3 ml-1">Paneles</h3>
                                         <div className="flex flex-col gap-2">
                                             {[
                                                 { key: 'back', label: 'Panel Trasero' },
@@ -305,7 +304,6 @@ export const Sidebar = () => {
 
                                 {/* Dimensions */}
                                 <div className="mb-5">
-                                    <h3 className="text-sm uppercase tracking-widest font-extrabold text-black mb-3 ml-1">Dimensiones</h3>
 
                                     <div className="space-y-4">
                                         <div>
@@ -315,9 +313,9 @@ export const Sidebar = () => {
                                                     <button
                                                         key={w}
                                                         onClick={() => updateColumnWidth(targetModule.id, w)}
-                                                        className={`flex-1 py-3 cursor-pointer rounded-xl border-2 transition-all font-bold text-sm ${targetModule.size.w === w
+                                                        className={`flex-1 py-2 cursor-pointer rounded-xl border-2 transition-all font-bold text-xs ${targetModule.size.w === w
                                                             ? 'bg-white border-[#354763] text-black shadow-md'
-                                                            : 'border-transparent text-black/60 hover:bg-[#354763]/5'
+                                                            : 'bg-[#f5f5f5] border-transparent text-black/60 hover:bg-[#354763]/5'
                                                             }`}
                                                     >
                                                         {w}mm
@@ -333,9 +331,9 @@ export const Sidebar = () => {
                                                     <button
                                                         key={h}
                                                         onClick={() => updateRowHeight(targetModule.id, h)}
-                                                        className={`flex-1 py-3 cursor-pointer rounded-xl border-2 transition-all font-bold text-sm ${targetModule.size.h === h
+                                                        className={`flex-1 py-2 cursor-pointer rounded-xl border-2 transition-all font-bold text-xs ${targetModule.size.h === h
                                                             ? 'bg-white border-[#354763] text-black shadow-md'
-                                                            : 'border-transparent text-black/60 hover:bg-[#354763]/5'
+                                                            : 'bg-[#f5f5f5] border-transparent text-black/60 hover:bg-[#354763]/5'
                                                             }`}
                                                     >
                                                         {h}mm
@@ -363,9 +361,9 @@ export const Sidebar = () => {
                                 <button
                                     key={col.value}
                                     onClick={() => handleColorChange(col.value)}
-                                    className={`flex items-center cursor-pointer gap-3 p-3 rounded-xl border-2 transition-all ${targetModule.color === col.value
+                                    className={`flex items-center cursor-pointer gap-2.5 p-2 rounded-xl border-2 transition-all ${targetModule.color === col.value
                                         ? 'border-[#354763] bg-white shadow-lg shadow-[#354763]/5'
-                                        : 'border-transparent hover:bg-[#354763]/5 hover:border-[#354763]/10'
+                                        : 'bg-[#f5f5f5] border-transparent hover:bg-[#354763]/5 hover:border-[#354763]/10'
                                         }`}
                                 >
                                     <div
