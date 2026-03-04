@@ -26,11 +26,8 @@ const WoodFloor = () => {
     return (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
             <planeGeometry args={[50, 50]} />
-            <meshStandardMaterial
+            <meshBasicMaterial
                 map={colorMap}
-                normalMap={normalMap}
-                roughnessMap={roughnessMap}
-                envMapIntensity={0}
             />
         </mesh>
     );
@@ -56,11 +53,8 @@ const WoodFloor2 = () => {
     return (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
             <planeGeometry args={[50, 50]} />
-            <meshStandardMaterial
+            <meshBasicMaterial
                 map={colorMap}
-                normalMap={normalMap}
-                roughnessMap={roughnessMap}
-                envMapIntensity={0}
             />
         </mesh>
     );
@@ -86,11 +80,8 @@ const WoodFloor3 = () => {
     return (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
             <planeGeometry args={[50, 50]} />
-            <meshStandardMaterial
+            <meshBasicMaterial
                 map={colorMap}
-                normalMap={normalMap}
-                roughnessMap={roughnessMap}
-                envMapIntensity={0}
             />
         </mesh>
     );
