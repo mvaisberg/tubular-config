@@ -34,6 +34,7 @@ const CameraController = () => {
 
 export default function Scene() {
     const selectModule = useConfigStore((state) => state.actions.selectModule);
+    const setShowAddButtons = useConfigStore((state) => state.actions.setShowAddButtons);
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
@@ -54,7 +55,10 @@ export default function Scene() {
                     toneMappingExposure: 1.0,
                 }}
                 camera={{ position: isMobile ? [1.1, 1.1, 1.1] : [1.4, 1.4, 1.4], fov: 50 }}
-                onPointerMissed={() => selectModule(null)}
+                onPointerMissed={() => {
+                    selectModule(null);
+                    setShowAddButtons(false);
+                }}
             >
                 <Suspense fallback={null}>
                     <RoomEnvironment />

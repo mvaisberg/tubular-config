@@ -8,10 +8,25 @@ import { useConfigStore } from "@/lib/store";
 export function DataLoader() {
     const searchParams = useSearchParams();
     const quoteId = searchParams.get("quote");
+    const configParam = searchParams.get("config");
     const supabase = createClient();
-    const setModules = useConfigStore((state) => state.actions.setModules); // Let's check if we have setModules in store
+    const setModules = useConfigStore((state) => state.actions.setModules);
 
     useEffect(() => {
+        // Load from inline base64-encoded config (used by admin order links).
+        if (configParam) {
+            try {
+                const json = JSON.parse(atob(configParam));
+                const modules = Array.isArray(json) ? json : json.modules || json.configuration;
+                if (Array.isArray(modules)) {
+                    setModules(modules);
+                }
+            } catch (e) {
+                console.error("Failed to parse config param:", e);
+            }
+            return;
+        }
+
         const loadQuoteData = async () => {
             if (!quoteId) return;
 
@@ -42,7 +57,7 @@ export function DataLoader() {
         };
 
         loadQuoteData();
-    }, [quoteId, supabase, setModules]);
+    }, [quoteId, configParam, supabase, setModules]);
 
     return null;
 }

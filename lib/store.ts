@@ -44,6 +44,7 @@ interface ConfigState {
     environment: EnvironmentType
     showDimensions: boolean
     showAddButtons: boolean
+    hasWheels: boolean
     actions: {
         addModule: (module: ModuleConfig) => void
         removeModule: (id: string) => void
@@ -56,6 +57,8 @@ interface ConfigState {
         setEnvironment: (env: EnvironmentType) => void
         toggleDimensions: () => void
         toggleAddButtons: () => void
+        setShowAddButtons: (value: boolean) => void
+        setHasWheels: (value: boolean) => void
         reset: () => void
         fetchPartsData: () => Promise<void>
         fetchSettings: () => Promise<void>
@@ -64,21 +67,48 @@ interface ConfigState {
     }
 }
 
-const enforceModuleConstraints = (module: ModuleConfig): ModuleConfig => {
-    const is750x750 = module.size.w === 750 && module.size.h === 750;
-    const isHeight200 = module.size.h === 200;
+// Available panel sizes in the parts database (width × height, checked in both orientations)
+const AVAILABLE_PANEL_SIZES: [number, number][] = [[750, 350], [350, 350]];
 
-    if ((is750x750 || isHeight200) && module.hasPanel.back) {
-        return {
-            ...module,
-            hasPanel: {
-                ...module.hasPanel,
-                back: false
-            }
-        };
+function panelSizeExists(a: number, b: number): boolean {
+    return AVAILABLE_PANEL_SIZES.some(
+        ([pw, ph]) => (a === pw && b === ph) || (a === ph && b === pw)
+    );
+}
+
+// Check which panel faces have a matching part for a given module size
+export function getAvailablePanels(w: number, h: number, d: number) {
+    return {
+        topBottom: panelSizeExists(w, d),    // XZ plane
+        leftRight: panelSizeExists(d, h),    // YZ plane
+        frontBack: panelSizeExists(w, h),    // XY plane
+    };
+}
+
+const enforceModuleConstraints = (module: ModuleConfig): ModuleConfig => {
+    const { w, h, d } = module.size;
+    const avail = getAvailablePanels(w, h, d);
+
+    const hasPanel = { ...module.hasPanel };
+
+    // Force off panels that have no matching part size
+    if (!avail.topBottom) {
+        hasPanel.top = false;
+        hasPanel.bottom = false;
+    }
+    if (!avail.leftRight) {
+        hasPanel.left = false;
+        hasPanel.right = false;
+    }
+    if (!avail.frontBack) {
+        hasPanel.front = false;
+        hasPanel.back = false;
     }
 
-    return module;
+    // Front panel is never available
+    hasPanel.front = false;
+
+    return { ...module, hasPanel };
 };
 
 export const useConfigStore = create<ConfigState>((set, get) => ({
@@ -86,7 +116,7 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
         id: 'initial-module',
         position: { x: 0, y: 0, z: 0 },
         size: { w: 750, h: 350, d: 350 },
-        color: 'white',
+        color: 'black',
         material: 'steel',
         hasPanel: { top: true, bottom: true, left: true, right: true, front: false, back: true }
     }],
@@ -101,12 +131,18 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
     environment: 'none',
     showDimensions: false,
     showAddButtons: true,
+    hasWheels: false,
     actions: {
         selectModule: (id) => set({ selectedModuleId: id }),
         triggerCameraReset: () => set((state) => ({ cameraResetVersion: state.cameraResetVersion + 1 })),
         setEnvironment: (env) => set({ environment: env }),
         toggleDimensions: () => set((state) => ({ showDimensions: !state.showDimensions })),
         toggleAddButtons: () => set((state) => ({ showAddButtons: !state.showAddButtons })),
+        setShowAddButtons: (value) => set({ showAddButtons: value }),
+        setHasWheels: (value) => {
+            set({ hasWheels: value });
+            get().actions.calculatePrice();
+        },
         setModules: (modules) => {
             set({ modules, selectedModuleId: null });
             get().actions.calculatePrice();
@@ -195,9 +231,9 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
                     id: crypto.randomUUID(),
                     position: { x: 0, y: 0, z: 0 },
                     size: { w: 750, h: 350, d: 350 },
-                    color: 'white',
+                    color: 'black',
                     material: 'steel',
-                    hasPanel: { top: true, bottom: true, left: true, right: true, front: false, back: false }
+                    hasPanel: { top: true, bottom: true, left: true, right: true, front: false, back: true }
                 }],
                 selectedModuleId: null,
                 totalPrice: 0 // Will be recalculated
@@ -236,10 +272,10 @@ export const useConfigStore = create<ConfigState>((set, get) => ({
             }
         },
         calculatePrice: () => {
-            const { modules, partsData, settings } = get();
+            const { modules, partsData, settings, hasWheels } = get();
             if (!settings) return;
 
-            const result = calculatePricing(modules, partsData, settings);
+            const result = calculatePricing(modules, partsData, settings, hasWheels);
 
             set({
                 totalCost: result.totalCost,

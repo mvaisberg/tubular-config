@@ -105,7 +105,7 @@ export const Toolbar = () => {
 
     return (
         <>
-            <div className="absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md p-2 md:p-4 rounded-full shadow-2xl border border-[#354763]/10 flex gap-1.5 md:gap-4 items-center w-[95%] sm:w-auto overflow-x-auto no-scrollbar z-30 justify-start sm:justify-center">
+            <div className="toolbar-mobile-override absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md p-2 md:p-4 rounded-full shadow-2xl border border-[#354763]/10 flex gap-1.5 md:gap-4 items-center w-[95%] sm:w-auto overflow-x-auto no-scrollbar z-30 justify-start sm:justify-center">
                 {modules.length === 0 ? (
                     <button onClick={() => addModule({
                         id: crypto.randomUUID(),

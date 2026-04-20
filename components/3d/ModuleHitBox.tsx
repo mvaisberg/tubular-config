@@ -2,85 +2,61 @@
 
 import { ModuleConfig } from '@/lib/types';
 import { useConfigStore } from '@/lib/store';
-import { useRef, useState, useEffect } from 'react';
-import { Billboard, Html } from '@react-three/drei';
+import { useState, useEffect } from 'react';
+import { Html } from '@react-three/drei';
 import { Plus, Trash2 } from 'lucide-react';
 
 const AddButton = ({ position, onClick, direction }: { position: [number, number, number], onClick: () => void, direction: string }) => {
-    const [hovered, setHovered] = useState(false);
-
-    useEffect(() => {
-        if (hovered) document.body.style.cursor = 'pointer';
-        else document.body.style.cursor = 'auto';
-        return () => { document.body.style.cursor = 'auto'; };
-    }, [hovered]);
-
     return (
-        <Billboard position={position}>
-            {/* Single mesh: the clickable area IS the button */}
-            <mesh
-                onPointerDown={(e) => {
-                    e.stopPropagation();
-                    onClick();
+        <Html position={position} center zIndexRange={[100, 0]}>
+            <button
+                onClick={(e) => { e.stopPropagation(); onClick(); }}
+                style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    background: '#354763',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                    transition: 'background 0.15s',
                 }}
-                onPointerOver={(e) => {
-                    e.stopPropagation();
-                    setHovered(true);
-                }}
-                onPointerOut={(e) => {
-                    e.stopPropagation();
-                    setHovered(false);
-                }}
+                onMouseOver={(e) => (e.currentTarget.style.background = '#2a3850')}
+                onMouseOut={(e) => (e.currentTarget.style.background = '#354763')}
             >
-                <circleGeometry args={[0.04, 32]} />
-                <meshBasicMaterial
-                    color={hovered ? "#2a3850" : "#354763"}
-                    transparent
-                    opacity={0.9}
-                />
-            </mesh>
-            <Html center style={{ pointerEvents: 'none' }} zIndexRange={[100, 0]}>
-                <Plus size={18} color="#ffffff" strokeWidth={3} />
-            </Html>
-        </Billboard>
+                <Plus size={16} color="#ffffff" strokeWidth={3} />
+            </button>
+        </Html>
     );
 };
 
 const DeleteButton = ({ position, onClick }: { position: [number, number, number], onClick: () => void }) => {
-    const [hovered, setHovered] = useState(false);
-
-    useEffect(() => {
-        if (hovered) document.body.style.cursor = 'pointer';
-        else document.body.style.cursor = 'auto';
-        return () => { document.body.style.cursor = 'auto'; };
-    }, [hovered]);
-
     return (
-        <Billboard position={position}>
-            {/* Single mesh: the clickable area IS the button */}
-            <mesh
-                onPointerDown={(e) => {
-                    e.stopPropagation();
-                    onClick();
+        <Html position={position} center zIndexRange={[100, 0]}>
+            <button
+                onClick={(e) => { e.stopPropagation(); onClick(); }}
+                style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    background: '#ef4444',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                    transition: 'background 0.15s',
                 }}
-                onPointerOver={(e) => {
-                    e.stopPropagation();
-                    setHovered(true);
-                }}
-                onPointerOut={(e) => {
-                    e.stopPropagation();
-                    setHovered(false);
-                }}
+                onMouseOver={(e) => (e.currentTarget.style.background = '#dc2626')}
+                onMouseOut={(e) => (e.currentTarget.style.background = '#ef4444')}
             >
-                <circleGeometry args={[0.04, 32]} />
-                <meshBasicMaterial
-                    color={hovered ? "#dc2626" : "#ef4444"}
-                />
-            </mesh>
-            <Html center style={{ pointerEvents: 'none' }} zIndexRange={[100, 0]}>
-                <Trash2 size={16} color="#ffffff" />
-            </Html>
-        </Billboard>
+                <Trash2 size={16} color="#ffffff" strokeWidth={2.5} />
+            </button>
+        </Html>
     );
 };
 
@@ -244,7 +220,7 @@ export const ModuleHitBox = ({ module }: { module: ModuleConfig }) => {
                 />
             </mesh>
 
-            {(isMobile ? showAddButtons : (isSelected || hovered)) && (
+            {(isMobile ? (isSelected || showAddButtons) : (isSelected || hovered)) && (
                 <>
                     {!hasRight && (y === 0 || hasNeighbor(w, -h, 0)) && <AddButton position={rightPos} direction="right" onClick={() => handleAdd('right')} />}
                     {!hasLeft && (y === 0 || hasNeighbor(-w, -h, 0)) && <AddButton position={leftPos} direction="left" onClick={() => handleAdd('left')} />}

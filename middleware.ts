@@ -66,7 +66,7 @@ export async function middleware(request: NextRequest) {
     }
 
     if (!user) {
-        return NextResponse.redirect(new URL('/admin/login', request.url))
+        return NextResponse.redirect(new URL('/configurador/admin/login', request.url))
     }
 
     return response

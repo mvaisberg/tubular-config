@@ -24,3 +24,81 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Toolbar mobile: vertical strip on the right */
+@media (max-width: 767px) {
+  .toolbar-mobile-override {
+    position: absolute !important;
+    bottom: auto !important;
+    top: 0.5rem !important;
+    right: 0.5rem !important;
+    left: auto !important;
+    transform: none !important;
+    flex-direction: column !important;
+    width: auto !important;
+    background: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    gap: 0.25rem !important;
+    overflow: visible !important;
+    border-radius: 0 !important;
+  }
+
+  .toolbar-mobile-override > button,
+  .toolbar-mobile-override > a {
+    background: none !important;
+    backdrop-filter: none !important;
+    border-radius: 50% !important;
+    width: 36px !important;
+    height: 36px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 0 !important;
+    box-shadow: none !important;
+    color: #1e314b !important;
+  }
+
+  .toolbar-mobile-override > button > span,
+  .toolbar-mobile-override > a > span {
+    display: none !important;
+  }
+
+  .toolbar-mobile-override > button > svg,
+  .toolbar-mobile-override > a > svg {
+    width: 18px !important;
+    height: 18px !important;
+  }
+
+  .toolbar-mobile-override > div.h-6 {
+    display: none !important;
+  }
+}
+
+/* PriceDisplay mobile overrides */
+.price-desktop-only {
+  display: none !important;
+}
+
+@media (min-width: 768px) {
+  .price-desktop-only {
+    display: flex !important;
+  }
+  .price-desktop-only-block {
+    display: block !important;
+  }
+}
+
+.price-desktop-only-block {
+  display: none !important;
+}
+
+@media (min-width: 768px) {
+  .price-desktop-only-block {
+    display: block !important;
+  }
+}

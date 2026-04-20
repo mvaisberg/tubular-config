@@ -35,7 +35,8 @@ export interface PricingResult {
 export function calculatePricing(
     modules: ModuleConfig[],
     partsData: any[],
-    settings: Settings
+    settings: Settings,
+    hasWheels: boolean = false
 ): PricingResult {
     const derivedParts = generateParts(modules);
     let productCost = 0; // marginable_cost
@@ -58,15 +59,18 @@ export function calculatePricing(
 
     let tubesCount = 0;
     let acrylicPanelsCount = 0;
+    let feetCount = 0;
 
     derivedParts.forEach(part => {
         let match: any | undefined;
 
         if (part.type === 'ball') {
+            if (part.hasFoot) feetCount++;
             match = partsData.find(p => p.sku === 'bola' || p.type === 'ball' || p.type === 'node');
         } else if (part.type === 'tube') {
             tubesCount++;
-            match = partsData.find(p => p.type === 'tube' && p.dimensions?.length === part.length);
+            match = partsData.find(p => p.type === 'tube' && p.dimensions?.length === part.length)
+                || partsData.find(p => p.type === 'tube' && p.sku === `tube-${part.length}`);
         } else if (part.type === 'panel') {
             if (part.material === 'acrylic') acrylicPanelsCount++;
             if (part.dimensions) {
@@ -87,13 +91,23 @@ export function calculatePricing(
 
     // ADD IMPLICIT/FIXED PARTS
     if (tubesCount > 0) {
-        const connMatch = partsData.find(p => p.type?.toLowerCase().includes('conect') || p.sku === 'CONN-INT');
+        const connMatch = partsData.find(p => p.sku === 'CONN-INT' || p.type === 'connector' || p.name?.toLowerCase().includes('conector'));
         if (connMatch) addObjToBom(connMatch.sku || connMatch.id, connMatch.name || 'Conector Interno', getCostARS(connMatch), tubesCount * 2);
     }
 
     if (acrylicPanelsCount > 0) {
-        const suppMatch = partsData.find(p => p.type?.toLowerCase().includes('soport'));
+        const suppMatch = partsData.find(p => p.sku === 'soporte' || p.name?.toLowerCase().includes('soport'));
         if (suppMatch) addObjToBom(suppMatch.sku || suppMatch.id, suppMatch.name || 'Soporte Acrílico', getCostARS(suppMatch), acrylicPanelsCount * 4);
+    }
+
+    if (feetCount > 0) {
+        if (hasWheels) {
+            const wheelMatch = partsData.find(p => p.sku === 'rueda-normal' || p.type?.toLowerCase().includes('rueda') || p.name?.toLowerCase().includes('rueda'));
+            if (wheelMatch) addObjToBom(wheelMatch.sku || wheelMatch.id, wheelMatch.name || 'Rueda', getCostARS(wheelMatch), feetCount);
+        } else {
+            const footMatch = partsData.find(p => p.sku === 'pata-plastico' || p.type?.toLowerCase().includes('pata'));
+            if (footMatch) addObjToBom(footMatch.sku || footMatch.id, footMatch.name || 'Pata', getCostARS(footMatch), feetCount);
+        }
     }
 
     const packingPart = partsData.find(p => p.sku === 'embalaje');

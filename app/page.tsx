@@ -47,19 +47,29 @@ export async function generateMetadata({ searchParams }: { searchParams: { quote
 }
 
 export default function Home() {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tubular.com.ar';
   return (
-    <div className="flex flex-col md:flex-row h-[100dvh] w-full bg-white overflow-hidden">
+    <div className="flex flex-col h-[100dvh] w-full bg-white overflow-hidden">
+      {/* Top nav bar */}
+      <div className="flex items-center px-4 py-2 bg-white border-b border-gray-100 shrink-0 z-50">
+        <a href={siteUrl} className="flex items-center gap-1 text-xs uppercase tracking-wider text-gray-500 hover:text-gray-900 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+          Volver a la tienda
+        </a>
+      </div>
       <Suspense fallback={null}>
         <DataLoader />
       </Suspense>
-      <div className="flex-1 relative h-[55dvh] md:h-full shrink-0 md:shrink">
-        <Scene />
-        <SceneLoader />
-        <Suspense fallback={null}>
-          <Toolbar />
-        </Suspense>
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+        <div className="flex-1 relative h-[40dvh] md:h-full shrink-0 md:shrink">
+          <Scene />
+          <SceneLoader />
+          <Suspense fallback={null}>
+            <Toolbar />
+          </Suspense>
+        </div>
+        <Sidebar />
       </div>
-      <Sidebar />
     </div>
   );
 }
