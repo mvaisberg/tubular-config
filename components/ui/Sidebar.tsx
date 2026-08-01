@@ -389,24 +389,27 @@ export const Sidebar = () => {
                     <div className="mb-4">
                         <h3 className="text-sm uppercase tracking-widest font-extrabold text-black mb-4 ml-1">Base</h3>
                         <div className="flex gap-2">
-                            <button
-                                onClick={() => setHasWheels(false)}
-                                className={`flex-1 py-2 px-3 rounded-xl border-2 transition-all font-bold text-xs uppercase tracking-widest ${!hasWheels
-                                    ? 'bg-[#354763] text-white border-[#354763] shadow-lg shadow-[#354763]/20 cursor-pointer'
-                                    : 'bg-[#f5f5f5] text-black/70 border-transparent hover:border-[#354763]/10 hover:bg-[#354763]/5 cursor-pointer'
-                                    }`}
-                            >
-                                Patas
-                            </button>
-                            <button
-                                onClick={() => setHasWheels(true)}
-                                className={`flex-1 py-2 px-3 rounded-xl border-2 transition-all font-bold text-xs uppercase tracking-widest ${hasWheels
-                                    ? 'bg-[#354763] text-white border-[#354763] shadow-lg shadow-[#354763]/20 cursor-pointer'
-                                    : 'bg-[#f5f5f5] text-black/70 border-transparent hover:border-[#354763]/10 hover:bg-[#354763]/5 cursor-pointer'
-                                    }`}
-                            >
-                                Ruedas
-                            </button>
+                            {[
+                                { wheels: false, label: 'Patas', img: '/configurador/base-styles/patas.png' },
+                                { wheels: true, label: 'Ruedas', img: '/configurador/base-styles/ruedas.png' },
+                            ].map(opt => {
+                                const isSelected = hasWheels === opt.wheels;
+                                return (
+                                    <button
+                                        key={opt.label}
+                                        type="button"
+                                        onClick={() => setHasWheels(opt.wheels)}
+                                        className={`flex-1 flex flex-col items-center gap-1.5 p-2 rounded-xl border-2 transition-all cursor-pointer ${isSelected
+                                            ? 'border-[#354763] bg-white shadow-lg shadow-[#354763]/10'
+                                            : 'border-transparent bg-[#f5f5f5] hover:bg-[#354763]/5 hover:border-[#354763]/10'
+                                            }`}
+                                        title={opt.label}
+                                    >
+                                        <img src={opt.img} alt={opt.label} className="w-[53px] h-[53px] rounded-lg" />
+                                        <span className="text-[10px] font-bold text-[#354763] text-center leading-tight">{opt.label}</span>
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
