@@ -35,21 +35,34 @@ export const Ball = ({ position, hasFoot, useWheel }: { position: [number, numbe
             )}
             {hasFoot && useWheel && (
                 <group position={[0, -0.0125, 0]}>
-                    {/* Chrome stem from ball to caster housing */}
-                    <mesh position={[0, -0.008, 0]} castShadow receiveShadow>
-                        <cylinderGeometry args={[0.006, 0.006, 0.016, 16]} />
+                    {/* Chrome stem from ball to caster hood */}
+                    <mesh position={[0, -0.007, 0]} castShadow receiveShadow>
+                        <cylinderGeometry args={[0.006, 0.006, 0.014, 16]} />
                         <meshPhysicalMaterial color="#d9d9d9" metalness={1.0} roughness={0.18} clearcoat={0.3} />
                     </mesh>
-                    {/* Caster housing (black cylindrical body) */}
-                    <mesh position={[0, -0.022, 0]} castShadow receiveShadow>
-                        <cylinderGeometry args={[0.02, 0.02, 0.012, 32]} />
-                        <meshStandardMaterial color="#1a1a1a" roughness={0.5} metalness={0.2} />
-                    </mesh>
-                    {/* Wheel tread (thicker torus/cylinder lying on side at the bottom) */}
-                    <mesh position={[0, -0.034, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow receiveShadow>
-                        <cylinderGeometry args={[0.018, 0.018, 0.022, 32]} />
-                        <meshStandardMaterial color="#0f0f0f" roughness={0.7} metalness={0.1} />
-                    </mesh>
+                    {/* USM caster: capucha cromada (domo + faldón) que cubre la mitad
+                        superior de la rueda; la rueda negra asoma por debajo.
+                        Leve offset horizontal para el look de rueda giratoria (trail). */}
+                    {/* Swivel del caster: giro que deja la cara redonda de la rueda
+                        mirando hacia la cámara (no el canto) */}
+                    <group rotation={[0, Math.PI * 0.38, 0]}>
+                        {/* Dome (flattened top hemisphere) */}
+                        <mesh position={[0, -0.022, 0]} scale={[1, 0.65, 1]} castShadow receiveShadow>
+                            <sphereGeometry args={[0.021, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
+                            <meshPhysicalMaterial color="#d9d9d9" metalness={1.0} roughness={0.15} clearcoat={0.3} clearcoatRoughness={0.1} envMapIntensity={1.2} side={2} />
+                        </mesh>
+                        {/* Skirt (short cylindrical band under the dome) */}
+                        <mesh position={[0, -0.027, 0]} castShadow receiveShadow>
+                            <cylinderGeometry args={[0.021, 0.021, 0.010, 32, 1, true]} />
+                            <meshPhysicalMaterial color="#d9d9d9" metalness={1.0} roughness={0.15} clearcoat={0.3} clearcoatRoughness={0.1} envMapIntensity={1.2} side={2} />
+                        </mesh>
+                        {/* Black wheel: axle offset from the stem (swivel trail) so it peeks
+                            out from under the hood, lower half clearly visible */}
+                        <mesh position={[0, -0.034, 0.009]} rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow>
+                            <cylinderGeometry args={[0.020, 0.020, 0.016, 32]} />
+                            <meshStandardMaterial color="#111111" roughness={0.6} metalness={0.1} />
+                        </mesh>
+                    </group>
                 </group>
             )}
         </group>
