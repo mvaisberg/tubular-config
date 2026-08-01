@@ -154,7 +154,7 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
             <div className="flex justify-between items-center mb-6">
                 <button
                     onClick={() => setIsCreating(true)}
-                    className="flex items-center gap-2 bg-black text-white px-4 py-3 text-xs font-black uppercase tracking-widest hover:bg-blue-600 transition-colors shadow-[4px_4px_0px_#000]"
+                    className="flex items-center gap-2 bg-gray-900 text-white px-4 py-3 text-xs font-semibold tracking-normal hover:bg-indigo-600 transition-colors shadow-sm"
                 >
                     <Plus size={14} strokeWidth={2.5} />
                     NUEVA PIEZA
@@ -163,31 +163,31 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
 
             {isCreating && (
                 <div className="fixed inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                    <div className="bg-white border-2 border-black p-8 max-w-lg w-full shadow-[8px_8px_0px_#000]">
-                        <h3 className="text-2xl font-black uppercase tracking-tighter mb-6 border-b-2 border-black pb-2 text-black">Cear Pieza</h3>
+                    <div className="bg-white border border-gray-200 p-8 max-w-lg w-full shadow-sm">
+                        <h3 className="text-2xl font-semibold tracking-tighter mb-6 border-b border-gray-200 pb-2 text-gray-900">Cear Pieza</h3>
                         <div className="space-y-4">
                             <div className="group">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-black mb-1 block group-focus-within:text-blue-600 transition-colors">SKU</label>
+                                <label className="text-[10px] font-semibold tracking-normal text-gray-900 mb-1 block group-focus-within:text-indigo-600 transition-colors">SKU</label>
                                 <input
                                     placeholder="SKU-XXXX"
-                                    className="w-full border-2 border-black p-2 rounded-none focus:outline-none focus:border-blue-600 bg-white text-black font-bold uppercase transition-colors"
+                                    className="w-full border border-gray-200 p-2 rounded-none focus:outline-none focus:border-indigo-500 bg-white text-gray-900 font-bold transition-colors"
                                     value={createForm.sku}
                                     onChange={e => handleCreateChange('sku', e.target.value)}
                                 />
                             </div>
                             <div className="group">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-black mb-1 block group-focus-within:text-blue-600 transition-colors">Nombre</label>
+                                <label className="text-[10px] font-semibold tracking-normal text-gray-900 mb-1 block group-focus-within:text-indigo-600 transition-colors">Nombre</label>
                                 <input
                                     placeholder="Nombre de la Pieza"
-                                    className="w-full border-2 border-black p-2 rounded-none focus:outline-none focus:border-blue-600 bg-white text-black font-bold uppercase transition-colors"
+                                    className="w-full border border-gray-200 p-2 rounded-none focus:outline-none focus:border-indigo-500 bg-white text-gray-900 font-bold transition-colors"
                                     value={createForm.name}
                                     onChange={e => handleCreateChange('name', e.target.value)}
                                 />
                             </div>
                             <div className="group">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-black mb-1 block group-focus-within:text-blue-600 transition-colors">Tipo</label>
+                                <label className="text-[10px] font-semibold tracking-normal text-gray-900 mb-1 block group-focus-within:text-indigo-600 transition-colors">Tipo</label>
                                 <select
-                                    className="w-full border-2 border-black p-2 rounded-none focus:outline-none focus:border-blue-600 bg-white text-black font-bold uppercase transition-colors"
+                                    className="w-full border border-gray-200 p-2 rounded-none focus:outline-none focus:border-indigo-500 bg-white text-gray-900 font-bold transition-colors"
                                     value={createForm.type}
                                     onChange={e => handleCreateChange('type', e.target.value)}
                                 >
@@ -199,20 +199,20 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="group">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-black mb-1 block group-focus-within:text-blue-600 transition-colors">Precio ARS</label>
+                                    <label className="text-[10px] font-semibold tracking-normal text-gray-900 mb-1 block group-focus-within:text-indigo-600 transition-colors">Precio ARS</label>
                                     <input
                                         type="number" step="0.01" placeholder="ARS"
-                                        className="w-full border-2 border-black p-2 rounded-none focus:outline-none focus:border-blue-600 bg-white text-black font-black uppercase disabled:opacity-30 disabled:border-black/30 transition-colors"
+                                        className="w-full border border-gray-200 p-2 rounded-none focus:outline-none focus:border-indigo-500 bg-white text-gray-900 font-semibold disabled:opacity-30 disabled:border-gray-200/30 transition-colors"
                                         value={createForm.price_ars}
                                         onChange={e => handleCreateChange('price_ars', e.target.value)}
                                         disabled={!!createForm.price_usd}
                                     />
                                 </div>
                                 <div className="group">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-black mb-1 block group-focus-within:text-blue-600 transition-colors">Precio USD</label>
+                                    <label className="text-[10px] font-semibold tracking-normal text-gray-900 mb-1 block group-focus-within:text-indigo-600 transition-colors">Precio USD</label>
                                     <input
                                         type="number" step="0.01" placeholder="USD"
-                                        className="w-full border-2 border-black p-2 rounded-none focus:outline-none focus:border-blue-600 bg-white text-black font-black uppercase disabled:opacity-30 disabled:border-black/30 transition-colors"
+                                        className="w-full border border-gray-200 p-2 rounded-none focus:outline-none focus:border-indigo-500 bg-white text-gray-900 font-semibold disabled:opacity-30 disabled:border-gray-200/30 transition-colors"
                                         value={createForm.price_usd}
                                         onChange={e => handleCreateChange('price_usd', e.target.value)}
                                         disabled={!!createForm.price_ars}
@@ -221,11 +221,11 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
                             </div>
 
                             <div>
-                                <label className="text-[10px] font-black uppercase tracking-widest text-black mb-1 block">Imagen</label>
+                                <label className="text-[10px] font-semibold tracking-normal text-gray-900 mb-1 block">Imagen</label>
                                 {createForm.image_url ? (
                                     <div className="relative w-24 h-24 mb-2 group/img">
-                                        <img src={createForm.image_url} alt="Preview" className="w-full h-full object-cover border-2 border-black" />
-                                        <button onClick={() => handleCreateChange('image_url', '')} className="absolute -top-3 -right-3 bg-red-600 text-white rounded-none p-2 border-2 border-black opacity-0 group-hover/img:opacity-100 transition-opacity transform hover:scale-110"><X size={14} strokeWidth={3} /></button>
+                                        <img src={createForm.image_url} alt="Preview" className="w-full h-full object-cover border border-gray-200" />
+                                        <button onClick={() => handleCreateChange('image_url', '')} className="absolute -top-3 -right-3 bg-red-600 text-white rounded-none p-2 border border-gray-200 opacity-0 group-hover/img:opacity-100 transition-opacity transform hover:scale-110"><X size={14} strokeWidth={3} /></button>
                                     </div>
                                 ) : (
                                     <input
@@ -233,45 +233,45 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
                                         accept="image/*"
                                         onChange={(e) => handleImageUpload(e, false)}
                                         disabled={uploadingImage}
-                                        className="w-full border-2 border-black p-2 text-xs font-bold uppercase rounded-none file:mr-4 file:py-2 file:px-4 file:border-0 file:text-xs file:font-black file:uppercase file:bg-black file:text-white hover:file:bg-blue-600 file:transition-colors file:cursor-pointer disabled:opacity-50"
+                                        className="w-full border border-gray-200 p-2 text-xs font-bold rounded-none file:mr-4 file:py-2 file:px-4 file:border-0 file:text-xs file:font-semibold file:file:bg-black file:text-white hover:file:bg-indigo-600 file:transition-colors file:cursor-pointer disabled:opacity-50"
                                     />
                                 )}
                             </div>
 
                         </div>
-                        <div className="flex justify-end gap-4 mt-8 pt-4 border-t-2 border-black">
-                            <button onClick={() => setIsCreating(false)} className="px-6 py-3 text-xs font-black uppercase tracking-widest text-black border-2 border-transparent hover:border-black transition-colors">CANCELAR</button>
-                            <button onClick={handleCreate} disabled={uploadingImage} className="px-6 py-3 bg-blue-600 text-white text-xs font-black uppercase tracking-widest hover:bg-black transition-colors disabled:opacity-50 shadow-[4px_4px_0px_#000]">CREAR PIEZA</button>
+                        <div className="flex justify-end gap-4 mt-8 pt-4 border-t border-gray-200">
+                            <button onClick={() => setIsCreating(false)} className="px-6 py-3 text-xs font-semibold tracking-normal text-gray-900 border-2 border-transparent hover:border-gray-300 transition-colors">CANCELAR</button>
+                            <button onClick={handleCreate} disabled={uploadingImage} className="px-6 py-3 bg-indigo-600 text-white text-xs font-semibold tracking-normal hover:bg-black transition-colors disabled:opacity-50 shadow-sm">CREAR PIEZA</button>
                         </div>
                     </div>
                 </div>
             )}
 
-            <div className="overflow-x-auto bg-white border border-black shadow-[8px_8px_0px_#000]">
-                <table className="min-w-full divide-y divide-black">
+            <div className="overflow-x-auto bg-white border border-gray-200 shadow-sm">
+                <table className="min-w-full divide-y divide-gray-100">
                     <thead className="bg-black">
                         <tr>
-                            <th className="px-6 py-4 text-left text-[10px] font-black text-white uppercase tracking-[0.2em]">IMG</th>
-                            <th className="px-6 py-4 text-left text-[10px] font-black text-white uppercase tracking-[0.2em]">SKU</th>
-                            <th className="px-6 py-4 text-left text-[10px] font-black text-white uppercase tracking-[0.2em]">NOMBRE</th>
-                            <th className="px-6 py-4 text-left text-[10px] font-black text-white uppercase tracking-[0.2em]">TIPO</th>
-                            <th className="px-6 py-4 text-right text-[10px] font-black text-white uppercase tracking-[0.2em]">ARS</th>
-                            <th className="px-6 py-4 text-right text-[10px] font-black text-white uppercase tracking-[0.2em]">USD</th>
-                            <th className="px-6 py-4 text-right text-[10px] font-black text-white uppercase tracking-[0.2em] w-24">ACT</th>
+                            <th className="px-6 py-4 text-left text-[10px] font-semibold text-white tracking-normal">IMG</th>
+                            <th className="px-6 py-4 text-left text-[10px] font-semibold text-white tracking-normal">SKU</th>
+                            <th className="px-6 py-4 text-left text-[10px] font-semibold text-white tracking-normal">NOMBRE</th>
+                            <th className="px-6 py-4 text-left text-[10px] font-semibold text-white tracking-normal">TIPO</th>
+                            <th className="px-6 py-4 text-right text-[10px] font-semibold text-white tracking-normal">ARS</th>
+                            <th className="px-6 py-4 text-right text-[10px] font-semibold text-white tracking-normal">USD</th>
+                            <th className="px-6 py-4 text-right text-[10px] font-semibold text-white tracking-normal w-24">ACT</th>
                         </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-black/20">
+                    <tbody className="bg-white divide-y divide-gray-100">
                         {parts.map((part) => {
                             const isEditing = editingId === part.id;
                             return (
-                                <tr key={part.id} className="hover:bg-black/5 transition-colors group">
+                                <tr key={part.id} className="hover:bg-gray-50 transition-colors group">
                                     <td className="px-6 py-3 whitespace-nowrap">
                                         {isEditing ? (
                                             <div>
                                                 {editForm.image_url ? (
                                                     <div className="relative w-12 h-12">
-                                                        <img src={editForm.image_url} alt="Thumb" className="w-full h-full object-cover border border-black shadow-[2px_2px_0px_#000]" />
-                                                        <button onClick={() => handleChange('image_url', '')} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-none p-1 border border-black"><X size={10} strokeWidth={3} /></button>
+                                                        <img src={editForm.image_url} alt="Thumb" className="w-full h-full object-cover border border-gray-200 shadow-sm" />
+                                                        <button onClick={() => handleChange('image_url', '')} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-none p-1 border border-gray-200"><X size={10} strokeWidth={3} /></button>
                                                     </div>
                                                 ) : (
                                                     <div className="flex items-center">
@@ -282,31 +282,31 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
                                                             onChange={(e) => handleImageUpload(e, true)}
                                                             className="hidden"
                                                         />
-                                                        <label htmlFor={`file-${part.id}`} className="cursor-pointer text-black hover:text-blue-600 p-2 border border-black shadow-[2px_2px_0px_#000] transition-colors"><ImageIcon size={16} strokeWidth={2} /></label>
+                                                        <label htmlFor={`file-${part.id}`} className="cursor-pointer text-gray-900 hover:text-indigo-600 p-2 border border-gray-200 shadow-sm transition-colors"><ImageIcon size={16} strokeWidth={2} /></label>
                                                     </div>
                                                 )}
                                             </div>
                                         ) : (
                                             part.image_url
-                                                ? <img src={part.image_url} alt={part.name} className="w-12 h-12 object-cover border border-black shadow-[2px_2px_0px_#000] grayscale group-hover:grayscale-0 transition-all duration-300" />
-                                                : <div className="w-12 h-12 bg-black/5 border border-black/20 flex flex-col items-center justify-center text-black/20 text-[8px] font-black uppercase"><ImageIcon size={14} className="mb-1 opacity-50" /> N/A</div>
+                                                ? <img src={part.image_url} alt={part.name} className="w-12 h-12 object-cover border border-gray-200 shadow-sm grayscale group-hover:grayscale-0 transition-all duration-300" />
+                                                : <div className="w-12 h-12 bg-gray-50 border border-gray-200/20 flex flex-col items-center justify-center text-gray-900/20 text-[8px] font-semibold"><ImageIcon size={14} className="mb-1 opacity-50" /> N/A</div>
                                         )}
                                     </td>
-                                    <td className="px-6 py-3 whitespace-nowrap text-xs font-black text-black">
-                                        {isEditing ? <input value={editForm.sku || ''} onChange={(e) => handleChange('sku', e.target.value)} className="w-full border-b-2 border-black focus:border-blue-600 outline-none p-1 font-black bg-transparent uppercase" /> : part.sku}
+                                    <td className="px-6 py-3 whitespace-nowrap text-xs font-semibold text-gray-900">
+                                        {isEditing ? <input value={editForm.sku || ''} onChange={(e) => handleChange('sku', e.target.value)} className="w-full border-b border-gray-200 focus:border-indigo-500 outline-none p-1 font-semibold bg-transparent" /> : part.sku}
                                     </td>
-                                    <td className="px-6 py-3 whitespace-nowrap text-xs font-bold text-black uppercase">
+                                    <td className="px-6 py-3 whitespace-nowrap text-xs font-bold text-gray-900">
                                         {isEditing ? (
                                             <input
                                                 value={editForm.name || ''}
                                                 onChange={(e) => handleChange('name', e.target.value)}
-                                                className="w-full border-b-2 border-black focus:border-blue-600 outline-none p-1 font-bold bg-transparent uppercase"
+                                                className="w-full border-b border-gray-200 focus:border-indigo-500 outline-none p-1 font-bold bg-transparent"
                                             />
                                         ) : part.name}
                                     </td>
-                                    <td className="px-6 py-3 whitespace-nowrap text-xs text-black/60 font-black uppercase tracking-widest">
+                                    <td className="px-6 py-3 whitespace-nowrap text-xs text-gray-500 font-semibold tracking-normal">
                                         {isEditing ? (
-                                            <select value={editForm.type || 'tube'} onChange={e => handleChange('type', e.target.value)} className="border-b-2 border-black focus:border-blue-600 outline-none p-1 font-black bg-white uppercase">
+                                            <select value={editForm.type || 'tube'} onChange={e => handleChange('type', e.target.value)} className="border-b border-gray-200 focus:border-indigo-500 outline-none p-1 font-semibold bg-white">
                                                 <option value="tube">TUBE</option>
                                                 <option value="connector">CONNECTOR</option>
                                                 <option value="panel">PANEL</option>
@@ -314,7 +314,7 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
                                             </select>
                                         ) : part.type}
                                     </td>
-                                    <td className="px-6 py-3 whitespace-nowrap text-xs font-black text-right text-black">
+                                    <td className="px-6 py-3 whitespace-nowrap text-xs font-semibold text-right text-gray-900">
                                         {isEditing ? (
                                             <input
                                                 type="number"
@@ -322,11 +322,11 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
                                                 value={editForm.price_ars ?? ''}
                                                 onChange={(e) => handleChange('price_ars', e.target.value)}
                                                 disabled={!!editForm.price_usd}
-                                                className="w-24 border-b-2 border-black focus:border-blue-600 outline-none p-1 text-right disabled:opacity-30 disabled:border-black/30 bg-transparent"
+                                                className="w-24 border-b border-gray-200 focus:border-indigo-500 outline-none p-1 text-right disabled:opacity-30 disabled:border-gray-200/30 bg-transparent"
                                             />
                                         ) : part.price_ars ? `$${Number(part.price_ars).toLocaleString('es-AR')}` : '-'}
                                     </td>
-                                    <td className="px-6 py-3 whitespace-nowrap text-xs font-black text-right text-black">
+                                    <td className="px-6 py-3 whitespace-nowrap text-xs font-semibold text-right text-gray-900">
                                         {isEditing ? (
                                             <input
                                                 type="number"
@@ -334,22 +334,22 @@ export default function PartsTable({ initialParts }: PartsTableProps) {
                                                 value={editForm.price_usd ?? ''}
                                                 onChange={(e) => handleChange('price_usd', e.target.value)}
                                                 disabled={!!editForm.price_ars}
-                                                className="w-24 border-b-2 border-black focus:border-blue-600 outline-none p-1 text-right disabled:opacity-30 disabled:border-black/30 bg-transparent"
+                                                className="w-24 border-b border-gray-200 focus:border-indigo-500 outline-none p-1 text-right disabled:opacity-30 disabled:border-gray-200/30 bg-transparent"
                                             />
                                         ) : part.price_usd ? `U$S ${Number(part.price_usd).toFixed(2)}` : '-'}
                                     </td>
                                     <td className="px-6 py-3 whitespace-nowrap text-right align-middle">
                                         {isEditing ? (
                                             <div className="flex justify-end gap-2">
-                                                <button onClick={handleSave} className="text-black hover:text-blue-600 transition-colors p-2 border border-transparent hover:border-black"><Save size={16} strokeWidth={2.5} /></button>
-                                                <button onClick={handleCancel} className="text-black/50 hover:text-red-600 transition-colors p-2 border border-transparent hover:border-black"><X size={16} strokeWidth={2.5} /></button>
+                                                <button onClick={handleSave} className="text-gray-900 hover:text-indigo-600 transition-colors p-2 border border-transparent hover:border-gray-300"><Save size={16} strokeWidth={2.5} /></button>
+                                                <button onClick={handleCancel} className="text-gray-500 hover:text-red-600 transition-colors p-2 border border-transparent hover:border-gray-300"><X size={16} strokeWidth={2.5} /></button>
                                             </div>
                                         ) : (
                                             <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button onClick={() => handleEdit(part)} className="text-black hover:text-blue-600 hover:bg-black/5 p-2 transition-colors border border-transparent hover:border-black">
+                                                <button onClick={() => handleEdit(part)} className="text-gray-900 hover:text-indigo-600 hover:bg-gray-50 p-2 transition-colors border border-transparent hover:border-gray-300">
                                                     <Pencil size={14} strokeWidth={2.5} />
                                                 </button>
-                                                <button onClick={() => handleDelete(part.id)} className="text-black/50 hover:text-red-600 hover:bg-red-50 p-2 transition-colors border border-transparent hover:border-red-600">
+                                                <button onClick={() => handleDelete(part.id)} className="text-gray-500 hover:text-red-600 hover:bg-red-50 p-2 transition-colors border border-transparent hover:border-red-600">
                                                     <Trash2 size={14} strokeWidth={2.5} />
                                                 </button>
                                             </div>

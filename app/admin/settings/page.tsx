@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, Trash2, Save, RefreshCw, Calculator, Truck, Percent, DollarSign } from "lucide-react";
+import { Plus, Trash2, Save, RefreshCw } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -15,37 +15,28 @@ interface FixedCost {
 export default function SettingsPage() {
     const supabase = createClient();
 
-    // Currency Settings
-    const [usdOfficial, setUsdOfficial] = useState<string>("0");
     const [usdExchangeRate, setUsdExchangeRate] = useState<string>("0");
-
-    // Pricing Variables
     const [shippingCost, setShippingCost] = useState<string>("20000");
     const [targetMarginPercent, setTargetMarginPercent] = useState<string>("65");
     const [transactionFeePercent, setTransactionFeePercent] = useState<string>("2.5");
     const [transactionFeeIvaPercent, setTransactionFeeIvaPercent] = useState<string>("21");
     const [installments6Percent, setInstallments6Percent] = useState<string>("13");
     const [ivaPercent, setIvaPercent] = useState<string>("21");
-
-    // Fixed Costs
     const [fixedCosts, setFixedCosts] = useState<FixedCost[]>([]);
+    // Calculadora de precio: costo de materiales de prueba (no se guarda).
+    const [calcCost, setCalcCost] = useState<string>("300000");
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [syncing, setSyncing] = useState(false);
     const [lastUpdated, setLastUpdated] = useState<string>("");
 
     const fetchSettings = async () => {
         setLoading(true);
         try {
-            const { data: settings, error: settingsError } = await supabase
-                .from("settings")
-                .select("*")
-                .eq("id", 1)
-                .single();
+            const { data: settings } = await supabase
+                .from("settings").select("*").eq("id", 1).single();
 
             if (settings) {
-                setUsdOfficial(settings.usd_official?.toString() || "0");
                 setUsdExchangeRate(settings.usd_exchange_rate?.toString() || "0");
                 setShippingCost(settings.shipping_cost?.toString() || "20000");
                 setTargetMarginPercent(settings.target_margin_percent?.toString() || "65");
@@ -53,20 +44,13 @@ export default function SettingsPage() {
                 setTransactionFeeIvaPercent(settings.transaction_fee_iva_percent?.toString() || "21");
                 setInstallments6Percent(settings.installments_6_percent?.toString() || "13");
                 setIvaPercent(settings.iva_percent?.toString() || "21");
-
                 if (settings.last_updated) {
                     setLastUpdated(new Date(settings.last_updated).toLocaleString("es-AR"));
                 }
             }
 
-            const { data: costs, error: costsError } = await supabase
-                .from("fixed_costs")
-                .select("*")
-                .order('created_at', { ascending: true });
-
-            if (costs) {
-                setFixedCosts(costs);
-            }
+            const { data: costs } = await supabase.from("fixed_costs").select("*").order("created_at", { ascending: true });
+            if (costs) setFixedCosts(costs);
         } catch (err) {
             console.error("Error fetching settings:", err);
         } finally {
@@ -81,7 +65,6 @@ export default function SettingsPage() {
     const handleSaveSettings = async () => {
         setSaving(true);
         const updates = {
-            usd_official: parseFloat(usdOfficial),
             usd_exchange_rate: parseFloat(usdExchangeRate),
             shipping_cost: parseFloat(shippingCost),
             target_margin_percent: parseFloat(targetMarginPercent),
@@ -89,57 +72,41 @@ export default function SettingsPage() {
             transaction_fee_iva_percent: parseFloat(transactionFeeIvaPercent),
             installments_6_percent: parseFloat(installments6Percent),
             iva_percent: parseFloat(ivaPercent),
-            last_updated: new Date().toISOString()
+            last_updated: new Date().toISOString(),
         };
 
-        const { error } = await supabase
-            .from("settings")
-            .update(updates)
-            .eq("id", 1);
+        const { error } = await supabase.from("settings").update(updates).eq("id", 1);
 
-        if (error) {
-            alert("Error al guardar la configuración");
-        } else {
-            alert("Configuración guardada");
-            fetchSettings();
-        }
+        if (error) alert("Error al guardar");
+        else fetchSettings();
+
         setSaving(false);
     };
 
-    const handleSyncUsd = async () => {
-        setSyncing(true);
-        try {
-            const response = await fetch("https://dolarapi.com/v1/dolares/oficial");
-            const result = await response.json();
-            const official = result.venta;
-            if (official) {
-                const applied = official * 1.03;
-                setUsdOfficial(official.toFixed(2));
-                setUsdExchangeRate(applied.toFixed(2));
-
-                await supabase.from("settings").update({
-                    usd_official: official,
-                    usd_exchange_rate: applied,
-                    last_updated: new Date().toISOString()
-                }).eq("id", 1);
-
-                fetchSettings();
-            }
-        } catch (error) {
-            alert("Error sincronizando dólar");
-        }
-        setSyncing(false);
-    };
-
     const addFixedCost = async () => {
-        const newCost = { name: "NUEVO COSTO", amount: 0 };
-        const { data, error } = await supabase.from("fixed_costs").insert(newCost).select().single();
+        const { data } = await supabase.from("fixed_costs").insert({ name: "Nuevo costo", amount: 0 }).select().single();
         if (data) setFixedCosts([...fixedCosts, data]);
     };
 
-    const updateFixedCost = async (id: string, updates: Partial<FixedCost>) => {
-        await supabase.from("fixed_costs").update(updates).eq("id", id);
-        setFixedCosts(fixedCosts.map(c => c.id === id ? { ...c, ...updates } : c));
+    // Ref siempre con el estado más reciente, para guardar el valor final en onBlur.
+    const fixedCostsRef = useRef<FixedCost[]>(fixedCosts);
+    fixedCostsRef.current = fixedCosts;
+
+    // Actualiza SOLO el estado local (inmediato, sin lag). Forma funcional para no
+    // pisar tipeos rápidos. La persistencia va aparte, en saveFixedCost (onBlur).
+    const updateFixedCost = (id: string, updates: Partial<FixedCost>) => {
+        setFixedCosts(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+    };
+
+    const saveFixedCost = async (id: string) => {
+        const c = fixedCostsRef.current.find(x => x.id === id);
+        if (!c) return;
+        // IMPORTANTE: hay que await, si no la query de Supabase (lazy) nunca se ejecuta.
+        const { error } = await supabase
+            .from("fixed_costs")
+            .update({ name: c.name, amount: c.amount })
+            .eq("id", id);
+        if (error) alert("No se pudo guardar el costo: " + error.message);
     };
 
     const deleteFixedCost = async (id: string) => {
@@ -147,191 +114,237 @@ export default function SettingsPage() {
         setFixedCosts(fixedCosts.filter(c => c.id !== id));
     };
 
-    if (loading) return <div className="p-12 text-black font-black uppercase tracking-[0.2em] animate-pulse">Cargando...</div>;
+    const inputCls = "w-full border border-gray-200 rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors tabular-nums";
+    const labelCls = "text-xs font-medium text-gray-700 mb-1.5 block";
+
+    if (loading) {
+        return <div className="text-sm text-gray-500 animate-pulse">Cargando…</div>;
+    }
 
     return (
-        <div className="max-w-6xl space-y-8 pb-32">
-            <header className="flex flex-col md:flex-row md:justify-between md:items-end border-b border-black pb-4 gap-4">
+        <div className="space-y-6 pb-32">
+            <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
                 <div>
-                    <h1 className="text-4xl font-black text-black tracking-tight uppercase">Configuración</h1>
-                    <p className="text-black/60 text-xs font-bold uppercase tracking-widest mt-1">Variables y Costos Estratégicos</p>
+                    <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Configuración</h1>
+                    <p className="text-sm text-gray-500 mt-1">Variables y costos estratégicos</p>
                 </div>
-                <div className="text-left md:text-right border-l-2 border-black pl-4">
-                    <p className="text-[10px] font-black text-black/50 uppercase tracking-[0.2em]">Última Actualización</p>
-                    <p className="text-sm font-black text-black uppercase">{lastUpdated || "NUNCA"}</p>
-                </div>
+                {lastUpdated && (
+                    <div className="text-xs text-gray-500">
+                        Última actualización: <span className="font-medium text-gray-700">{lastUpdated}</span>
+                    </div>
+                )}
             </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* DIVISAS */}
-                <section className="bg-white border border-black p-6 md:p-8 relative group">
-                    <div className="absolute top-0 left-0 w-2 h-full bg-black scale-y-0 group-hover:scale-y-100 transition-transform origin-top z-10"></div>
-                    <div className="flex justify-between items-center mb-6 border-b border-black pb-4">
-                        <div className="flex items-center gap-3">
-                            <h2 className="text-xl font-black text-black uppercase tracking-tight">Divisas</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Divisas */}
+                <section className="bg-white border border-gray-200 rounded-lg p-6">
+                    <h2 className="text-sm font-semibold text-gray-900 mb-4">Divisas</h2>
+                    <div>
+                        <label className={labelCls}>Tipo de cambio fijo (USD → ARS)</label>
+                        <div className="relative">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+                            <input
+                                type="number"
+                                value={usdExchangeRate}
+                                onChange={e => setUsdExchangeRate(e.target.value)}
+                                className={inputCls + " pl-7"}
+                            />
                         </div>
-                        <button
-                            onClick={handleSyncUsd}
-                            disabled={syncing}
-                            className="bg-black text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 hover:bg-blue-600 transition-colors disabled:opacity-50"
-                        >
-                            {syncing ? "SYNC..." : "SYNC DÓLAR"}
-                        </button>
                     </div>
+                </section>
 
-                    <div className="grid grid-cols-2 gap-6">
-                        <div className="space-y-2 group/input">
-                            <label className="text-[10px] font-black text-black uppercase tracking-widest transition-colors group-focus-within/input:text-blue-600">Dólar Oficial (Venta)</label>
-                            <div className="relative border border-black group-focus-within/input:border-blue-600 transition-colors bg-white">
-                                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-black" size={14} strokeWidth={2.5} />
-                                <input
-                                    type="number" value={usdOfficial} onChange={e => setUsdOfficial(e.target.value)}
-                                    className="w-full pl-8 pr-4 py-3 bg-transparent font-black text-black focus:outline-none rounded-none text-sm"
-                                />
+                {/* Logística y margen */}
+                <section className="bg-white border border-gray-200 rounded-lg p-6">
+                    <h2 className="text-sm font-semibold text-gray-900 mb-4">Logística y margen</h2>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className={labelCls}>Envío ($)</label>
+                            <input type="number" value={shippingCost} onChange={e => setShippingCost(e.target.value)} className={inputCls} />
+                        </div>
+                        <div>
+                            <label className={labelCls}>Margen (%)</label>
+                            <input type="number" value={targetMarginPercent} onChange={e => setTargetMarginPercent(e.target.value)} className={inputCls} />
+                        </div>
+                    </div>
+                </section>
+
+                {/* Comisiones e impuestos */}
+                <section className="bg-white border border-gray-200 rounded-lg p-6 lg:col-span-2">
+                    <h2 className="text-sm font-semibold text-gray-900 mb-4">Comisiones e impuestos</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label className={labelCls}>Com. transac. (%)</label>
+                            <input type="number" step="0.01" value={transactionFeePercent} onChange={e => setTransactionFeePercent(e.target.value)} className={inputCls} />
+                        </div>
+                        <div>
+                            <label className={labelCls}>IVA s/ comis. (%)</label>
+                            <input type="number" value={transactionFeeIvaPercent} onChange={e => setTransactionFeeIvaPercent(e.target.value)} className={inputCls} />
+                        </div>
+                        <div>
+                            <label className={labelCls}>Interés 6 cuotas (%)</label>
+                            <input type="number" value={installments6Percent} onChange={e => setInstallments6Percent(e.target.value)} className={inputCls} />
+                        </div>
+                        <div>
+                            <label className={labelCls}>IVA gral. (%)</label>
+                            <input type="number" value={ivaPercent} onChange={e => setIvaPercent(e.target.value)} className={inputCls} />
+                        </div>
+                    </div>
+                </section>
+
+                {/* Fórmula de precio + calculadora (misma matemática que lib/pricing.ts) */}
+                {(() => {
+                    const margin = parseFloat(targetMarginPercent) || 0;
+                    const ship = parseFloat(shippingCost) || 0;
+                    const trans = parseFloat(transactionFeePercent) || 0;
+                    const transIva = parseFloat(transactionFeeIvaPercent) || 0;
+                    const cuotas = parseFloat(installments6Percent) || 0;
+                    const iva = parseFloat(ivaPercent) || 0;
+
+                    // Réplica exacta de calculatePricing (lib/pricing.ts):
+                    const feeTrans = trans * (1 + transIva / 100);           // comisión c/IVA
+                    const feeCuotas = cuotas * (1 + iva / 100);              // cuotas c/IVA
+                    const feeTotal = feeTrans + feeCuotas;
+
+                    const cost = parseFloat(calcCost) || 0;
+                    const basePrice = margin < 100 ? Math.round(cost / (1 - margin / 100)) : 0;
+                    const plusShipping = basePrice + ship;
+                    const finalPrice = feeTotal < 100 ? Math.round(plusShipping / (1 - feeTotal / 100)) : 0;
+                    const realRevenue = Math.round(finalPrice * (1 - feeTotal / 100));
+                    const grossProfit = realRevenue - cost - ship;
+                    const money = (n: number) => "$" + Math.round(n).toLocaleString("es-AR");
+                    const pct = (n: number) => n.toLocaleString("es-AR", { maximumFractionDigits: 3 }) + "%";
+
+                    return (
+                        <section className="bg-white border border-gray-200 rounded-lg p-6 lg:col-span-2">
+                            <h2 className="text-sm font-semibold text-gray-900 mb-1">Fórmula de precio</h2>
+                            <p className="text-xs text-gray-500 mb-5">
+                                Así se arma el PVP de lista. Los valores se actualizan al instante con lo que edites arriba — probá acá y recién después tocá <b>Guardar cambios</b>.
+                            </p>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                {/* Fórmula expresada */}
+                                <div className="space-y-2">
+                                    <div className="rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
+                                        <div className="px-4 py-3 flex justify-between items-center bg-gray-50">
+                                            <span className="font-medium text-gray-700">1 · Costo de materiales</span>
+                                            <span className="text-gray-500 text-xs">sale del despiece (Partes)</span>
+                                        </div>
+                                        <div className="px-4 py-3 flex justify-between items-center">
+                                            <span className="text-gray-700">2 · ÷ (1 − <b>margen {margin}%</b>)</span>
+                                            <span className="text-xs text-gray-400">= Precio base</span>
+                                        </div>
+                                        <div className="px-4 py-3 flex justify-between items-center">
+                                            <span className="text-gray-700">3 · + <b>envío {money(ship)}</b></span>
+                                            <span className="text-xs text-gray-400">costo fijo</span>
+                                        </div>
+                                        <div className="px-4 py-3">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-gray-700">4 · ÷ (1 − <b>fees {pct(feeTotal)}</b>)</span>
+                                                <span className="text-xs text-gray-400">= PVP lista</span>
+                                            </div>
+                                            <div className="mt-2 text-[11px] text-gray-500 space-y-0.5 pl-4">
+                                                <div>• Transacción: {trans}% × (1 + IVA {transIva}%) = <b>{pct(feeTrans)}</b></div>
+                                                <div>• 6 cuotas: {cuotas}% × (1 + IVA {iva}%) = <b>{pct(feeCuotas)}</b></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p className="text-[11px] text-gray-400">
+                                        El margen y los fees van como <b>divisor</b> (÷ (1−%)) y no como suma, para que el % quede calculado sobre el precio final, no sobre el costo. Los descuentos por medio de pago (−10% transf., −20% efectivo) se aplican después, sobre el PVP.
+                                    </p>
+                                </div>
+
+                                {/* Calculadora */}
+                                <div className="rounded-lg border-2 border-indigo-100 bg-indigo-50/40 p-5">
+                                    <label className={labelCls}>🧮 Calculadora — Costo de materiales de prueba</label>
+                                    <div className="relative mb-4">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+                                        <input
+                                            type="number"
+                                            value={calcCost}
+                                            onChange={e => setCalcCost(e.target.value)}
+                                            className={inputCls + " pl-7 text-lg font-semibold"}
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5 text-sm">
+                                        <div className="flex justify-between"><span className="text-gray-500">Precio base (÷ {(1 - margin / 100).toLocaleString("es-AR", { maximumFractionDigits: 2 })})</span><span className="tabular-nums font-medium">{money(basePrice)}</span></div>
+                                        <div className="flex justify-between"><span className="text-gray-500">+ Envío</span><span className="tabular-nums font-medium">{money(plusShipping)}</span></div>
+                                        <div className="flex justify-between items-center pt-2 border-t border-indigo-100">
+                                            <span className="font-semibold text-gray-900">PVP lista</span>
+                                            <span className="tabular-nums text-xl font-bold text-indigo-700">{money(finalPrice)}</span>
+                                        </div>
+                                        <div className="flex justify-between"><span className="text-gray-500">Transferencia (−10%)</span><span className="tabular-nums font-medium">{money(finalPrice * 0.9)}</span></div>
+                                        <div className="flex justify-between"><span className="text-gray-500">Efectivo (−20%)</span><span className="tabular-nums font-medium">{money(finalPrice * 0.8)}</span></div>
+                                        <div className="flex justify-between pt-2 border-t border-indigo-100"><span className="text-gray-500">Recaudación real (PVP − fees)</span><span className="tabular-nums font-medium">{money(realRevenue)}</span></div>
+                                        <div className="flex justify-between"><span className="text-gray-500">Utilidad bruta (− costo − envío)</span><span className={`tabular-nums font-semibold ${grossProfit >= 0 ? "text-emerald-700" : "text-rose-600"}`}>{money(grossProfit)}</span></div>
+                                        <div className="flex justify-between"><span className="text-gray-500">Margen real s/ recaudación</span><span className="tabular-nums font-medium">{realRevenue > 0 ? Math.round((grossProfit / realRevenue) * 100) : 0}%</span></div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div className="space-y-2 group/input">
-                            <label className="text-[10px] font-black text-black uppercase tracking-widest transition-colors group-focus-within/input:text-blue-600">Dólar Aplicado (+Mgn)</label>
-                            <div className="relative border border-black group-focus-within/input:border-blue-600 transition-colors bg-white">
-                                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 text-black" size={14} strokeWidth={2.5} />
-                                <input
-                                    type="number" value={usdExchangeRate} onChange={e => setUsdExchangeRate(e.target.value)}
-                                    className="w-full pl-8 pr-4 py-3 bg-transparent font-black text-black focus:outline-none rounded-none text-sm"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </section>
+                        </section>
+                    );
+                })()}
 
-                {/* LOGISTICA Y MARGEN */}
-                <section className="bg-white border border-black p-6 md:p-8 relative group">
-                    <div className="absolute top-0 left-0 w-2 h-full bg-black scale-y-0 group-hover:scale-y-100 transition-transform origin-top z-10"></div>
-                    <div className="flex items-center gap-3 mb-6 border-b border-black pb-4">
-                        <h2 className="text-xl font-black text-black uppercase tracking-tight">Logística y Margen</h2>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-6">
-                        <div className="space-y-2 group/input">
-                            <label className="text-[10px] font-black text-black uppercase tracking-widest transition-colors group-focus-within/input:text-blue-600">Envío ($)</label>
-                            <input
-                                type="number" value={shippingCost} onChange={e => setShippingCost(e.target.value)}
-                                className="w-full px-4 py-3 border border-black focus:border-blue-600 font-black text-black focus:outline-none rounded-none bg-white text-sm"
-                            />
-                        </div>
-                        <div className="space-y-2 group/input">
-                            <label className="text-[10px] font-black text-black uppercase tracking-widest transition-colors group-focus-within/input:text-blue-600">Margen (%)</label>
-                            <input
-                                type="number" value={targetMarginPercent} onChange={e => setTargetMarginPercent(e.target.value)}
-                                className="w-full px-4 py-3 border border-black focus:border-blue-600 font-black text-black focus:outline-none rounded-none bg-white text-sm"
-                            />
-                        </div>
-                    </div>
-                </section>
-
-                {/* IMPUESTOS Y COMISIONES */}
-                <section className="bg-white border border-black p-6 md:p-8 lg:col-span-2 relative group">
-                    <div className="absolute top-0 left-0 w-2 h-full bg-black scale-y-0 group-hover:scale-y-100 transition-transform origin-top z-10"></div>
-                    <div className="flex items-center gap-3 mb-6 border-b border-black pb-4">
-                        <h2 className="text-xl font-black text-black uppercase tracking-tight">Comisiones e Impuestos</h2>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div className="space-y-2 group/input">
-                            <label className="text-[10px] font-black text-black uppercase tracking-widest transition-colors group-focus-within/input:text-blue-600">Com. Transac. (%)</label>
-                            <input
-                                type="number" step="0.01" value={transactionFeePercent} onChange={e => setTransactionFeePercent(e.target.value)}
-                                className="w-full px-4 py-3 border border-black focus:border-blue-600 font-black text-black focus:outline-none rounded-none bg-white text-sm"
-                            />
-                        </div>
-                        <div className="space-y-2 group/input">
-                            <label className="text-[10px] font-black text-black uppercase tracking-widest transition-colors group-focus-within/input:text-blue-600">IVA s/ Comis. (%)</label>
-                            <input
-                                type="number" value={transactionFeeIvaPercent} onChange={e => setTransactionFeeIvaPercent(e.target.value)}
-                                className="w-full px-4 py-3 border border-black focus:border-blue-600 font-black text-black focus:outline-none rounded-none bg-white text-sm"
-                            />
-                        </div>
-                        <div className="space-y-2 group/input">
-                            <label className="text-[10px] font-black text-black uppercase tracking-widest transition-colors group-focus-within/input:text-blue-600">Interés 6C (%)</label>
-                            <input
-                                type="number" value={installments6Percent} onChange={e => setInstallments6Percent(e.target.value)}
-                                className="w-full px-4 py-3 border border-black focus:border-blue-600 font-black text-black focus:outline-none rounded-none bg-white text-sm"
-                            />
-                        </div>
-                        <div className="space-y-2 group/input">
-                            <label className="text-[10px] font-black text-black uppercase tracking-widest transition-colors group-focus-within/input:text-blue-600">IVA Gral. (%)</label>
-                            <input
-                                type="number" value={ivaPercent} onChange={e => setIvaPercent(e.target.value)}
-                                className="w-full px-4 py-3 border border-black focus:border-blue-600 font-black text-black focus:outline-none rounded-none bg-white text-sm"
-                            />
-                        </div>
-                    </div>
-                </section>
-
-                {/* COSTOS FIJOS */}
-                <section className="bg-white border border-black p-6 md:p-8 lg:col-span-2 relative group flex flex-col">
-                    <div className="absolute top-0 left-0 w-2 h-full bg-black scale-y-0 group-hover:scale-y-100 transition-transform origin-top z-10"></div>
-                    <div className="flex justify-between items-center mb-6 border-b border-black pb-4">
-                        <div className="flex items-center gap-3">
-                            <h2 className="text-xl font-black text-black uppercase tracking-tight">Estructura de Costos Fijos</h2>
-                        </div>
+                {/* Costos fijos */}
+                <section className="bg-white border border-gray-200 rounded-lg p-6 lg:col-span-2">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-sm font-semibold text-gray-900">Estructura de costos fijos</h2>
                         <button
                             onClick={addFixedCost}
-                            className="bg-black text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 hover:bg-blue-600 transition-colors flex items-center gap-2"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
                         >
-                            <Plus size={14} strokeWidth={2.5} />
-                            AÑADIR
+                            <Plus size={13} /> Añadir
                         </button>
                     </div>
 
-                    <div className="space-y-2 mb-6 flex-1">
-                        {fixedCosts.length === 0 ? (
-                            <p className="text-center py-10 text-xs font-black text-black/20 uppercase tracking-widest border border-dashed border-black/20">VACÍO</p>
-                        ) : (
-                            fixedCosts.map(cost => (
-                                <div key={cost.id} className="flex relative border-b border-black/10 focus-within:border-blue-600 transition-colors group/row">
+                    {fixedCosts.length === 0 ? (
+                        <p className="text-sm text-gray-400 italic py-6 text-center">Sin costos cargados.</p>
+                    ) : (
+                        <div className="divide-y divide-gray-100">
+                            {fixedCosts.map(cost => (
+                                <div key={cost.id} className="flex items-center gap-2 py-2">
                                     <input
                                         type="text" value={cost.name}
                                         onChange={e => updateFixedCost(cost.id, { name: e.target.value })}
-                                        className="flex-1 bg-transparent py-3 font-bold text-black border-none focus:outline-none text-sm uppercase placeholder:text-black/30"
-                                        placeholder="CONCEPTO"
+                                        onBlur={() => saveFixedCost(cost.id)}
+                                        className="flex-1 bg-transparent px-2 py-1.5 text-sm font-medium text-gray-900 border-b border-transparent focus:border-indigo-500 focus:outline-none"
+                                        placeholder="Concepto"
                                     />
-                                    <div className="relative w-32 md:w-48 border-l border-black/10 group-focus-within/row:border-blue-600 flex items-center px-3">
-                                        <span className="text-[10px] font-black text-black/40 mr-2">$</span>
+                                    <div className="relative w-40">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
                                         <input
                                             type="number" value={cost.amount}
-                                            onChange={e => updateFixedCost(cost.id, { amount: parseFloat(e.target.value) })}
-                                            className="w-full bg-transparent py-3 font-black text-black border-none focus:outline-none text-right"
+                                            onChange={e => updateFixedCost(cost.id, { amount: parseFloat(e.target.value) || 0 })}
+                                            onBlur={() => saveFixedCost(cost.id)}
+                                            className="w-full pl-7 pr-2 py-1.5 text-sm text-right tabular-nums border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                         />
                                     </div>
                                     <button
                                         onClick={() => deleteFixedCost(cost.id)}
-                                        className="w-12 flex items-center justify-center text-black/20 hover:text-red-600 hover:bg-black/5 transition-colors border-l border-black/10 group-focus-within/row:border-blue-600"
+                                        className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
                                     >
-                                        <Trash2 size={16} strokeWidth={2} />
+                                        <Trash2 size={14} />
                                     </button>
                                 </div>
-                            ))
-                        )}
-                    </div>
-                    {fixedCosts.length > 0 && (
-                        <div className="flex justify-between items-center p-6 bg-black mt-auto">
-                            <span className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Total Gastos</span>
-                            <span className="text-2xl font-black text-white">
-                                ${fixedCosts.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString('es-AR')}
-                            </span>
+                            ))}
+                            <div className="flex justify-between items-center pt-4 border-t border-gray-200 mt-2">
+                                <span className="text-xs font-medium text-gray-500">Total gastos</span>
+                                <span className="text-lg font-semibold text-gray-900 tabular-nums">
+                                    ${fixedCosts.reduce((acc, c) => acc + c.amount, 0).toLocaleString("es-AR")}
+                                </span>
+                            </div>
                         </div>
                     )}
                 </section>
             </div>
 
-            <div className="fixed bottom-0 left-0 lg:left-64 right-0 p-6 pointer-events-none flex justify-end z-50">
+            <div className="fixed bottom-6 right-6 z-50">
                 <button
                     onClick={handleSaveSettings}
                     disabled={saving}
-                    className="pointer-events-auto flex items-center gap-3 px-8 py-4 bg-blue-600 text-white font-black hover:bg-black transition-colors disabled:opacity-50 uppercase tracking-widest text-xs shadow-[8px_8px_0px_#000]"
+                    className="inline-flex items-center gap-2 px-5 py-3 bg-indigo-600 text-white text-sm font-medium rounded-md shadow-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
                 >
-                    {saving ? <RefreshCw className="animate-spin" size={16} strokeWidth={2.5} /> : <Save size={16} strokeWidth={2.5} />}
-                    {saving ? "GUARDANDO..." : "GUARDAR CAMBIOS"}
+                    {saving ? <RefreshCw className="animate-spin" size={15} /> : <Save size={15} />}
+                    {saving ? "Guardando…" : "Guardar cambios"}
                 </button>
             </div>
         </div>

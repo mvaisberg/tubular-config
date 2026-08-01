@@ -19,18 +19,18 @@ export default async function ProductsAdminPage() {
     const { data: settings } = await supabase.from("settings").select("*").eq("id", 1).single();
 
     return (
-        <div className="max-w-6xl space-y-8 pb-32">
-            <header className="mb-12 border-b border-black pb-4 flex justify-between items-end">
+        <div className="space-y-6 pb-32">
+            <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tight uppercase">Productos Fijos</h1>
-                    <p className="text-black/60 text-xs font-bold uppercase tracking-widest mt-1">Configuraciones guardadas y precios dinámicos</p>
+                    <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Productos</h1>
+                    <p className="text-sm text-gray-500 mt-1">Configuraciones guardadas y precios dinámicos</p>
                 </div>
                 <Link
                     href="/?admin=true"
-                    className="flex items-center gap-2 bg-black text-white px-4 py-3 text-xs font-black uppercase tracking-widest hover:bg-blue-600 transition-colors shadow-[4px_4px_0px_#000]"
+                    className="inline-flex items-center gap-2 bg-indigo-600 text-white px-3 py-2 text-sm font-medium rounded-md hover:bg-indigo-700 transition-colors w-fit"
                 >
-                    <Plus size={14} strokeWidth={2.5} />
-                    NUEVO PRODUCTO
+                    <Plus size={15} />
+                    Nuevo producto
                 </Link>
             </header>
 

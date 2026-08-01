@@ -57,10 +57,11 @@ export function generateConfigDescription(modules: ModuleConfig[]): string {
  */
 export async function addConfigToWooCart(params: {
   modules: ModuleConfig[];
+  hasWheels: boolean;
   totalPriceARS: number;
   totalPriceUSD: number;
 }): Promise<{ success: boolean; cart_url?: string; error?: string }> {
-  const { modules, totalPriceARS, totalPriceUSD } = params;
+  const { modules, hasWheels, totalPriceARS, totalPriceUSD } = params;
   const description = generateConfigDescription(modules);
 
   // Build the API URL relative to the parent domain (without /configurador basePath)
@@ -80,6 +81,7 @@ export async function addConfigToWooCart(params: {
 
   const body = {
     configuration: modules,
+    has_wheels: hasWheels,
     price: Math.round(totalPriceARS),
     price_usd: Math.round(totalPriceUSD),
     description,

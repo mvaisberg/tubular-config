@@ -1,29 +1,4 @@
-import { useRef, useMemo } from 'react';
-
-interface PanelProps {
-    position: [number, number, number];
-    orientation: 'xy' | 'xz' | 'yz';
-    dimension: number; // width for xy/xz, height for yz
-    // We need both dimensions!
-    // derivedPart structure in types.ts only has 'dimension' which is ambiguous.
-    // I need to update types.ts to support width/height or separate props.
-    // For now, let's infer or pass it through.
-    // In calculator.ts I passed `dimension: w_dim`. I lost the other dimension.
-    // I should fix types.ts first or hack it.
-    // Let's assume the ID contains dimensions? `panel-{plane}-{x}-{y}-{z}-{w}-{h}`
-    // But better to pass it in props.
-    // I'll update types.ts to allow extra data or dimensions object.
-
-    // TEMPORARY HACK: I'll use the id to parse dimensions if needed, OR better, update the type.
-    // I will look at how I implemented generateParts in calculator.ts. I passed `dimension: w_dim`. I missed h_dim.
-
-    // I will assume for now I receive w and h as separate props if I update types.
-    // But let's look at the props I *can* pass.
-    // DerivedPart has: id, type, position, rotation, length, orientation, dimension, color.
-}
-
-// I need to fix types.ts and calculator.ts to include full dimensions for panels.
-// Let's do that in next step. For now, this is a placeholder.
+import { useMemo } from 'react';
 
 export const Panel = ({ position, orientation, width, height, color = 'white' }: { position: [number, number, number], orientation: 'xy' | 'xz' | 'yz', width: number, height: number, color?: string }) => {
     // USM panels are thin.
@@ -68,11 +43,18 @@ export const Panel = ({ position, orientation, width, height, color = 'white' }:
         if (colorName === 'white') return { color: '#FAFAFA', isAcrylic: false };
         if (colorName === 'beige') return { color: '#a48f7a', isAcrylic: false };
 
-        // Acrylic — lit with transmission (meshPhysicalMaterial)
-        if (colorName === 'transparent') return { color: '#ffffff', isAcrylic: true, opacity: 1, transparent: true, metalness: 0.1, roughness: 0.05, transmission: 1.0, thickness: 0.05, ior: 1.5, clearcoat: 1.0, envMapIntensity: 0.6 };
-        if (colorName === 'orange_translucent') return { color: '#E64A00', isAcrylic: true, opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5, envMapIntensity: 0.6 };
-        if (colorName === 'blue_translucent') return { color: '#0055A4', isAcrylic: true, opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5, envMapIntensity: 0.6 };
-        if (colorName === 'green_translucent') return { color: '#006B3C', isAcrylic: true, opacity: 0.8, transparent: true, metalness: 0.1, roughness: 0.1, transmission: 0.8, thickness: 0.05, ior: 1.5, clearcoat: 0.5, envMapIntensity: 0.6 };
+        // Acrylic plenos (opaque) — flat unlit
+        if (colorName === 'black_solid') return { color: '#1C1C1C', isAcrylic: false };
+        if (colorName === 'white_solid') return { color: '#FAFAFA', isAcrylic: false };
+
+        // Acrylic — translucido sin reflexiones especulares.
+        // specularIntensity=0 + reflectivity=0 + ior=1.0 mata el Fresnel (los reflejos rasantes).
+        // thickness ~0 evita refracción visible que duplique tubos/bolas.
+        // Roughness alta para que cualquier highlight residual sea totalmente difuso.
+        if (colorName === 'transparent') return { color: '#ffffff', isAcrylic: true, opacity: 1, transparent: true, metalness: 0, roughness: 0.35, transmission: 0.95, thickness: 0.001, ior: 1.0, clearcoat: 0, envMapIntensity: 0, specularIntensity: 0, reflectivity: 0 };
+        if (colorName === 'orange_translucent') return { color: '#E64A00', isAcrylic: true, opacity: 0.7, transparent: true, metalness: 0, roughness: 0.4, transmission: 0.7, thickness: 0.001, ior: 1.0, clearcoat: 0, envMapIntensity: 0, specularIntensity: 0, reflectivity: 0 };
+        if (colorName === 'blue_translucent') return { color: '#003366', isAcrylic: true, opacity: 0.7, transparent: true, metalness: 0, roughness: 0.4, transmission: 0.7, thickness: 0.001, ior: 1.0, clearcoat: 0, envMapIntensity: 0, specularIntensity: 0, reflectivity: 0 };
+        if (colorName === 'green_translucent') return { color: '#003D1F', isAcrylic: true, opacity: 0.7, transparent: true, metalness: 0, roughness: 0.4, transmission: 0.7, thickness: 0.001, ior: 1.0, clearcoat: 0, envMapIntensity: 0, specularIntensity: 0, reflectivity: 0 };
 
         return { color: colorName, isAcrylic: false };
     };
@@ -91,9 +73,11 @@ export const Panel = ({ position, orientation, width, height, color = 'white' }:
                     opacity={params.opacity}
                     transmission={params.transmission || 0}
                     thickness={params.thickness || 0}
-                    ior={params.ior || 1.5}
+                    ior={params.ior || 1.0}
                     clearcoat={params.clearcoat || 0}
-                    envMapIntensity={params.envMapIntensity || 0.5}
+                    envMapIntensity={params.envMapIntensity ?? 0}
+                    specularIntensity={params.specularIntensity ?? 0}
+                    reflectivity={params.reflectivity ?? 0}
                 />
             ) : (
                 <meshBasicMaterial color={params.color} />

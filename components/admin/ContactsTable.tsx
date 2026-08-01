@@ -82,11 +82,11 @@ export const ContactsTable = () => {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-slate-50/50 border-b border-slate-200">
-                                <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Fecha</th>
-                                <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Contacto</th>
-                                <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Mensaje</th>
-                                <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Estado</th>
-                                <th className="p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Acciones</th>
+                                <th className="p-4 text-xs font-semibold text-slate-500 tracking-wider">Fecha</th>
+                                <th className="p-4 text-xs font-semibold text-slate-500 tracking-wider">Contacto</th>
+                                <th className="p-4 text-xs font-semibold text-slate-500 tracking-wider">Mensaje</th>
+                                <th className="p-4 text-xs font-semibold text-slate-500 tracking-wider">Estado</th>
+                                <th className="p-4 text-xs font-semibold text-slate-500 tracking-wider text-right">Acciones</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">

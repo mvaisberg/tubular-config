@@ -17,10 +17,7 @@ export default function LoginForm() {
         setLoading(true);
         setError(null);
 
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        });
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
 
         if (error) {
             setError(error.message);
@@ -32,56 +29,47 @@ export default function LoginForm() {
     };
 
     return (
-        <div className="w-full bg-white border border-black p-8 lg:p-12 shadow-[8px_8px_0px_#000]">
-            <div className="flex flex-col items-start mb-8 gap-0 border-b border-black pb-6">
-                <h1 className="text-4xl font-black tracking-tighter uppercase relative group">
-                    Tubular
-                    <span className="absolute -bottom-1 left-0 w-full h-[2px] bg-blue-600 scale-x-100 transition-transform origin-left"></span>
-                </h1>
-                <span className="text-[10px] uppercase font-bold text-black/50 tracking-[0.3em] mt-3">Admin Access</span>
+        <div className="w-full bg-white border border-gray-200 rounded-lg shadow-sm p-8">
+            <div className="mb-7">
+                <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Tubular</h1>
+                <p className="text-sm text-gray-500 mt-1">Admin access</p>
             </div>
 
             {error && (
-                <div className="bg-black text-white p-4 mb-6 text-xs font-bold uppercase tracking-wider relative overflow-hidden">
-                    <span className="relative z-10">{error}</span>
-                    <div className="absolute inset-x-0 bottom-0 h-1 bg-red-600"></div>
+                <div className="bg-rose-50 border border-rose-200 text-rose-700 text-sm rounded-md p-3 mb-5">
+                    {error}
                 </div>
             )}
-            <form onSubmit={handleLogin} className="space-y-6">
-                <div className="space-y-2 group">
-                    <label className="block text-[10px] uppercase tracking-widest font-bold text-black transition-colors group-focus-within:text-blue-600">Email</label>
+
+            <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1.5">Email</label>
                     <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-white border border-black outline-none p-3 text-sm focus:ring-1 focus:ring-blue-600 focus:border-blue-600 transition-none rounded-none placeholder:text-black/30"
+                        className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-gray-400 transition-colors"
                         placeholder="admin@tubular.com"
                         required
+                        autoFocus
                     />
                 </div>
-                <div className="space-y-2 group">
-                    <label className="block text-[10px] uppercase tracking-widest font-bold text-black transition-colors group-focus-within:text-blue-600">Password</label>
+                <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1.5">Contraseña</label>
                     <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full bg-white border border-black outline-none p-3 text-sm focus:ring-1 focus:ring-blue-600 focus:border-blue-600 transition-none rounded-none"
+                        className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                         required
                     />
                 </div>
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-black text-white py-4 text-xs font-bold uppercase tracking-widest hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:hover:bg-black mt-8 flex items-center justify-center relative group"
+                    className="w-full bg-indigo-600 text-white py-2.5 text-sm font-medium rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 mt-2"
                 >
-                    {loading ? (
-                        <span className="animate-pulse">Loading...</span>
-                    ) : (
-                        <>
-                            <span className="relative z-10 transition-transform group-hover:translate-x-2">Login</span>
-                            <span className="absolute opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all font-serif italic text-blue-200 ml-[-4rem]">→</span>
-                        </>
-                    )}
+                    {loading ? "Entrando…" : "Iniciar sesión"}
                 </button>
             </form>
         </div>

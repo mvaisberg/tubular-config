@@ -1,6 +1,6 @@
 export type Axis = 'x' | 'y' | 'z';
 
-export type Dimension = 100 | 200 | 250 | 350 | 395 | 500 | 750;
+export type Dimension = 100 | 200 | 250 | 350 | 395 | 400 | 500 | 750;
 
 export interface Coordinates {
     x: number;
@@ -20,6 +20,9 @@ export interface ModuleConfig {
     };
     color: string;
     material: ModuleMaterial;
+    // Override material for the top panel only. Used in steel modules to allow an acrylic shelf
+    // on top of a steel frame. Falls back to `material` when undefined.
+    topPanelMaterial?: ModuleMaterial;
     hasPanel: {
         top: boolean;
         bottom: boolean;

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tubular · Flujos de mensajes transaccionales</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({ startOnLoad: true, theme: 'neutral', flowchart: { htmlLabels: true } });</script>
+<style>
+  :root { --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --accent:#4f46e5; }
+  * { box-sizing: border-box; }
+  body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color: var(--ink); max-width: 980px; margin: 0 auto; padding: 40px 24px 120px; line-height: 1.55; }
+  h1 { font-size: 30px; letter-spacing: -0.02em; margin-bottom: 4px; }
+  h2 { font-size: 20px; margin-top: 48px; border-bottom: 2px solid var(--ink); padding-bottom: 6px; }
+  .sub { color: var(--muted); margin-top: 0; }
+  .card { border: 1px solid var(--line); background: #fafafa; border-radius: 12px; padding: 20px; margin: 18px 0; overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: #111827; color: #fff; font-weight: 600; }
+  .msg { border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 14px 16px; margin: 12px 0; background: #fff; }
+  .msg h3 { margin: 0 0 8px; font-size: 15px; }
+  .msg pre { background: #f3f4f6; padding: 12px; border-radius: 8px; white-space: pre-wrap; font-size: 13px; margin: 0; }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-left: 6px; }
+  .util { background: #ecfdf5; color: #047857; } .mkt { background: #fef3c7; color: #b45309; }
+  code { background: #f3f4f6; padding: 1px 6px; border-radius: 5px; font-size: 13px; }
+</style>
+</head>
+<body>
+  <h1>Flujos de mensajes transaccionales · Tubular</h1>
+  <p class="sub">Mensajes disparados por eventos del pedido. Canal principal: WhatsApp (API oficial) · fallback email.</p>
+
+  <h2>1 · Ciclo de vida del pedido</h2>
+  <div class="card">
+    <pre class="mermaid">
+stateDiagram-v2
+    direction LR
+    [*] --> PendientePago
+    PendientePago --> Sena: paga seña (partial)
+    PendientePago --> Pagado: paga total (paid)
+    Sena --> Pagado: completa saldo
+    Pagado --> Embalado: fulfillment = packed
+    Sena --> Embalado: (se prepara con seña)
+    Embalado --> ListoRetiro: shipping = pickup
+    Embalado --> Despachado: shipping = delivery
+    ListoRetiro --> Entregado: fulfillment = delivered
+    Despachado --> Entregado: fulfillment = delivered
+    Entregado --> [*]
+    </pre>
+  </div>
+
+  <h2>2 · Mapa maestro (evento → mensaje)</h2>
+  <div class="card">
+    <pre class="mermaid">
+flowchart TD
+    CART([Empieza checkout]) -. abandona +1h .-> M11["🛒 M11 · Carrito abandonado<br/>delay · Marketing · WhatsApp"]
+    M11 -. recupera .-> START
+    CART --> START([Pedido creado])
+    START --> PAY{¿Cómo nace el pedido?}
+    PAY -->|pagado en el acto| M1P["📩✅ M1 · Pedido confirmado + pago<br/>un solo mensaje · Utility"]
+    PAY -->|pago pendiente| M1["📩 M1 · Pedido recibido<br/>inmediato · Utility"]
+    PAY -->|seña| M2["💰 M2 · Seña recibida + saldo<br/>inmediato · Utility"]
+    M1 -. el pago se confirma en otro momento .-> M3["✅ M3 · Pago confirmado<br/>inmediato · Utility"]
+    M2 -. completa el saldo .-> M3
+    M1P --> PACK["📦 fulfillment = packed"]
+    M3 --> PACK
+    M2 --> PACK
+    PACK --> SHIP{Tipo de envío}
+    SHIP -->|pickup| M5["🎉 M5 · Listo para retirar<br/>inmediato · Utility"]
+    SHIP -->|delivery| M6["🚚 M6 · Despachado / en camino<br/>inmediato · Utility"]
+    M5 --> DEL["🏁 fulfillment = delivered"]
+    M6 --> DEL
+    DEL --> M7["✅ M7 · Entregado<br/>inmediato · Utility"]
+    M7 -. +6 días .-> M8["⭐ M8 · Pedido de reseña<br/>delay · Marketing"]
+    M7 -. +40 días .-> M10["🧩 M10 · Recompra / módulos<br/>delay · Marketing"]
+    </pre>
+  </div>
+
+  <h2>3 · Especificación</h2>
+  <table>
+    <tr><th>ID</th><th>Mensaje</th><th>Disparador</th><th>Timing</th><th>Categoría</th></tr>
+    <tr><td>M11</td><td>Carrito abandonado</td><td>inicia checkout y no compra</td><td>+1h (+24h opc.)</td><td>Marketing · WA</td></tr>
+    <tr><td>M1</td><td>Pedido confirmado <em>(incluye pago si nace pagado)</em></td><td><code>order.created</code></td><td>inmediato</td><td>Utility</td></tr>
+    <tr><td>M2</td><td>Seña recibida + saldo</td><td><code>status = partial</code></td><td>inmediato</td><td>Utility</td></tr>
+    <tr><td>M3</td><td>Pago confirmado <em>(solo si el pago llega en otro momento)</em></td><td><code>status → paid</code></td><td>inmediato</td><td>Utility</td></tr>
+    <tr><td>M5</td><td>Listo para retirar</td><td><code>packed</code> y <code>pickup</code></td><td>inmediato</td><td>Utility</td></tr>
+    <tr><td>M6</td><td>Despachado / en camino</td><td><code>packed</code> y <code>delivery</code></td><td>inmediato</td><td>Utility</td></tr>
+    <tr><td>M7</td><td>Entregado</td><td><code>fulfillment → delivered</code></td><td>inmediato</td><td>Utility</td></tr>
+    <tr><td>M8</td><td>Pedido de reseña</td><td><code>delivered</code> + 6 días</td><td>delay</td><td>Marketing</td></tr>
+    <tr><td>M10</td><td>Recompra / módulos</td><td><code>delivered</code> + 40 días</td><td>delay</td><td>Marketing</td></tr>
+  </table>
+  <p style="font-size:13px;color:var(--muted)"><b>Pedido + pago juntos = un solo mensaje (M1).</b> M3 solo si el pago se confirma en un momento distinto al alta. <b>M11</b> requiere capturar el WhatsApp al inicio del checkout (hoy la recuperación es por email).</p>
+
+  <h2>4 · Copy propuesta</h2>
+  <div class="msg"><h3>M11 · Carrito abandonado <span class="tag mkt">Marketing</span> <span style="font-size:11px;color:var(--muted)">requiere WhatsApp capturado al inicio del checkout</span></h3><pre>¡Hola {{nombre}}! 👋 Vimos que quedaste a un paso de tu pedido en Tubular.
+🛋️ {{resumen_items}} — ${{total}}
+Te dejamos el carrito listo para terminar la compra 👉 {{link_recuperar}}
+¿Alguna duda? Respondé este mensaje y te ayudamos.</pre></div>
+
+  <div class="msg"><h3>M1 · Pedido confirmado — nace pagado <span class="tag util">Utility</span> <span style="font-size:11px;color:var(--muted)">pedido + pago juntos · NO se manda M3</span></h3><pre>¡Hola {{nombre}}! 👋 Recibimos tu pedido *#{{numero}}* y el *pago está confirmado* ✅
+🛋️ {{resumen_items}}
+Total pagado: ${{total}}
+Ya arrancamos a prepararlo. Te avisamos en cada paso. ¡Gracias por elegirnos!</pre></div>
+
+  <div class="msg"><h3>M1 · Pedido confirmado — pago pendiente <span class="tag util">Utility</span> <span style="font-size:11px;color:var(--muted)">luego llega M3 al acreditarse</span></h3><pre>¡Hola {{nombre}}! 👋 Recibimos tu pedido *#{{numero}}* en Tubular.
+🛋️ {{resumen_items}}
+Total: ${{total}}
+Te avisamos apenas se acredite el pago. ¡Gracias por elegirnos!</pre></div>
+
+  <div class="msg"><h3>M2 · Seña recibida + saldo <span class="tag util">Utility</span></h3><pre>¡Gracias {{nombre}}! 💰 Registramos tu seña de ${{sena}} para el pedido *#{{numero}}*.
+Saldo pendiente: *${{saldo}}*.
+Ya arrancamos a prepararlo. Cuando quieras completar el saldo, avisame.</pre></div>
+
+  <div class="msg"><h3>M3 · Pago confirmado <span class="tag util">Utility</span></h3><pre>¡Listo {{nombre}}! ✅ Confirmamos el pago total de tu pedido *#{{numero}}*.
+Pasa a preparación 🛠️ — te aviso apenas esté embalado.</pre></div>
+
+  <div class="msg"><h3>M5 · Listo para retirar <span class="tag util">Utility</span></h3><pre>🎉 {{nombre}}, tu pedido *#{{numero}}* está *listo para retirar*.
+📍 {{direccion_retiro}}
+🕐 {{horarios}}
+Traé tu DNI y el número de pedido. ¡Te esperamos!</pre></div>
+
+  <div class="msg"><h3>M6 · Despachado / en camino <span class="tag util">Utility</span></h3><pre>🚚 {{nombre}}, ¡tu pedido *#{{numero}}* salió para tu domicilio!
+{{transporte_o_tracking}}
+Cualquier cosa respondé este mensaje.</pre></div>
+
+  <div class="msg"><h3>M7 · Entregado <span class="tag util">Utility</span></h3><pre>✅ {{nombre}}, nos figura que tu pedido *#{{numero}}* fue entregado.
+¡Esperamos que lo disfrutes! 🧡 ¿Salió todo bien? Escribinos si necesitás algo.</pre></div>
+
+  <div class="msg"><h3>M8 · Pedido de reseña <span class="tag mkt">Marketing</span></h3><pre>¡Hola {{nombre}}! ¿Cómo venís con tu {{producto}} de Tubular? 🛋️
+Tu opinión nos ayuda un montón ⭐ (1 minuto):
+👉 {{link_resena}}
+¡Gracias por bancar una marca que arma muebles a medida!</pre></div>
+
+  <div class="msg"><h3>M10 · Recompra / sumar módulos <span class="tag mkt">Marketing</span></h3><pre>{{nombre}}, ¿sabías que tu mueble Tubular es *modular*? 🧩
+Podés sumarle módulos y hacerlo crecer cuando quieras.
+Mirá ideas 👉 {{link_configurador}}</pre></div>
+
+</body>
+</html>

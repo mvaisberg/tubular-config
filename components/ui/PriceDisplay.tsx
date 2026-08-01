@@ -8,6 +8,7 @@ export const PriceDisplay = ({ className }: { className?: string }) => {
     const modules = useConfigStore((state) => state.modules);
     const totalPrice = useConfigStore((state) => state.totalPrice);
     const settings = useConfigStore((state) => state.settings);
+    const hasWheels = useConfigStore((state) => state.hasWheels);
     const [isAddingToCart, setIsAddingToCart] = useState(false);
     const [addToCartError, setAddToCartError] = useState<string | null>(null);
 
@@ -25,6 +26,7 @@ export const PriceDisplay = ({ className }: { className?: string }) => {
 
             const result = await addConfigToWooCart({
                 modules,
+                hasWheels,
                 totalPriceARS: finalPrice,
                 totalPriceUSD,
             });

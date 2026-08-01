@@ -1,8 +1,12 @@
 import Scene from "@/components/3d/Scene";
 import { Toolbar } from "@/components/ui/Toolbar";
 import { Sidebar } from "@/components/ui/Sidebar";
+import { Toast } from "@/components/ui/Toast";
+import { FirstVisitHint } from "@/components/ui/FirstVisitHint";
 import { DataLoader } from "@/components/DataLoader";
 import { SceneLoader } from "@/components/ui/SceneLoader";
+import { MetaTracker } from "@/components/MetaTracker";
+import { ConfiguratorTracker } from "@/components/ConfiguratorTracker";
 import { Suspense } from "react";
 import { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
@@ -60,10 +64,16 @@ export default function Home() {
       <Suspense fallback={null}>
         <DataLoader />
       </Suspense>
+      <MetaTracker />
+      <Suspense fallback={null}>
+        <ConfiguratorTracker />
+      </Suspense>
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
-        <div className="flex-1 relative h-[40dvh] md:h-full shrink-0 md:shrink">
+        <div className="flex-1 relative shrink min-h-0">
           <Scene />
           <SceneLoader />
+          <Toast />
+          <FirstVisitHint />
           <Suspense fallback={null}>
             <Toolbar />
           </Suspense>

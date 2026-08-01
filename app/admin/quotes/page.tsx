@@ -9,12 +9,10 @@ export default async function QuotesPage() {
         .order("created_at", { ascending: false });
 
     return (
-        <div className="max-w-6xl space-y-8 pb-32">
-            <header className="mb-12 border-b border-black pb-4 flex justify-between items-end">
-                <div>
-                    <h1 className="text-4xl font-black tracking-tight uppercase">Cotizaciones</h1>
-                    <p className="text-black/60 text-xs font-bold uppercase tracking-widest mt-1">Cotizaciones guardadas</p>
-                </div>
+        <div className="space-y-6 pb-32">
+            <header>
+                <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Cotizaciones</h1>
+                <p className="text-sm text-gray-500 mt-1">Cotizaciones guardadas</p>
             </header>
 
             <QuotesTable quotes={quotes || []} />

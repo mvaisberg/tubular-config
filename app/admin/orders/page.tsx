@@ -1,32 +1,42 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import OrdersTable from "@/components/admin/OrdersTable";
+import OrdersGrid from "@/components/admin/OrdersGrid";
+import { getUserRole, canViewPricing } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
 
 export default async function OrdersPage() {
     const supabase = await createClient();
+    const role = await getUserRole();
+    const showPricing = canViewPricing(role);
+
     const { data: orders } = await supabase
         .from("admin_orders")
         .select("*")
         .order("created_at", { ascending: false });
 
     return (
-        <div className="max-w-6xl space-y-8 pb-32">
-            <header className="mb-12 border-b border-black pb-4 flex justify-between items-end">
+        <div className="space-y-6 pb-32">
+            <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tight uppercase">Órdenes</h1>
-                    <p className="text-black/60 text-xs font-bold uppercase tracking-widest mt-1">Gestión de recibos y cobros</p>
+                    <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Pedidos</h1>
+                    <p className="text-sm text-gray-500 mt-1">
+                        Pedidos manuales y de WooCommerce
+                    </p>
                 </div>
-                <Link
-                    href="/admin/orders/new"
-                    className="flex items-center gap-2 bg-black text-white px-4 py-3 text-xs font-black uppercase tracking-widest hover:bg-blue-600 transition-colors shadow-[4px_4px_0px_#000]"
-                >
-                    <Plus size={14} strokeWidth={2.5} />
-                    CREAR ORDEN
-                </Link>
+                {showPricing && (
+                    <Link
+                        href="/admin/orders/new"
+                        className="inline-flex items-center gap-2 bg-indigo-600 text-white px-3 py-2 text-sm font-medium rounded-md hover:bg-indigo-700 transition-colors w-fit"
+                    >
+                        <Plus size={15} />
+                        Nuevo pedido
+                    </Link>
+                )}
             </header>
 
-            <OrdersTable initialOrders={orders || []} />
+            <OrdersGrid initialOrders={orders || []} showPricing={showPricing} />
         </div>
     );
 }

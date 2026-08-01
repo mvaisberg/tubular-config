@@ -1,17 +1,11 @@
-import { createClient } from "@/lib/supabase/client";
-import Sidebar from "@/components/admin/Sidebar";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { getUserRole } from "@/lib/auth";
 
-export default function AdminLayout({
+export default async function AdminLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
-    return (
-        <div className="flex min-h-screen bg-white text-black font-sans selection:bg-blue-600 selection:text-white">
-            <Sidebar />
-            <main className="flex-1 overflow-auto p-8 lg:p-12">
-                {children}
-            </main>
-        </div>
-    );
+    const role = await getUserRole();
+    return <AdminShell role={role}>{children}</AdminShell>;
 }

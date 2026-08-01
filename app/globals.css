@@ -102,3 +102,17 @@ body {
     display: block !important;
   }
 }
+/* Marquee promo (texto en movimiento) — Color Drop */
+@keyframes promo-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.promo-marquee-track {
+  display: inline-flex;
+  white-space: nowrap;
+  will-change: transform;
+  animation: promo-marquee 22s linear infinite;
+}
+.promo-marquee-track:hover {
+  animation-play-state: paused;
+}

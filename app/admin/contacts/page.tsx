@@ -35,9 +35,9 @@ export default function ContactsAdminPage() {
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
             <header className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-black text-slate-800 tracking-tight">Contactos de Tienda</h1>
-                    <p className="text-slate-500 mt-1 font-medium text-lg leading-relaxed max-w-2xl">
-                        Mensajes recibidos desde el formulario de contacto de Tiendanube.
+                    <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Contactos</h1>
+                    <p className="text-sm text-gray-500 mt-1">
+                        Mensajes recibidos desde el formulario de contacto.
                     </p>
                 </div>
             </header>

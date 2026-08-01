@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { detectDevice } from '@/lib/device';
 
 export async function POST(req: Request) {
     try {
-        const { modules, totalPrice, usdExchangeRate, imageData } = await req.json();
+        const { modules, hasWheels, totalPrice, usdExchangeRate, imageData, clientName } = await req.json();
+        const device = detectDevice(req.headers);
 
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -19,7 +21,7 @@ export async function POST(req: Request) {
         const supabase = createClient(supabaseUrl, supabaseKey);
 
         const rawExchange = usdExchangeRate || 1000;
-        const configuration: any = { modules };
+        const configuration: any = { modules, hasWheels: !!hasWheels };
 
         // Handle image data upload if present
         if (imageData && typeof imageData === 'string') {
@@ -60,10 +62,11 @@ export async function POST(req: Request) {
         }
 
         const quoteData = {
-            client_name: "Cotización WhatsApp",
+            client_name: clientName || "Cotización WhatsApp",
             configuration,
             total_price_ars: Math.round(totalPrice),
-            total_price_usd: Math.round(totalPrice / rawExchange)
+            total_price_usd: Math.round(totalPrice / rawExchange),
+            device,
         };
 
         const { data, error } = await supabase.from('quotes').insert([quoteData]).select().single();

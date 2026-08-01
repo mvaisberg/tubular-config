@@ -3,7 +3,7 @@
 import { ModuleConfig } from '@/lib/types';
 import { useConfigStore } from '@/lib/store';
 import { useState, useEffect } from 'react';
-import { Html } from '@react-three/drei';
+import { Html, Edges } from '@react-three/drei';
 import { Plus, Trash2 } from 'lucide-react';
 
 const AddButton = ({ position, onClick, direction }: { position: [number, number, number], onClick: () => void, direction: string }) => {
@@ -65,6 +65,7 @@ export const ModuleHitBox = ({ module }: { module: ModuleConfig }) => {
     const selectModule = useConfigStore((state) => state.actions.selectModule);
     const addModule = useConfigStore((state) => state.actions.addModule);
     const removeModule = useConfigStore((state) => state.actions.removeModule);
+    const showToast = useConfigStore((state) => state.actions.showToast);
     const modules = useConfigStore((state) => state.modules);
     const showAddButtons = useConfigStore((state) => state.showAddButtons);
     const [hovered, setHovered] = useState(false);
@@ -109,6 +110,17 @@ export const ModuleHitBox = ({ module }: { module: ModuleConfig }) => {
         if (direction === 'right') newX += w;
         if (direction === 'top') newY += h;
 
+        // Rule: all modules in the same column share width, all modules in the
+        // same row share height. Inherit from existing peers in the target
+        // column/row so we don't break that invariant.
+        const peerInColumn = modules.find(m => Math.abs(m.position.x - newX) < 1);
+        const peerInRow = modules.find(m => Math.abs(m.position.y - newY) < 1);
+        const newSize = {
+            w: peerInColumn ? peerInColumn.size.w : module.size.w,
+            h: peerInRow ? peerInRow.size.h : module.size.h,
+            d: module.size.d,
+        };
+
         // Rule: Can't add side module if no support below (unless on floor).
         // If supporting column is missing, fill it down to y=0.
 
@@ -135,10 +147,7 @@ export const ModuleHitBox = ({ module }: { module: ModuleConfig }) => {
                 // Check if there is a module at [newX, newY - h, newZ]
                 const hasSupport = isOccupied(newX, newY - h, newZ);
                 if (!hasSupport) {
-                    // Can't add!
-                    // Maybe could use a toast here ideally.
-                    console.warn("Cannot add lateral module without support below.");
-                    alert("Cannot add lateral module without support below.");
+                    showToast("Necesita un módulo de apoyo abajo para agregar acá.");
                     return;
                 }
             }
@@ -148,7 +157,7 @@ export const ModuleHitBox = ({ module }: { module: ModuleConfig }) => {
                 modulesToAdd.push({
                     id: crypto.randomUUID(),
                     position: { x: newX, y: newY, z: newZ },
-                    size: { ...module.size },
+                    size: newSize,
                     color: module.color,
                     material: module.material,
                     hasPanel: { ...module.hasPanel }
@@ -162,7 +171,7 @@ export const ModuleHitBox = ({ module }: { module: ModuleConfig }) => {
                 modulesToAdd.push({
                     id: crypto.randomUUID(),
                     position: { x: newX, y: newY, z: newZ },
-                    size: { ...module.size },
+                    size: newSize,
                     color: module.color,
                     material: module.material,
                     hasPanel: { ...module.hasPanel }
@@ -186,11 +195,15 @@ export const ModuleHitBox = ({ module }: { module: ModuleConfig }) => {
     const rightPos: [number, number, number] = [((x + w) * 0.001) + 0.02, cy, frontZ];
     const leftPos: [number, number, number] = [(x * 0.001) - 0.02, cy, frontZ];
 
-    // Position Top Add button based on whether Delete button is also shown
-    const showDeleteBtn = isSelected && modules.length > 1 && !hasTop;
-    // Increased separation from 0.04 to 0.055
-    const topPos: [number, number, number] = [showDeleteBtn ? cx - 0.055 : cx, ((y + h) * 0.001) + 0.02, frontZ];
-    const topPosDel: [number, number, number] = [cx + 0.055, ((y + h) * 0.001) + 0.02, frontZ];
+    // Only allow deletion from extremes — never from the middle, since removing
+    // a middle module would split the structure or leave modules unsupported.
+    // A module is at an extreme iff: nothing rests on top of it AND it's at a
+    // horizontal edge (no left neighbor or no right neighbor).
+    const isExtreme = !hasTop && (!hasLeft || !hasRight);
+    const showDeleteBtn = isSelected && modules.length > 1 && isExtreme;
+    // Increased separation from 0.04 to 0.08
+    const topPos: [number, number, number] = [showDeleteBtn ? cx - 0.08 : cx, ((y + h) * 0.001) + 0.02, frontZ];
+    const topPosDel: [number, number, number] = [cx + 0.08, ((y + h) * 0.001) + 0.02, frontZ];
 
     // Dimensions
     const args: [number, number, number] = [w * 0.001, h * 0.001, d * 0.001];
@@ -215,9 +228,11 @@ export const ModuleHitBox = ({ module }: { module: ModuleConfig }) => {
                 <meshBasicMaterial
                     color="#354763"
                     transparent
-                    opacity={isSelected ? 0.15 : hovered ? 0.05 : 0}
+                    opacity={isSelected ? 0.12 : hovered ? 0.05 : 0}
                     wireframe={false}
                 />
+                {/* Outline de aristas: hace visible la selección incluso sobre acrílicos. */}
+                {isSelected && <Edges color="#354763" lineWidth={2} />}
             </mesh>
 
             {(isMobile ? (isSelected || showAddButtons) : (isSelected || hovered)) && (

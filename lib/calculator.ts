@@ -102,7 +102,12 @@ export function generateParts(modules: ModuleConfig[]): DerivedPart[] {
         // Panel positions are their bottom-left-back corner? Or center?
         // Let's use the corner with lowest coordinates.
 
-        const addPanel = (x1: number, y1: number, z1: number, plane: 'xy' | 'xz' | 'yz', w_dim: number, h_dim: number) => {
+        const addPanel = (
+            x1: number, y1: number, z1: number,
+            plane: 'xy' | 'xz' | 'yz',
+            w_dim: number, h_dim: number,
+            overrides?: { material?: ModuleConfig['material']; color?: string }
+        ) => {
             const id = `panel-${plane}-${x1}-${y1}-${z1}-${w_dim}-${h_dim}`;
             addPart({
                 id,
@@ -110,14 +115,20 @@ export function generateParts(modules: ModuleConfig[]): DerivedPart[] {
                 position: [x1, y1, z1] as [number, number, number],
                 orientation: plane,
                 dimensions: { width: w_dim, height: h_dim },
-                color: mod.color,
-                material: mod.material
+                color: overrides?.color ?? mod.color,
+                material: overrides?.material ?? mod.material
             });
         };
 
         // Top Panel (XZ) at y + h
         if (mod.hasPanel.top) {
-            addPanel(x, y + h, z, 'xz', w, d);
+            const topMat = mod.topPanelMaterial ?? mod.material;
+            // When a steel module gets an acrylic top shelf, force transparent color
+            // (steel colors like 'black' would render wrong on the acrylic shader).
+            const topColor = (topMat === 'acrylic' && mod.material === 'steel')
+                ? 'transparent'
+                : mod.color;
+            addPanel(x, y + h, z, 'xz', w, d, { material: topMat, color: topColor });
         }
         // Bottom Panel (XZ) at y
         if (mod.hasPanel.bottom) {

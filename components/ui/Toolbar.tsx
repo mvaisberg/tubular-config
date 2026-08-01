@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useConfigStore } from '@/lib/store';
 import { ModuleConfig } from '@/lib/types';
-import { Plus, Trash2, RotateCcw, Target, Save, ShoppingBag, Layout, Ruler, Loader2 } from 'lucide-react';
+import { Plus, Trash2, RotateCcw, Target, Save, ShoppingBag, Layout, Ruler, Loader2, Undo2, Redo2, Camera } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useSearchParams } from 'next/navigation';
 import { SaveModal } from './SaveModal';
@@ -18,6 +18,32 @@ export const Toolbar = () => {
     const removeModule = useConfigStore((state) => state.actions.removeModule);
     const reset = useConfigStore((state) => state.actions.reset);
     const triggerCameraReset = useConfigStore((state) => state.actions.triggerCameraReset);
+    const undo = useConfigStore((state) => state.actions.undo);
+    const redo = useConfigStore((state) => state.actions.redo);
+    const canUndo = useConfigStore((state) => state.history.length > 0);
+    const canRedo = useConfigStore((state) => state.future.length > 0);
+
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            const target = e.target as HTMLElement | null;
+            const tag = target?.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || target?.isContentEditable) return;
+
+            const isMod = e.ctrlKey || e.metaKey;
+            if (!isMod) return;
+            const k = e.key.toLowerCase();
+
+            if (k === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                undo();
+            } else if ((k === 'z' && e.shiftKey) || k === 'y') {
+                e.preventDefault();
+                redo();
+            }
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [undo, redo]);
     const environment = useConfigStore((state) => state.environment);
     const setEnvironment = useConfigStore((state) => state.actions.setEnvironment);
     const showDimensions = useConfigStore((state) => state.showDimensions);
@@ -27,10 +53,17 @@ export const Toolbar = () => {
     const { active, progress } = useProgress();
 
     const toggleEnvironment = () => {
-        const envs: Array<'none' | 'env1' | 'env2' | 'env3'> = ['none', 'env1', 'env2', 'env3'];
-        const availableEnvs = envs.filter(e => e !== environment);
-        const randomEnv = availableEnvs[Math.floor(Math.random() * availableEnvs.length)];
-        setEnvironment(randomEnv);
+        setEnvironment(environment === 'none' ? 'room' : 'none');
+    };
+
+    // Captura el canvas 3D (preserveDrawingBuffer ya está activo) y lo descarga como PNG.
+    const downloadImage = () => {
+        const canvas = document.querySelector('canvas');
+        if (!canvas) return;
+        const a = document.createElement('a');
+        a.href = (canvas as HTMLCanvasElement).toDataURL('image/png');
+        a.download = 'mi-mueble-tubular.png';
+        a.click();
     };
 
     const [isSaving, setIsSaving] = useState(false);
@@ -105,7 +138,7 @@ export const Toolbar = () => {
 
     return (
         <>
-            <div className="toolbar-mobile-override absolute bottom-4 md:bottom-8 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md p-2 md:p-4 rounded-full shadow-2xl border border-[#354763]/10 flex gap-1.5 md:gap-4 items-center w-[95%] sm:w-auto overflow-x-auto no-scrollbar z-30 justify-start sm:justify-center">
+            <div className="toolbar-mobile-override absolute bottom-3 md:bottom-8 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-md p-2 md:p-3 rounded-full md:rounded-3xl shadow-2xl border border-[#354763]/10 flex gap-1.5 md:gap-1 items-center w-[95%] sm:w-auto overflow-x-auto no-scrollbar z-30 justify-start sm:justify-center">
                 {modules.length === 0 ? (
                     <button onClick={() => addModule({
                         id: crypto.randomUUID(),
@@ -122,19 +155,20 @@ export const Toolbar = () => {
                 <button
                     onClick={toggleEnvironment}
                     disabled={active}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all ${environment !== 'none' ? 'bg-[#354763] text-white shadow-md' : 'text-[#354763] hover:bg-gray-100'} ${active ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`flex flex-col items-center gap-1 p-2 md:px-3 md:py-1.5 rounded-2xl transition-all ${environment !== 'none' ? 'bg-[#354763] text-white shadow-md' : 'text-[#354763] hover:bg-gray-100'} ${active ? 'opacity-50 cursor-not-allowed' : ''}`}
                     title="Cambiar Ambiente"
                 >
-                    <Layout size={18} />
-                    <span>Ambientar</span>
+                    <Layout size={20} />
+                    <span className="hidden md:block text-[10px] font-semibold leading-none">Ambientar</span>
                 </button>
 
                 <button
                     onClick={toggleDimensions}
-                    className={`p-2 rounded-full transition-colors ${showDimensions ? 'bg-[#354763] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
+                    className={`flex flex-col items-center gap-1 p-2 md:px-3 md:py-1.5 rounded-2xl transition-colors ${showDimensions ? 'bg-[#354763] text-white shadow-md' : 'text-gray-500 hover:bg-gray-100'}`}
                     title="Mostrar Medidas"
                 >
                     <Ruler size={20} />
+                    <span className="hidden md:block text-[10px] font-semibold leading-none">Medidas</span>
                 </button>
 
                 <button
@@ -148,29 +182,61 @@ export const Toolbar = () => {
                 {isAdmin && (
                     <button
                         onClick={() => setIsProductModalOpen(true)}
-                        className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors"
+                        className="flex flex-col items-center gap-1 p-2 md:px-3 md:py-1.5 text-emerald-600 hover:bg-emerald-50 rounded-2xl transition-colors"
                         title="Guardar como Producto"
                     >
                         <Save size={20} />
+                        <span className="hidden md:block text-[10px] font-semibold leading-none">Guardar</span>
                     </button>
                 )}
 
                 <div className="h-6 w-px bg-gray-200 mx-2" />
 
                 <button
+                    onClick={undo}
+                    disabled={!canUndo}
+                    className="flex flex-col items-center gap-1 p-2 md:px-3 md:py-1.5 text-gray-600 hover:bg-gray-100 rounded-2xl disabled:opacity-30 disabled:cursor-not-allowed"
+                    title="Deshacer (Ctrl+Z)"
+                >
+                    <Undo2 size={20} />
+                    <span className="hidden md:block text-[10px] font-semibold leading-none">Deshacer</span>
+                </button>
+
+                <button
+                    onClick={redo}
+                    disabled={!canRedo}
+                    className="flex flex-col items-center gap-1 p-2 md:px-3 md:py-1.5 text-gray-600 hover:bg-gray-100 rounded-2xl disabled:opacity-30 disabled:cursor-not-allowed"
+                    title="Rehacer (Ctrl+Shift+Z)"
+                >
+                    <Redo2 size={20} />
+                    <span className="hidden md:block text-[10px] font-semibold leading-none">Rehacer</span>
+                </button>
+
+                <button
                     onClick={reset}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-full"
-                    title="Reset All"
+                    className="flex flex-col items-center gap-1 p-2 md:px-3 md:py-1.5 text-red-500 hover:bg-red-50 rounded-2xl"
+                    title="Reiniciar diseño"
                 >
                     <RotateCcw size={20} />
+                    <span className="hidden md:block text-[10px] font-semibold leading-none">Reiniciar</span>
                 </button>
 
                 <button
                     onClick={triggerCameraReset}
-                    className="p-2 text-gray-500 hover:bg-gray-100 rounded-full"
-                    title="Center Camera"
+                    className="flex flex-col items-center gap-1 p-2 md:px-3 md:py-1.5 text-gray-500 hover:bg-gray-100 rounded-2xl"
+                    title="Centrar cámara"
                 >
                     <Target size={20} />
+                    <span className="hidden md:block text-[10px] font-semibold leading-none">Centrar</span>
+                </button>
+
+                <button
+                    onClick={downloadImage}
+                    className="flex flex-col items-center gap-1 p-2 md:px-3 md:py-1.5 text-gray-500 hover:bg-gray-100 rounded-2xl"
+                    title="Descargar imagen"
+                >
+                    <Camera size={20} />
+                    <span className="hidden md:block text-[10px] font-semibold leading-none">Imagen</span>
                 </button>
 
             </div>

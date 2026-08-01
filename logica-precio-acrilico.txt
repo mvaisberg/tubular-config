@@ -1,0 +1,139 @@
+CÓMO SE CALCULA EL PRECIO DE UN MUEBLE ACRÍLICO — PASO A PASO
+================================================================
+
+
+PASO 1 — GENERAR LAS PIEZAS A PARTIR DEL MÓDULO
+------------------------------------------------
+lib/calculator.ts → generateParts() toma los módulos y deriva las
+piezas físicas. Cada módulo de tamaño w × h × d (ancho × alto ×
+profundidad) produce:
+
+  - 8 bolas (esquinas)
+  - 12 caños (4 en eje X = ancho, 4 en eje Y = alto, 4 en eje Z = profundidad)
+  - 0 a 6 paneles: en acrílico solo entran top + bottom (= los estantes)
+
+Cuando hay varios módulos, las piezas que comparten posición se
+deduplican (no contás dos veces el caño que conecta dos módulos
+vecinos).
+
+
+PASO 2 — CADA PIEZA BUSCA SU MATCH EN LA BASE DE PARTES
+--------------------------------------------------------
+lib/pricing.ts recorre las piezas y busca el SKU correspondiente en
+Supabase (partsData). Es material-aware:
+
+  - Bola → 'bola' (siempre la misma)
+
+  - Caño:
+      Si el módulo es ACRÍLICO Y el caño es de eje X (ancho) Y mide 750mm
+        → usa 'tube-acrilico-750' ($10.000)
+      En cualquier otro caso
+        → busca el caño de acero por longitud
+          (tube-200, tube-350, tube-500, tube-750)
+
+  - Panel → match por (width, height, material).
+      Para acrílico busca 'panel-acrilico-WxD' que tiene
+      dimensions.material === 'acrylic'.
+
+El precio en pesos sale de getCostARS(part):
+  - si la pieza tiene price_ars lo usa directo
+  - si tiene price_usd lo multiplica por usd_exchange_rate (hoy = 1440)
+
+
+PASO 3 — SUMAR PIEZAS IMPLÍCITAS (no salen de la geometría)
+------------------------------------------------------------
+Después de matchear las piezas visibles, se agregan:
+
+  - Conectores internos: tubesCount × 2
+      (cada caño tiene un conector en cada punta)
+
+  - Soportes acrílicos: acrylicPanelsCount × 4
+      (4 por estante)
+
+  - Patas o ruedas: 1 por bola apoyada en el piso (y === 0).
+      Si está activo Ruedas → 'rueda-normal'
+      Si no                → 'pata-plastico'
+
+  - Embalaje: 1 fijo
+
+La suma de todo eso es el productCost = costo real de fabricar el
+mueble.
+
+
+PASO 4 — FÓRMULA FINAL (margen + envío + fees de pago)
+-------------------------------------------------------
+Constantes de la tabla settings (valores actuales en producción):
+
+  target_margin_percent       = 70%
+  shipping_cost               = $20.000
+  transaction_fee_percent     = 2.5%
+  transaction_fee_iva_percent = 21%
+  installments_6_percent      = 13%
+  iva_percent                 = 21%
+
+Fórmulas (literal del código):
+
+  transaction_fee_real = 2.5 × (1 + 21/100) = 3.025%
+  installment_fee      = 13  × (1 + 21/100) = 15.73%
+  total_fee            = 3.025 + 15.73      = 18.755%
+
+  base_price       = productCost / (1 - 0.70)         ← aplica margen
+  price_w_shipping = base_price + 20.000              ← suma envío
+  final_price      = price_w_shipping / (1 - 0.18755) ← absorbe fees
+                                                        Mercado Pago
+                                                        + 6 cuotas
+
+final_price es el precio en 6 cuotas sin interés que se ve en el sidebar.
+El precio efectivo (20% OFF) se calcula en la UI:
+  efectivo = final_price × 0.80
+
+
+================================================================
+EJEMPLO CONCRETO
+Módulo acrílico 750 × 350 × 350, naranja, con patas
+================================================================
+
+BOM (Bill of Materials)
+-----------------------
+Pieza                                  Cant.   Costo unit ARS    Subtotal
+Bola cromada (USD 1.8 × 1440)             8         $2.592      $20.736
+Tube acrílico 750 ANCHO (especial)        4        $10.000      $40.000
+Tube 350 ALTO (acero)                     4         $3.750      $15.000
+Tube 350 PROFUNDIDAD (acero)              4         $3.750      $15.000
+Estante acrílico 750×350                  2        $30.000      $60.000
+Conector interno (USD 0.35 × 1440)       24           $504      $12.096
+Soporte acrílico (USD 0.4 × 1440)         8           $576       $4.608
+Pata plástico (USD 0.3 × 1440)            4           $432       $1.728
+Embalaje                                  1        $15.000      $15.000
+                                                              ----------
+productCost                                                    $184.168
+
+
+Aplicación de la fórmula
+-------------------------
+  base_price       = 184.168 / 0.30      =  $613.893
+  price_w_shipping = 613.893 + 20.000    =  $633.893
+  final_price      = 633.893 / 0.81245   ≈  $780.222   ← 6 cuotas
+  efectivo (20%)   = 780.222 × 0.80      ≈  $624.178
+
+
+================================================================
+⚠️  ATENCIÓN — GAP DETECTADO EN LA BASE DE PARTES
+================================================================
+
+Las dimensiones habilitadas para acrílico son:
+  - ancho/alto:  200 / 350 / 400 / 750
+  - profundidad: 250 / 350
+
+Pero en la DB sólo existen estos caños de acero:
+  tube-200, tube-350, tube-500, tube-750
+
+FALTAN:
+  - tube-250  (necesario si el cliente elige profundidad 250mm)
+  - tube-400  (necesario si el cliente elige ancho o alto 400mm)
+
+Si un cliente arma un módulo con profundidad 250 o cualquier
+dimensión de 400, el matcher no encuentra el caño y suma $0 en
+silencio — el mueble queda sub-cotizado.
+
+Hay que cargar esas dos piezas con su precio correspondiente.

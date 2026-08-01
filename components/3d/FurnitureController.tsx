@@ -80,7 +80,7 @@ export const FurnitureController = () => {
         if (groupRef.current) {
             fixModelToFloor(groupRef.current);
         }
-    }); // Run on every render to ensure it stays grounded if parts change
+    }, [parts, hasWheels]); // Solo cuando cambia la geometría (antes corría en cada render)
 
     return (
         <group position={[bounds?.centerX || 0, 0, bounds?.centerZ || 0]}>
@@ -127,16 +127,16 @@ export const FurnitureController = () => {
                         {/* Width line (front bottom edge) */}
                         <Line
                             points={[
-                                [bounds.minX, bounds.minY + 0.005, bounds.maxZ + 0.05],
-                                [bounds.maxX, bounds.minY + 0.005, bounds.maxZ + 0.05]
+                                [bounds.minX, bounds.minY + 0.005, bounds.maxZ + 0.09],
+                                [bounds.maxX, bounds.minY + 0.005, bounds.maxZ + 0.09]
                             ]}
                             color="#354763"
                             lineWidth={1.5}
                         />
-                        <Line points={[[bounds.minX, bounds.minY + 0.005, bounds.maxZ + 0.04], [bounds.minX, bounds.minY + 0.005, bounds.maxZ + 0.06]]} color="#354763" lineWidth={1.5} />
-                        <Line points={[[bounds.maxX, bounds.minY + 0.005, bounds.maxZ + 0.04], [bounds.maxX, bounds.minY + 0.005, bounds.maxZ + 0.06]]} color="#354763" lineWidth={1.5} />
+                        <Line points={[[bounds.minX, bounds.minY + 0.005, bounds.maxZ + 0.08], [bounds.minX, bounds.minY + 0.005, bounds.maxZ + 0.10]]} color="#354763" lineWidth={1.5} />
+                        <Line points={[[bounds.maxX, bounds.minY + 0.005, bounds.maxZ + 0.08], [bounds.maxX, bounds.minY + 0.005, bounds.maxZ + 0.10]]} color="#354763" lineWidth={1.5} />
 
-                        <Billboard position={[(bounds.minX + bounds.maxX) / 2, bounds.minY + 0.005, bounds.maxZ + 0.08]}>
+                        <Billboard position={[(bounds.minX + bounds.maxX) / 2, bounds.minY + 0.005, bounds.maxZ + 0.12]}>
                             {/* Background pill */}
                             <mesh position={[0, 0, -0.001]}>
                                 <planeGeometry args={[0.18, 0.055]} />
@@ -150,16 +150,16 @@ export const FurnitureController = () => {
                         {/* Height line (left front edge) */}
                         <Line
                             points={[
-                                [bounds.minX - 0.05, bounds.minY, bounds.maxZ + 0.02],
-                                [bounds.minX - 0.05, bounds.maxY, bounds.maxZ + 0.02]
+                                [bounds.minX - 0.09, bounds.minY, bounds.maxZ + 0.02],
+                                [bounds.minX - 0.09, bounds.maxY, bounds.maxZ + 0.02]
                             ]}
                             color="#354763"
                             lineWidth={1.5}
                         />
-                        <Line points={[[bounds.minX - 0.04, bounds.minY, bounds.maxZ + 0.02], [bounds.minX - 0.06, bounds.minY, bounds.maxZ + 0.02]]} color="#354763" lineWidth={1.5} />
-                        <Line points={[[bounds.minX - 0.04, bounds.maxY, bounds.maxZ + 0.02], [bounds.minX - 0.06, bounds.maxY, bounds.maxZ + 0.02]]} color="#354763" lineWidth={1.5} />
+                        <Line points={[[bounds.minX - 0.08, bounds.minY, bounds.maxZ + 0.02], [bounds.minX - 0.10, bounds.minY, bounds.maxZ + 0.02]]} color="#354763" lineWidth={1.5} />
+                        <Line points={[[bounds.minX - 0.08, bounds.maxY, bounds.maxZ + 0.02], [bounds.minX - 0.10, bounds.maxY, bounds.maxZ + 0.02]]} color="#354763" lineWidth={1.5} />
 
-                        <Billboard position={[bounds.minX - 0.09, (bounds.minY + bounds.maxY) / 2, bounds.maxZ + 0.02]}>
+                        <Billboard position={[bounds.minX - 0.13, (bounds.minY + bounds.maxY) / 2, bounds.maxZ + 0.02]}>
                             <mesh position={[0, 0, -0.001]}>
                                 <planeGeometry args={[0.16, 0.055]} />
                                 <meshBasicMaterial color="#354763" transparent opacity={0.9} />
@@ -172,16 +172,16 @@ export const FurnitureController = () => {
                         {/* Depth line (right bottom edge) */}
                         <Line
                             points={[
-                                [bounds.maxX + 0.05, bounds.minY + 0.005, bounds.minZ],
-                                [bounds.maxX + 0.05, bounds.minY + 0.005, bounds.maxZ]
+                                [bounds.maxX + 0.09, bounds.minY + 0.005, bounds.minZ],
+                                [bounds.maxX + 0.09, bounds.minY + 0.005, bounds.maxZ]
                             ]}
                             color="#354763"
                             lineWidth={1.5}
                         />
-                        <Line points={[[bounds.maxX + 0.04, bounds.minY + 0.005, bounds.minZ], [bounds.maxX + 0.06, bounds.minY + 0.005, bounds.minZ]]} color="#354763" lineWidth={1.5} />
-                        <Line points={[[bounds.maxX + 0.04, bounds.minY + 0.005, bounds.maxZ], [bounds.maxX + 0.06, bounds.minY + 0.005, bounds.maxZ]]} color="#354763" lineWidth={1.5} />
+                        <Line points={[[bounds.maxX + 0.08, bounds.minY + 0.005, bounds.minZ], [bounds.maxX + 0.10, bounds.minY + 0.005, bounds.minZ]]} color="#354763" lineWidth={1.5} />
+                        <Line points={[[bounds.maxX + 0.08, bounds.minY + 0.005, bounds.maxZ], [bounds.maxX + 0.10, bounds.minY + 0.005, bounds.maxZ]]} color="#354763" lineWidth={1.5} />
 
-                        <Billboard position={[bounds.maxX + 0.09, bounds.minY + 0.005, (bounds.minZ + bounds.maxZ) / 2]}>
+                        <Billboard position={[bounds.maxX + 0.13, bounds.minY + 0.005, (bounds.minZ + bounds.maxZ) / 2]}>
                             <mesh position={[0, 0, -0.001]}>
                                 <planeGeometry args={[0.16, 0.055]} />
                                 <meshBasicMaterial color="#354763" transparent opacity={0.9} />

@@ -3,19 +3,42 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { LayoutDashboard, Package, Settings, LogOut, FileText, ShoppingCart, Store, MessageSquare } from "lucide-react";
+import {
+    LayoutDashboard,
+    Package,
+    Settings,
+    LogOut,
+    FileText,
+    ShoppingCart,
+    Store,
+    MessageSquare,
+    ExternalLink,
+    Boxes,
+    BarChart3,
+    Wallet,
+    Lightbulb,
+    Calculator,
+} from "lucide-react";
+
+type Role = "admin" | "sales" | null;
 
 const navItems = [
-    { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-    { name: "Cotizaciones", href: "/admin/quotes", icon: FileText },
-    { name: "Contactos", href: "/admin/contacts", icon: MessageSquare },
-    { name: "Productos", href: "/admin/products", icon: Store },
-    { name: "Órdenes", href: "/admin/orders", icon: ShoppingCart },
-    { name: "Parts & Costs", href: "/admin/parts", icon: Package },
-    { name: "Settings", href: "/admin/settings", icon: Settings },
+    { name: "Dashboard", href: "/admin", icon: LayoutDashboard, adminOnly: true },
+    { name: "Pedidos", href: "/admin/orders", icon: ShoppingCart, adminOnly: false },
+    { name: "Informes", href: "/admin/reports", icon: BarChart3, adminOnly: true },
+    { name: "Cajas", href: "/admin/cajas", icon: Wallet, adminOnly: true },
+    { name: "Contabilidad", href: "/admin/contabilidad", icon: Calculator, adminOnly: true },
+    { name: "Cotizaciones", href: "/admin/quotes", icon: FileText, adminOnly: true },
+    { name: "Contactos", href: "/admin/contacts", icon: MessageSquare, adminOnly: false },
+    { name: "Ideas", href: "/admin/ideas", icon: Lightbulb, adminOnly: false },
+    { name: "Productos", href: "/admin/products", icon: Store, adminOnly: true },
+    { name: "Stock", href: "/admin/stock", icon: Boxes, adminOnly: true },
+    { name: "Parts & Costs", href: "/admin/parts", icon: Package, adminOnly: true },
+    { name: "Settings", href: "/admin/settings", icon: Settings, adminOnly: true },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ role }: { role: Role }) {
+    const visibleItems = navItems.filter(i => role === "admin" || !i.adminOnly);
     const pathname = usePathname();
     const router = useRouter();
     const supabase = createClient();
@@ -26,55 +49,55 @@ export default function Sidebar() {
         router.refresh();
     };
 
-    if (pathname === "/admin/login") {
-        return null;
-    }
+    if (pathname === "/admin/login") return null;
 
     return (
-        <aside className="w-64 bg-white border-r border-black flex flex-col shrink-0">
-            <div className="p-8 border-b border-black flex flex-col items-start gap-1">
-                <Link href="/brandbook/identidad.pdf" target="_blank">
-                    <h1 className="text-3xl font-black tracking-tighter uppercase relative group cursor-pointer text-black">
-                        Tubular
-                        <span className="absolute -bottom-2 left-0 w-full h-[2px] bg-blue-600 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
-                    </h1>
+        <aside className="w-60 bg-gray-900 text-gray-300 flex flex-col shrink-0 border-r border-gray-800">
+            <div className="px-5 py-6 border-b border-gray-800">
+                <Link href="/admin" className="flex items-baseline gap-2 group">
+                    <span className="text-lg font-semibold tracking-tight text-white">Tubular</span>
+                    <span className="text-[10px] uppercase font-medium tracking-widest text-gray-500 group-hover:text-gray-400 transition-colors">
+                        Admin
+                    </span>
                 </Link>
-                <span className="text-[10px] uppercase font-bold text-black/50 tracking-widest mt-2">Admin Panel</span>
             </div>
-            <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                {navItems.map((item) => {
-                    const isActive = pathname === item.href;
+
+            <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+                {visibleItems.map((item) => {
+                    const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
                     const Icon = item.icon;
                     return (
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`flex items-center gap-3 px-4 py-3 text-xs uppercase tracking-widest font-bold transition-all border ${isActive
-                                ? "bg-black text-white border-black"
-                                : "text-black border-transparent hover:border-black"
+                            className={`flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-md transition-colors ${isActive
+                                ? "bg-gray-800 text-white"
+                                : "text-gray-400 hover:bg-gray-800/60 hover:text-gray-200"
                                 }`}
                         >
-                            <Icon size={14} strokeWidth={isActive ? 2.5 : 2} />
+                            <Icon size={16} strokeWidth={2} />
                             {item.name}
                         </Link>
                     );
                 })}
             </nav>
-            <div className="p-4 space-y-2 border-t border-black">
+
+            <div className="px-3 py-4 border-t border-gray-800 space-y-1">
                 <a
-                    href="/brandbook/identidad.pdf"
+                    href="/configurador"
                     target="_blank"
-                    className="flex items-center gap-3 px-4 py-3 text-xs uppercase tracking-widest font-bold text-black border border-transparent hover:border-black transition-all"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-gray-400 rounded-md hover:bg-gray-800/60 hover:text-gray-200 transition-colors"
                 >
-                    <Settings size={14} strokeWidth={2} />
-                    Manual
+                    <ExternalLink size={16} strokeWidth={2} />
+                    Ir al configurador
                 </a>
                 <button
                     onClick={handleLogout}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-xs uppercase tracking-widest font-bold text-white bg-black hover:bg-blue-600 transition-colors"
+                    className="flex w-full items-center gap-2.5 px-3 py-2 text-sm font-medium text-gray-400 rounded-md hover:bg-gray-800/60 hover:text-gray-200 transition-colors"
                 >
-                    <LogOut size={14} strokeWidth={2} />
-                    Logout
+                    <LogOut size={16} strokeWidth={2} />
+                    Cerrar sesión
                 </button>
             </div>
         </aside>
