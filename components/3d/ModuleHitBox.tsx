@@ -61,10 +61,10 @@ const DeleteButton = ({ position, onClick }: { position: [number, number, number
 };
 
 // Toggle de la chapa trasera con agujero pasacable. Mismo look que AddButton,
-// pero con un enchufe; verde cuando el agujero está activo.
+// pero con un enchufe en amarillo eléctrico; más oscuro cuando el agujero está activo.
 const CableHoleButton = ({ position, active, onClick }: { position: [number, number, number], active: boolean, onClick: () => void }) => {
-    const baseColor = active ? '#16a34a' : '#354763';
-    const hoverColor = active ? '#15803d' : '#2a3850';
+    const baseColor = active ? '#F59E0B' : '#FACC15';
+    const hoverColor = active ? '#D97706' : '#EAB308';
     return (
         <Html position={position} center zIndexRange={[100, 0]}>
             <button
@@ -86,7 +86,7 @@ const CableHoleButton = ({ position, active, onClick }: { position: [number, num
                 onMouseOver={(e) => (e.currentTarget.style.background = hoverColor)}
                 onMouseOut={(e) => (e.currentTarget.style.background = baseColor)}
             >
-                <Plug size={16} color="#ffffff" strokeWidth={2.5} />
+                <Plug size={16} color="#1C1C1C" strokeWidth={2.5} />
             </button>
         </Html>
     );
