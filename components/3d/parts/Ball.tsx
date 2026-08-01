@@ -56,11 +56,21 @@ export const Ball = ({ position, hasFoot, useWheel }: { position: [number, numbe
                             <cylinderGeometry args={[0.021, 0.021, 0.010, 32, 1, true]} />
                             <meshPhysicalMaterial color="#d9d9d9" metalness={1.0} roughness={0.15} clearcoat={0.3} clearcoatRoughness={0.1} envMapIntensity={1.2} side={2} />
                         </mesh>
-                        {/* Black wheel: axle offset from the stem (swivel trail) so it peeks
-                            out from under the hood, lower half clearly visible */}
-                        <mesh position={[0, -0.034, 0.009]} rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow>
-                            <cylinderGeometry args={[0.020, 0.020, 0.016, 32]} />
+                        {/* Twin wheels (estilo silla de oficina): dos discos negros con luz
+                            en el medio, eje desplazado del vástago (swivel trail) para que
+                            asomen por debajo de la capucha */}
+                        <mesh position={[-0.0055, -0.034, 0.009]} rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow>
+                            <cylinderGeometry args={[0.020, 0.020, 0.008, 32]} />
                             <meshStandardMaterial color="#111111" roughness={0.6} metalness={0.1} />
+                        </mesh>
+                        <mesh position={[0.0055, -0.034, 0.009]} rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow>
+                            <cylinderGeometry args={[0.020, 0.020, 0.008, 32]} />
+                            <meshStandardMaterial color="#111111" roughness={0.6} metalness={0.1} />
+                        </mesh>
+                        {/* Axle visible en la luz entre las dos ruedas */}
+                        <mesh position={[0, -0.034, 0.009]} rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow>
+                            <cylinderGeometry args={[0.005, 0.005, 0.016, 16]} />
+                            <meshStandardMaterial color="#333333" roughness={0.4} metalness={0.6} />
                         </mesh>
                     </group>
                 </group>
