@@ -106,9 +106,9 @@ export function generateParts(modules: ModuleConfig[]): DerivedPart[] {
             x1: number, y1: number, z1: number,
             plane: 'xy' | 'xz' | 'yz',
             w_dim: number, h_dim: number,
-            overrides?: { material?: ModuleConfig['material']; color?: string }
+            overrides?: { material?: ModuleConfig['material']; color?: string; cableHole?: boolean }
         ) => {
-            const id = `panel-${plane}-${x1}-${y1}-${z1}-${w_dim}-${h_dim}`;
+            const id = `panel-${plane}-${x1}-${y1}-${z1}-${w_dim}-${h_dim}${overrides?.cableHole ? '-hole' : ''}`;
             addPart({
                 id,
                 type: 'panel',
@@ -116,7 +116,8 @@ export function generateParts(modules: ModuleConfig[]): DerivedPart[] {
                 orientation: plane,
                 dimensions: { width: w_dim, height: h_dim },
                 color: overrides?.color ?? mod.color,
-                material: overrides?.material ?? mod.material
+                material: overrides?.material ?? mod.material,
+                cableHole: overrides?.cableHole
             });
         };
 
@@ -161,7 +162,10 @@ export function generateParts(modules: ModuleConfig[]): DerivedPart[] {
         }
         // Back Panel (XY) at z
         if (mod.hasPanel.back) {
-            addPanel(x, y, z, 'xy', w, h);
+            // Variante pasacable: sólo existe como chapa 750×350.
+            addPanel(x, y, z, 'xy', w, h, {
+                cableHole: mod.backPanelCableHole && w === 750 && h === 350
+            });
         }
 
     });

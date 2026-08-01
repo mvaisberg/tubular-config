@@ -154,7 +154,13 @@ export function calculatePricing(
 
         if (match) {
             const cost = getCostARS(match);
-            addObjToBom(match.sku || match.id, match.name || match.type, cost, 1);
+            if (part.type === 'panel' && part.cableHole) {
+                // Chapa pasacable: mismo precio que la standard, línea propia en el BOM
+                // para que fabricación sepa que lleva el agujero.
+                addObjToBom(`${match.sku || match.id}-pasacable`, `${match.name || match.type} c/ pasacable`, cost, 1);
+            } else {
+                addObjToBom(match.sku || match.id, match.name || match.type, cost, 1);
+            }
         }
     });
 

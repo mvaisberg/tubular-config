@@ -110,6 +110,7 @@ export const FurnitureController = () => {
                                 width={part.dimensions?.width || 0}
                                 height={part.dimensions?.height || 0}
                                 color={part.color}
+                                cableHole={part.cableHole}
                             />
                         );
                     }

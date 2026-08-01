@@ -4,7 +4,7 @@ import { ModuleConfig } from '@/lib/types';
 import { useConfigStore } from '@/lib/store';
 import { useState, useEffect } from 'react';
 import { Html, Edges } from '@react-three/drei';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Plug } from 'lucide-react';
 
 const AddButton = ({ position, onClick, direction }: { position: [number, number, number], onClick: () => void, direction: string }) => {
     return (
@@ -60,11 +60,44 @@ const DeleteButton = ({ position, onClick }: { position: [number, number, number
     );
 };
 
+// Toggle de la chapa trasera con agujero pasacable. Mismo look que AddButton,
+// pero con un enchufe; verde cuando el agujero está activo.
+const CableHoleButton = ({ position, active, onClick }: { position: [number, number, number], active: boolean, onClick: () => void }) => {
+    const baseColor = active ? '#16a34a' : '#354763';
+    const hoverColor = active ? '#15803d' : '#2a3850';
+    return (
+        <Html position={position} center zIndexRange={[100, 0]}>
+            <button
+                title={active ? 'Sacar agujero pasacable' : 'Agregar agujero pasacable'}
+                onClick={(e) => { e.stopPropagation(); onClick(); }}
+                style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    background: baseColor,
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                    transition: 'background 0.15s',
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.background = hoverColor)}
+                onMouseOut={(e) => (e.currentTarget.style.background = baseColor)}
+            >
+                <Plug size={16} color="#ffffff" strokeWidth={2.5} />
+            </button>
+        </Html>
+    );
+};
+
 export const ModuleHitBox = ({ module }: { module: ModuleConfig }) => {
     const selectedModuleId = useConfigStore((state) => state.selectedModuleId);
     const selectModule = useConfigStore((state) => state.actions.selectModule);
     const addModule = useConfigStore((state) => state.actions.addModule);
     const removeModule = useConfigStore((state) => state.actions.removeModule);
+    const updateModule = useConfigStore((state) => state.actions.updateModule);
     const showToast = useConfigStore((state) => state.actions.showToast);
     const modules = useConfigStore((state) => state.modules);
     const showAddButtons = useConfigStore((state) => state.showAddButtons);
@@ -240,6 +273,13 @@ export const ModuleHitBox = ({ module }: { module: ModuleConfig }) => {
                     {!hasRight && (y === 0 || hasNeighbor(w, -h, 0)) && <AddButton position={rightPos} direction="right" onClick={() => handleAdd('right')} />}
                     {!hasLeft && (y === 0 || hasNeighbor(-w, -h, 0)) && <AddButton position={leftPos} direction="left" onClick={() => handleAdd('left')} />}
                     {!hasTop && <AddButton position={topPos} direction="top" onClick={() => handleAdd('top')} />}
+                    {module.hasPanel.back && w === 750 && h === 350 && (
+                        <CableHoleButton
+                            position={[cx, cy, (z * 0.001) + 0.02]}
+                            active={!!module.backPanelCableHole}
+                            onClick={() => updateModule(module.id, { backPanelCableHole: !module.backPanelCableHole })}
+                        />
+                    )}
                 </>
             )}
 

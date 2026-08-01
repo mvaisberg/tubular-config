@@ -152,7 +152,12 @@ const enforceModuleConstraints = (module: ModuleConfig): ModuleConfig => {
     // Front panel is never available
     hasPanel.front = false;
 
-    return { ...module, hasPanel };
+    // La chapa pasacable sólo existe en 750×350: si cambia el tamaño o se saca la trasera, se limpia.
+    const backPanelCableHole = (hasPanel.back && w === 750 && h === 350)
+        ? module.backPanelCableHole
+        : undefined;
+
+    return { ...module, hasPanel, backPanelCableHole };
 };
 
 export const useConfigStore = create<ConfigState>((set, get) => {

@@ -1,6 +1,14 @@
 import { useMemo } from 'react';
+import * as THREE from 'three';
 
-export const Panel = ({ position, orientation, width, height, color = 'white' }: { position: [number, number, number], orientation: 'xy' | 'xz' | 'yz', width: number, height: number, color?: string }) => {
+// Agujero pasacable de la chapa trasera 750×350: 60mm ancho × 50mm alto,
+// centrado horizontalmente, arranca a 40mm del borde inferior de la chapa.
+const HOLE_W = 0.060;
+const HOLE_H = 0.050;
+const HOLE_BOTTOM = 0.040;
+const HOLE_R = 0.010; // esquinas redondeadas del slot
+
+export const Panel = ({ position, orientation, width, height, color = 'white', cableHole = false }: { position: [number, number, number], orientation: 'xy' | 'xz' | 'yz', width: number, height: number, color?: string, cableHole?: boolean }) => {
     // USM panels are thin.
     const thickness = 0.005; // 5mm
 
@@ -60,6 +68,65 @@ export const Panel = ({ position, orientation, width, height, color = 'white' }:
     };
 
     const params = getColorParams(color);
+
+    // Geometría con hueco para la chapa pasacable (sólo aplica a la chapa trasera, plano xy).
+    const holeGeometry = useMemo(() => {
+        if (!cableHole || orientation !== 'xy') return null;
+
+        const w = Math.max(1, width - 19) * 0.001;
+        const h = Math.max(1, height - 19) * 0.001;
+
+        const shape = new THREE.Shape();
+        shape.moveTo(-w / 2, -h / 2);
+        shape.lineTo(w / 2, -h / 2);
+        shape.lineTo(w / 2, h / 2);
+        shape.lineTo(-w / 2, h / 2);
+        shape.closePath();
+
+        const x0 = -HOLE_W / 2, x1 = HOLE_W / 2;
+        const y0 = -h / 2 + HOLE_BOTTOM, y1 = y0 + HOLE_H;
+        const r = HOLE_R;
+        const hole = new THREE.Path();
+        hole.moveTo(x0 + r, y0);
+        hole.lineTo(x1 - r, y0);
+        hole.quadraticCurveTo(x1, y0, x1, y0 + r);
+        hole.lineTo(x1, y1 - r);
+        hole.quadraticCurveTo(x1, y1, x1 - r, y1);
+        hole.lineTo(x0 + r, y1);
+        hole.quadraticCurveTo(x0, y1, x0, y1 - r);
+        hole.lineTo(x0, y0 + r);
+        hole.quadraticCurveTo(x0, y0, x0 + r, y0);
+        shape.holes.push(hole);
+
+        const geom = new THREE.ExtrudeGeometry(shape, { depth: thickness, bevelEnabled: false });
+        geom.translate(0, 0, -thickness / 2);
+        return geom;
+    }, [cableHole, orientation, width, height]);
+
+    if (holeGeometry) {
+        return (
+            <mesh position={offset as [number, number, number]} geometry={holeGeometry} castShadow receiveShadow>
+                {params.isAcrylic ? (
+                    <meshPhysicalMaterial
+                        color={params.color}
+                        metalness={params.metalness}
+                        roughness={params.roughness}
+                        transparent={params.transparent}
+                        opacity={params.opacity}
+                        transmission={params.transmission || 0}
+                        thickness={params.thickness || 0}
+                        ior={params.ior || 1.0}
+                        clearcoat={params.clearcoat || 0}
+                        envMapIntensity={params.envMapIntensity ?? 0}
+                        specularIntensity={params.specularIntensity ?? 0}
+                        reflectivity={params.reflectivity ?? 0}
+                    />
+                ) : (
+                    <meshBasicMaterial color={params.color} />
+                )}
+            </mesh>
+        );
+    }
 
     return (
         <mesh position={offset as [number, number, number]} castShadow receiveShadow>

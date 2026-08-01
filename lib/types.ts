@@ -31,6 +31,8 @@ export interface ModuleConfig {
         front: boolean; // Door or panel
         back: boolean;
     };
+    // Chapa trasera con agujero pasacable. Sólo válida para chapa 750×350 (mismo precio que la standard).
+    backPanelCableHole?: boolean;
     // Future: drawer, lock, etc.
 }
 
@@ -46,6 +48,7 @@ export interface DerivedPart {
     dimensions?: { width: number; height: number }; // For panels
     color?: string; // For panels
     material?: ModuleMaterial; // For panels
+    cableHole?: boolean; // For panels: agujero pasacable 60×50mm, centrado, a 40mm de la base
     hasFoot?: boolean; // For balls at the bottom
 }
 
