@@ -79,7 +79,7 @@ const MAX_HISTORY = 50;
 // Available panel sizes in the parts database (width × height, checked in both orientations)
 // Steel: panels for top/bottom/sides/back. Acrylic: only shelves (top/bottom).
 const AVAILABLE_PANEL_SIZES_BY_MATERIAL: Record<ModuleMaterial, [number, number][]> = {
-    steel: [[750, 350], [350, 350]],
+    steel: [[750, 350], [350, 350], [500, 350], [750, 500]],
     acrylic: [
         [200, 250], [200, 350],
         [350, 250], [350, 350],

@@ -29,7 +29,7 @@ const ACRYLIC_COLORS = [
 ];
 
 const STEEL_DIMENSIONS = {
-    width: [350, 750],
+    width: [350, 500, 750],
     height: [200, 350, 500, 750],
 };
 
