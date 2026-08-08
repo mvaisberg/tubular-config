@@ -148,18 +148,20 @@ const ParquetFloor = () => {
     return (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
             <planeGeometry args={[ROOM_SIZE, ROOM_SIZE]} />
-            {/* Especular casi nulo: en vista frontal la cámara mira el piso en ángulo
-                rasante y el Fresnel quemaba el parquet a blanco con las luces de área. */}
+            {/* Sin especular (el Fresnel rasante quemaba el parquet en vista frontal) y
+                albedo compensado: las luces del ambiente suman ~2.2× sobre el piso, el
+                multiplicador ~0.45 devuelve la madera a su tono real medido en pantalla. */}
             <meshPhysicalMaterial
                 map={colorMap}
                 normalMap={normalMap}
                 roughnessMap={roughMap}
                 normalScale={new THREE.Vector2(0.7, 0.7)}
+                color={'#737373'}
                 metalness={0}
                 roughness={1}
-                specularIntensity={0.12}
+                specularIntensity={0}
                 reflectivity={0}
-                envMapIntensity={0.03}
+                envMapIntensity={0}
             />
         </mesh>
     );

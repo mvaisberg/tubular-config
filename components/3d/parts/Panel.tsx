@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useConfigStore } from '@/lib/store';
@@ -143,38 +143,40 @@ export const Panel = ({ position, orientation, width, height, color = 'white', c
         return geom;
     };
 
-    // Animación de apertura: al activar el pasacable el agujero crece desde el centro.
+    // Animación de apertura/cierre del agujero: el progreso vive en estado React y la
+    // geometría se deriva de él — nada muta mesh.geometry a mano (eso dejaba la chapa
+    // con una geometría descartada al sacar el agujero, y desaparecía entera).
     // Si el panel ya nace con agujero (config guardada / carga inicial) no se anima.
-    const holeActive = cableHole && orientation === 'xy';
-    const holeMeshRef = useRef<THREE.Mesh>(null);
-    const holeProgress = useRef(1);
-    const prevHoleActive = useRef(holeActive);
-    if (holeActive !== prevHoleActive.current) {
-        holeProgress.current = holeActive ? 0 : 1;
-        prevHoleActive.current = holeActive;
-    }
+    const holeTarget = (cableHole && orientation === 'xy') ? 1 : 0;
+    const [holeProgress, setHoleProgress] = useState(holeTarget);
 
     const HOLE_ANIM_SECONDS = 0.45;
     const MIN_P = 0.03; // agujero "cerrado" (evita geometría degenerada)
 
     useFrame((_, delta) => {
-        if (!holeActive || !holeMeshRef.current || holeProgress.current >= 1) return;
-        holeProgress.current = Math.min(1, holeProgress.current + delta / HOLE_ANIM_SECONDS);
-        const eased = 1 - Math.pow(1 - holeProgress.current, 3); // ease-out cúbico
-        const old = holeMeshRef.current.geometry as THREE.BufferGeometry;
-        holeMeshRef.current.geometry = buildHoleGeometry(Math.max(eased, MIN_P));
-        old.dispose();
+        if (holeProgress === holeTarget) return;
+        const step = delta / HOLE_ANIM_SECONDS;
+        setHoleProgress((p) =>
+            holeTarget > p ? Math.min(holeTarget, p + step) : Math.max(holeTarget, p - step)
+        );
     });
 
     const holeGeometry = useMemo(() => {
-        if (!holeActive) return null;
-        return buildHoleGeometry(Math.max(holeProgress.current, MIN_P));
+        if (orientation !== 'xy' || (holeTarget === 0 && holeProgress === 0)) return null;
+        const eased = 1 - Math.pow(1 - holeProgress, 3); // ease-out cúbico
+        return buildHoleGeometry(Math.max(eased, MIN_P));
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [holeActive, orientation, width, height]);
+    }, [holeTarget, holeProgress, orientation, width, height]);
+
+    // Las geometrías intermedias de la animación se descartan al reemplazarse.
+    useEffect(() => {
+        if (!holeGeometry) return;
+        return () => holeGeometry.dispose();
+    }, [holeGeometry]);
 
     if (holeGeometry) {
         return (
-            <mesh ref={holeMeshRef} position={offset as [number, number, number]} geometry={holeGeometry} castShadow receiveShadow>
+            <mesh position={offset as [number, number, number]} geometry={holeGeometry} castShadow receiveShadow>
                 {materialEl}
             </mesh>
         );
