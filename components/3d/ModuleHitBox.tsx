@@ -61,13 +61,16 @@ const DeleteButton = ({ position, onClick }: { position: [number, number, number
 };
 
 // Toggle de la chapa trasera con agujero pasacable. Mismo look que AddButton,
-// pero con un enchufe en amarillo eléctrico; más oscuro cuando el agujero está activo.
+// pero con un enchufe: amarillo eléctrico cuando no está puesto, verde cuando está activo.
 const CableHoleButton = ({ position, active, onClick }: { position: [number, number, number], active: boolean, onClick: () => void }) => {
-    const baseColor = active ? '#F59E0B' : '#FACC15';
-    const hoverColor = active ? '#D97706' : '#EAB308';
+    const baseColor = active ? '#22C55E' : '#FACC15';
+    const hoverColor = active ? '#16A34A' : '#EAB308';
     return (
         <Html position={position} center zIndexRange={[100, 0]}>
+            {/* key por estado: los handlers de hover escriben style.background directo al DOM
+                y desincronizan el diff de React — remontar garantiza el color correcto. */}
             <button
+                key={active ? 'on' : 'off'}
                 title={active ? 'Sacar agujero pasacable' : 'Agregar agujero pasacable'}
                 onClick={(e) => { e.stopPropagation(); onClick(); }}
                 style={{
