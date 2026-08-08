@@ -108,7 +108,9 @@ export function generateParts(modules: ModuleConfig[]): DerivedPart[] {
             w_dim: number, h_dim: number,
             overrides?: { material?: ModuleConfig['material']; color?: string; cableHole?: boolean }
         ) => {
-            const id = `panel-${plane}-${x1}-${y1}-${z1}-${w_dim}-${h_dim}${overrides?.cableHole ? '-hole' : ''}`;
+            // Sin sufijo por cableHole: mismo id para que React actualice el mismo Panel
+            // y se pueda animar la apertura del agujero (un id nuevo remontaría el mesh).
+            const id = `panel-${plane}-${x1}-${y1}-${z1}-${w_dim}-${h_dim}`;
             addPart({
                 id,
                 type: 'panel',
