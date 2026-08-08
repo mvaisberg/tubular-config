@@ -31,6 +31,7 @@ const ACRYLIC_COLORS = [
 const STEEL_DIMENSIONS = {
     width: [350, 500, 750],
     height: [200, 350, 500, 750],
+    depth: [350, 500],
 };
 
 const ACRYLIC_DIMENSIONS = {
@@ -525,25 +526,23 @@ export const Sidebar = () => {
                                                     </div>
                                                 </div>
 
-                                                {currentMaterial === 'acrylic' && (
-                                                    <div>
-                                                        <label className="block text-[10px] uppercase tracking-widest font-extrabold text-black mb-2.5 ml-1">PROFUNDIDAD</label>
-                                                        <div className="flex gap-2">
-                                                            {ACRYLIC_DIMENSIONS.depth.map((d) => (
-                                                                <button
-                                                                    key={d}
-                                                                    onClick={() => setAllDepth(d)}
-                                                                    className={`flex-1 py-2 cursor-pointer rounded-xl border-2 transition-all font-bold text-xs ${targetModule.size.d === d
-                                                                        ? 'bg-white border-[#354763] text-black shadow-md'
-                                                                        : 'bg-[#f5f5f5] border-transparent text-black/60 hover:bg-[#354763]/5'
-                                                                        }`}
-                                                                >
-                                                                    {d}mm
-                                                                </button>
-                                                            ))}
-                                                        </div>
+                                                <div>
+                                                    <label className="block text-[10px] uppercase tracking-widest font-extrabold text-black mb-2.5 ml-1">PROFUNDIDAD</label>
+                                                    <div className="flex gap-2">
+                                                        {dims.depth.map((d) => (
+                                                            <button
+                                                                key={d}
+                                                                onClick={() => setAllDepth(d)}
+                                                                className={`flex-1 py-2 cursor-pointer rounded-xl border-2 transition-all font-bold text-xs ${targetModule.size.d === d
+                                                                    ? 'bg-white border-[#354763] text-black shadow-md'
+                                                                    : 'bg-[#f5f5f5] border-transparent text-black/60 hover:bg-[#354763]/5'
+                                                                    }`}
+                                                            >
+                                                                {d}mm
+                                                            </button>
+                                                        ))}
                                                     </div>
-                                                )}
+                                                </div>
                                             </div>
                                         </div>
                                     );
