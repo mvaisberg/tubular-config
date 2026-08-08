@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useConfigStore } from '@/lib/store';
 import { ModuleConfig } from '@/lib/types';
-import { Plus, Trash2, RotateCcw, Target, Save, ShoppingBag, Layout, Ruler, Loader2, Undo2, Redo2, Camera } from 'lucide-react';
+import { Plus, Trash2, RotateCcw, Target, Save, ShoppingBag, Layout, Ruler, Loader2, Undo2, Redo2, Camera, LayoutGrid } from 'lucide-react';
+import { PresetsModal } from './PresetsModal';
 import { createClient } from '@/lib/supabase/client';
 import { useSearchParams } from 'next/navigation';
 import { SaveModal } from './SaveModal';
@@ -66,6 +67,7 @@ export const Toolbar = () => {
         a.click();
     };
 
+    const [isPresetsOpen, setIsPresetsOpen] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isSavingProduct, setIsSavingProduct] = useState(false);
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -151,6 +153,16 @@ export const Toolbar = () => {
                         Comenzar Configuración
                     </button>
                 ) : null}
+
+                {/* Modelos de catálogo — desktop por ahora */}
+                <button
+                    onClick={() => setIsPresetsOpen(true)}
+                    className="hidden md:flex flex-col items-center gap-1 p-2 md:px-3 md:py-1.5 rounded-2xl transition-colors text-[#354763] hover:bg-gray-100"
+                    title="Empezar desde un modelo"
+                >
+                    <LayoutGrid size={20} />
+                    <span className="hidden md:block text-[10px] font-semibold leading-none">Modelos</span>
+                </button>
 
                 <button
                     onClick={toggleEnvironment}
@@ -240,6 +252,8 @@ export const Toolbar = () => {
                 </button>
 
             </div>
+
+            <PresetsModal open={isPresetsOpen} onClose={() => setIsPresetsOpen(false)} />
 
             <SaveModal
                 isOpen={isProductModalOpen}
