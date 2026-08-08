@@ -18,6 +18,9 @@
 
 # next.js
 /.next/
+/.next-fresh/
+/.next-old/
+/.next-broken/
 /out/
 
 # production
