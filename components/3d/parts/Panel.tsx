@@ -89,7 +89,16 @@ export const Panel = ({ position, orientation, width, height, color = 'white', c
             reflectivity={params.reflectivity ?? 0}
         />
     ) : roomActive ? (
-        <meshStandardMaterial color={params.color} roughness={1} metalness={0} envMapIntensity={0.05} />
+        // Difuso puro, sin nada de especular: la luz sombrea el panel pero jamás lo
+        // "blanquea" con reflejos — el color pintado se mantiene fiel.
+        <meshPhysicalMaterial
+            color={params.color}
+            roughness={1}
+            metalness={0}
+            specularIntensity={0}
+            reflectivity={0}
+            envMapIntensity={0}
+        />
     ) : (
         <meshBasicMaterial color={params.color} />
     );
