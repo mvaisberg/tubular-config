@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useConfigStore } from '@/lib/store';
 
@@ -73,6 +74,7 @@ export const Panel = ({ position, orientation, width, height, color = 'white', c
     // En modo ambientado el panel pasa a material iluminado (chapa pintada al horno:
     // difusa, leve sheen). En modo configurador queda el color plano sin luz (look catálogo).
     const roomActive = useConfigStore((state) => state.environment) === 'room';
+    const baseColor = useMemo(() => new THREE.Color(params.color as string), [params.color]);
     const materialEl = params.isAcrylic ? (
         <meshPhysicalMaterial
             color={params.color}
@@ -89,24 +91,27 @@ export const Panel = ({ position, orientation, width, height, color = 'white', c
             reflectivity={params.reflectivity ?? 0}
         />
     ) : roomActive ? (
-        // Difuso puro, sin nada de especular: la luz sombrea el panel pero jamás lo
-        // "blanquea" con reflejos — el color pintado se mantiene fiel.
+        // Color 100% fiel también en modo ambientado: el panel es emisivo puro y queda
+        // fuera del tone mapping, así ninguna luz lo aclara ni lo tiñe (pedido explícito:
+        // el negro no puede verse gris ni el beige lavado). El mueble igual proyecta
+        // sombras reales sobre piso/paredes, y tubos y bolas siguen siendo reflectivos.
         <meshPhysicalMaterial
-            color={params.color}
+            color={'#000000'}
+            emissive={baseColor}
             roughness={1}
             metalness={0}
             specularIntensity={0}
             reflectivity={0}
             envMapIntensity={0}
+            toneMapped={false}
         />
     ) : (
         <meshBasicMaterial color={params.color} />
     );
 
     // Geometría con hueco para la chapa pasacable (sólo aplica a la chapa trasera, plano xy).
-    const holeGeometry = useMemo(() => {
-        if (!cableHole || orientation !== 'xy') return null;
-
+    // `p` escala el agujero desde su centro (0→cerrado, 1→tamaño final) para animar la apertura.
+    const buildHoleGeometry = (p: number) => {
         const w = Math.max(1, width - 19) * 0.001;
         const h = Math.max(1, height - 19) * 0.001;
 
@@ -117,9 +122,10 @@ export const Panel = ({ position, orientation, width, height, color = 'white', c
         shape.lineTo(-w / 2, h / 2);
         shape.closePath();
 
-        const x0 = -HOLE_W / 2, x1 = HOLE_W / 2;
-        const y0 = -h / 2 + HOLE_BOTTOM, y1 = y0 + HOLE_H;
-        const r = HOLE_R;
+        const yc = -h / 2 + HOLE_BOTTOM + HOLE_H / 2;
+        const x0 = -(HOLE_W * p) / 2, x1 = (HOLE_W * p) / 2;
+        const y0 = yc - (HOLE_H * p) / 2, y1 = yc + (HOLE_H * p) / 2;
+        const r = HOLE_R * p;
         const hole = new THREE.Path();
         hole.moveTo(x0 + r, y0);
         hole.lineTo(x1 - r, y0);
@@ -135,11 +141,40 @@ export const Panel = ({ position, orientation, width, height, color = 'white', c
         const geom = new THREE.ExtrudeGeometry(shape, { depth: thickness, bevelEnabled: false });
         geom.translate(0, 0, -thickness / 2);
         return geom;
-    }, [cableHole, orientation, width, height]);
+    };
+
+    // Animación de apertura: al activar el pasacable el agujero crece desde el centro.
+    // Si el panel ya nace con agujero (config guardada / carga inicial) no se anima.
+    const holeActive = cableHole && orientation === 'xy';
+    const holeMeshRef = useRef<THREE.Mesh>(null);
+    const holeProgress = useRef(1);
+    const prevHoleActive = useRef(holeActive);
+    if (holeActive !== prevHoleActive.current) {
+        holeProgress.current = holeActive ? 0 : 1;
+        prevHoleActive.current = holeActive;
+    }
+
+    const HOLE_ANIM_SECONDS = 0.45;
+    const MIN_P = 0.03; // agujero "cerrado" (evita geometría degenerada)
+
+    useFrame((_, delta) => {
+        if (!holeActive || !holeMeshRef.current || holeProgress.current >= 1) return;
+        holeProgress.current = Math.min(1, holeProgress.current + delta / HOLE_ANIM_SECONDS);
+        const eased = 1 - Math.pow(1 - holeProgress.current, 3); // ease-out cúbico
+        const old = holeMeshRef.current.geometry as THREE.BufferGeometry;
+        holeMeshRef.current.geometry = buildHoleGeometry(Math.max(eased, MIN_P));
+        old.dispose();
+    });
+
+    const holeGeometry = useMemo(() => {
+        if (!holeActive) return null;
+        return buildHoleGeometry(Math.max(holeProgress.current, MIN_P));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [holeActive, orientation, width, height]);
 
     if (holeGeometry) {
         return (
-            <mesh position={offset as [number, number, number]} geometry={holeGeometry} castShadow receiveShadow>
+            <mesh ref={holeMeshRef} position={offset as [number, number, number]} geometry={holeGeometry} castShadow receiveShadow>
                 {materialEl}
             </mesh>
         );

@@ -22,11 +22,11 @@ const WALL_LEFT_X = -1.8;     // pared izquierda a 1.8m del centro
 const SKIRTING_HEIGHT = 0.08; // zócalo de 8cm
 const SKIRTING_DEPTH = 0.015; // 15mm de salida
 
-const HEMI_INTENSITY = 0.45;
-const KEY_LIGHT_INTENSITY = 0.9;
+const HEMI_INTENSITY = 0.32;
+const KEY_LIGHT_INTENSITY = 0.6;
 const KEY_LIGHT_COLOR = '#fff1e2';
 const KEY_LIGHT_POS: [number, number, number] = [3, 4.5, 2.5];
-const FILL_LIGHT_INTENSITY = 0.3;
+const FILL_LIGHT_INTENSITY = 0.25;
 const FILL_LIGHT_COLOR = '#e9f0fa';
 const FILL_LIGHT_POS: [number, number, number] = [-2.5, 3, 2];
 
@@ -38,7 +38,7 @@ const WINDOW_LIGHT_INTENSITY = 2.2;
 
 // Luz ancha y suave desde atrás de la cámara (ventana fuera de cuadro) — modela las caras frontales
 // y genera el brillo alargado típico de foto de interiores en los tubos cromados.
-const FRONT_SOFT_INTENSITY = 0.7;
+const FRONT_SOFT_INTENSITY = 0.5;
 const FRONT_SOFT_POS: [number, number, number] = [2.2, 2.0, 3.0];
 const FRONT_SOFT_SIZE: [number, number] = [2.4, 1.6];
 
@@ -148,13 +148,18 @@ const ParquetFloor = () => {
     return (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
             <planeGeometry args={[ROOM_SIZE, ROOM_SIZE]} />
-            <meshStandardMaterial
+            {/* Especular casi nulo: en vista frontal la cámara mira el piso en ángulo
+                rasante y el Fresnel quemaba el parquet a blanco con las luces de área. */}
+            <meshPhysicalMaterial
                 map={colorMap}
                 normalMap={normalMap}
                 roughnessMap={roughMap}
                 normalScale={new THREE.Vector2(0.7, 0.7)}
                 metalness={0}
-                envMapIntensity={0.35}
+                roughness={1}
+                specularIntensity={0.12}
+                reflectivity={0}
+                envMapIntensity={0.03}
             />
         </mesh>
     );
