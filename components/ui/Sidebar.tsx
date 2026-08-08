@@ -16,7 +16,7 @@ const MATERIAL_OPTIONS = [
 const STEEL_COLORS = [
     { value: 'black', label: 'Negro Grafito RAL9010', hex: '#000000', opacity: 1 },
     { value: 'white', label: 'Blanco Puro RAL9011', hex: '#FFFFFF', opacity: 1 },
-    { value: 'beige', label: 'Beige RAL1019', hex: '#A48F7A', opacity: 1, badge: 'NEW' },
+    { value: 'beige', label: 'Beige RAL1019', hex: '#A48F7A', opacity: 1 },
 ];
 
 const ACRYLIC_COLORS = [
@@ -497,12 +497,17 @@ export const Sidebar = () => {
                                                             <button
                                                                 key={w}
                                                                 onClick={() => updateColumnWidth(targetModule.id, w)}
-                                                                className={`flex-1 py-2 cursor-pointer rounded-xl border-2 transition-all font-bold text-xs ${targetModule.size.w === w
+                                                                className={`relative flex-1 py-2 cursor-pointer rounded-xl border-2 transition-all font-bold text-xs ${targetModule.size.w === w
                                                                     ? 'bg-white border-[#354763] text-black shadow-md'
                                                                     : 'bg-[#f5f5f5] border-transparent text-black/60 hover:bg-[#354763]/5'
                                                                     }`}
                                                             >
                                                                 {w}mm
+                                                                {w === 500 && currentMaterial === 'steel' && (
+                                                                    <span className="absolute -top-1.5 -right-1.5 text-[8px] font-black tracking-widest bg-red-600 text-white px-1 py-0.5 rounded">
+                                                                        NEW
+                                                                    </span>
+                                                                )}
                                                             </button>
                                                         ))}
                                                     </div>
@@ -527,7 +532,14 @@ export const Sidebar = () => {
                                                 </div>
 
                                                 <div>
-                                                    <label className="block text-[10px] uppercase tracking-widest font-extrabold text-black mb-2.5 ml-1">PROFUNDIDAD</label>
+                                                    <label className="block text-[10px] uppercase tracking-widest font-extrabold text-black mb-2.5 ml-1">
+                                                        PROFUNDIDAD
+                                                        {currentMaterial === 'steel' && (
+                                                            <span className="ml-2 text-[8px] font-black tracking-widest bg-red-600 text-white px-1 py-0.5 rounded align-middle">
+                                                                NEW
+                                                            </span>
+                                                        )}
+                                                    </label>
                                                     <div className="flex gap-2">
                                                         {dims.depth.map((d) => (
                                                             <button
