@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
+import { useConfigStore } from '@/lib/store';
 
 // Agujero pasacable de la chapa trasera 750×350: 60mm ancho × 50mm alto,
 // centrado horizontalmente, arranca a 40mm del borde inferior de la chapa.
@@ -69,6 +70,30 @@ export const Panel = ({ position, orientation, width, height, color = 'white', c
 
     const params = getColorParams(color);
 
+    // En modo ambientado el panel pasa a material iluminado (chapa pintada al horno:
+    // difusa, leve sheen). En modo configurador queda el color plano sin luz (look catálogo).
+    const roomActive = useConfigStore((state) => state.environment) === 'room';
+    const materialEl = params.isAcrylic ? (
+        <meshPhysicalMaterial
+            color={params.color}
+            metalness={params.metalness}
+            roughness={params.roughness}
+            transparent={params.transparent}
+            opacity={params.opacity}
+            transmission={params.transmission || 0}
+            thickness={params.thickness || 0}
+            ior={params.ior || 1.0}
+            clearcoat={params.clearcoat || 0}
+            envMapIntensity={params.envMapIntensity ?? 0}
+            specularIntensity={params.specularIntensity ?? 0}
+            reflectivity={params.reflectivity ?? 0}
+        />
+    ) : roomActive ? (
+        <meshStandardMaterial color={params.color} roughness={1} metalness={0} envMapIntensity={0.05} />
+    ) : (
+        <meshBasicMaterial color={params.color} />
+    );
+
     // Geometría con hueco para la chapa pasacable (sólo aplica a la chapa trasera, plano xy).
     const holeGeometry = useMemo(() => {
         if (!cableHole || orientation !== 'xy') return null;
@@ -106,24 +131,7 @@ export const Panel = ({ position, orientation, width, height, color = 'white', c
     if (holeGeometry) {
         return (
             <mesh position={offset as [number, number, number]} geometry={holeGeometry} castShadow receiveShadow>
-                {params.isAcrylic ? (
-                    <meshPhysicalMaterial
-                        color={params.color}
-                        metalness={params.metalness}
-                        roughness={params.roughness}
-                        transparent={params.transparent}
-                        opacity={params.opacity}
-                        transmission={params.transmission || 0}
-                        thickness={params.thickness || 0}
-                        ior={params.ior || 1.0}
-                        clearcoat={params.clearcoat || 0}
-                        envMapIntensity={params.envMapIntensity ?? 0}
-                        specularIntensity={params.specularIntensity ?? 0}
-                        reflectivity={params.reflectivity ?? 0}
-                    />
-                ) : (
-                    <meshBasicMaterial color={params.color} />
-                )}
+                {materialEl}
             </mesh>
         );
     }
@@ -131,24 +139,7 @@ export const Panel = ({ position, orientation, width, height, color = 'white', c
     return (
         <mesh position={offset as [number, number, number]} castShadow receiveShadow>
             <boxGeometry args={args} />
-            {params.isAcrylic ? (
-                <meshPhysicalMaterial
-                    color={params.color}
-                    metalness={params.metalness}
-                    roughness={params.roughness}
-                    transparent={params.transparent}
-                    opacity={params.opacity}
-                    transmission={params.transmission || 0}
-                    thickness={params.thickness || 0}
-                    ior={params.ior || 1.0}
-                    clearcoat={params.clearcoat || 0}
-                    envMapIntensity={params.envMapIntensity ?? 0}
-                    specularIntensity={params.specularIntensity ?? 0}
-                    reflectivity={params.reflectivity ?? 0}
-                />
-            ) : (
-                <meshBasicMaterial color={params.color} />
-            )}
+            {materialEl}
         </mesh>
     );
 };

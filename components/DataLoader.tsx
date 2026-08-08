@@ -12,6 +12,7 @@ export function DataLoader() {
     const supabase = createClient();
     const setModules = useConfigStore((state) => state.actions.setModules);
     const setHasWheels = useConfigStore((state) => state.actions.setHasWheels);
+    const setEnvironment = useConfigStore((state) => state.actions.setEnvironment);
 
     useEffect(() => {
         // Load from inline base64-encoded config (used by admin order links and share links).
@@ -24,6 +25,9 @@ export function DataLoader() {
                 }
                 if (!Array.isArray(json) && typeof json.hasWheels === 'boolean') {
                     setHasWheels(json.hasWheels);
+                }
+                if (!Array.isArray(json) && (json.environment === 'room' || json.environment === 'none')) {
+                    setEnvironment(json.environment);
                 }
             } catch (e) {
                 console.error("Failed to parse config param:", e);
@@ -72,7 +76,7 @@ export function DataLoader() {
         };
 
         loadQuoteData();
-    }, [quoteId, configParam, supabase, setModules, setHasWheels, searchParams]);
+    }, [quoteId, configParam, supabase, setModules, setHasWheels, setEnvironment, searchParams]);
 
     return null;
 }
