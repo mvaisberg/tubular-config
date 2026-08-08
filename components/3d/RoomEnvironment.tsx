@@ -125,40 +125,29 @@ const AreaLight = ({ position, size, intensity, color = '#ffffff', lookAt = [0, 
     );
 };
 
-// Piso de parquet chevron con mapas PBR reales (color + normal + roughness).
-const ParquetFloor = () => {
-    const [colorMap, normalMap, roughMap] = useTexture([
-        '/configurador/floor/parquet/color.jpg',
-        '/configurador/floor/parquet/normal.jpg',
-        '/configurador/floor/parquet/rough.jpg',
-    ]);
+// Piso de microcemento: gris cálido, mate, textura generada (manchado de llana + grano).
+// Una sola pasada de UV (repeat 1) sobre los 6×6m — sin patrón que delate tileo.
+const MicrocementFloor = () => {
+    const colorMap = useTexture('/configurador/floor/microcemento/color.jpg');
     const { gl } = useThree();
 
     useEffect(() => {
-        const maxAniso = gl.capabilities.getMaxAnisotropy();
-        [colorMap, normalMap, roughMap].forEach((t) => {
-            t.wrapS = t.wrapT = THREE.RepeatWrapping;
-            t.repeat.set(3, 3);
-            t.anisotropy = Math.min(8, maxAniso);
-            t.needsUpdate = true;
-        });
+        colorMap.anisotropy = Math.min(8, gl.capabilities.getMaxAnisotropy());
         colorMap.colorSpace = THREE.SRGBColorSpace;
-    }, [colorMap, normalMap, roughMap, gl]);
+        colorMap.needsUpdate = true;
+    }, [colorMap, gl]);
 
     return (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
             <planeGeometry args={[ROOM_SIZE, ROOM_SIZE]} />
-            {/* Sin especular (el Fresnel rasante quemaba el parquet en vista frontal) y
+            {/* Sin especular (el Fresnel rasante quemaba el piso en vista frontal) y
                 albedo compensado: las luces del ambiente suman ~2.2× sobre el piso, el
-                multiplicador ~0.45 devuelve la madera a su tono real medido en pantalla. */}
+                multiplicador ~0.45 devuelve el material a su tono real medido en pantalla. */}
             <meshPhysicalMaterial
                 map={colorMap}
-                normalMap={normalMap}
-                roughnessMap={roughMap}
-                normalScale={new THREE.Vector2(0.7, 0.7)}
                 color={'#737373'}
                 metalness={0}
-                roughness={1}
+                roughness={0.95}
                 specularIntensity={0}
                 reflectivity={0}
                 envMapIntensity={0}
@@ -231,7 +220,7 @@ const Window = () => {
 
 const RoomGeometry = () => (
     <group>
-        <ParquetFloor />
+        <MicrocementFloor />
 
         {/* techo */}
         <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, WALL_HEIGHT, 0]}>

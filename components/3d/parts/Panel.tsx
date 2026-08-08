@@ -174,17 +174,14 @@ export const Panel = ({ position, orientation, width, height, color = 'white', c
         return () => holeGeometry.dispose();
     }, [holeGeometry]);
 
-    if (holeGeometry) {
-        return (
-            <mesh position={offset as [number, number, number]} geometry={holeGeometry} castShadow receiveShadow>
-                {materialEl}
-            </mesh>
-        );
-    }
+    // La geometría SIEMPRE va por prop, sea caja o chapa agujereada. Alternar entre
+    // prop y <boxGeometry> hijo hacía que r3f, al quitar la prop, restaurara una
+    // geometría ya disposeada y la chapa desaparecía al sacar el agujero.
+    const boxGeometry = useMemo(() => new THREE.BoxGeometry(...args), [args]);
+    useEffect(() => () => boxGeometry.dispose(), [boxGeometry]);
 
     return (
-        <mesh position={offset as [number, number, number]} castShadow receiveShadow>
-            <boxGeometry args={args} />
+        <mesh position={offset as [number, number, number]} geometry={holeGeometry ?? boxGeometry} castShadow receiveShadow>
             {materialEl}
         </mesh>
     );
