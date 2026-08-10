@@ -177,7 +177,10 @@ export function calculatePricing(
 
     if (feetCount > 0) {
         if (hasWheels) {
-            const wheelMatch = partsData.find(p => p.sku === 'rueda-normal' || p.type?.toLowerCase().includes('rueda') || p.name?.toLowerCase().includes('rueda'));
+            // Preferir el SKU exacto: en el catálogo también existe Rueda-freno y el
+            // fallback por nombre podría agarrarla según el orden de la DB.
+            const wheelMatch = partsData.find(p => p.sku === 'rueda-normal')
+                || partsData.find(p => p.type?.toLowerCase().includes('rueda') || p.name?.toLowerCase().includes('rueda'));
             if (wheelMatch) addObjToBom(wheelMatch.sku || wheelMatch.id, wheelMatch.name || 'Rueda', getCostARS(wheelMatch), feetCount);
         } else {
             const footMatch = partsData.find(p => p.sku === 'pata-plastico' || p.type?.toLowerCase().includes('pata'));
@@ -187,6 +190,10 @@ export function calculatePricing(
 
     const packingPart = partsData.find(p => p.sku === 'embalaje');
     if (packingPart) addObjToBom(packingPart.sku, packingPart.name, getCostARS(packingPart), 1);
+
+    // Mano de obra: fija por mueble, igual que el embalaje (lista maestra v5).
+    const laborPart = partsData.find(p => p.sku === 'mano-obra');
+    if (laborPart) addObjToBom(laborPart.sku, laborPart.name, getCostARS(laborPart), 1);
 
     // NEW FORMULA CONSTANTS
     const shipping_cost = settings.shipping_cost || 0;
