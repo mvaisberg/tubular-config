@@ -1,0 +1,14 @@
+{
+  "name": "Tubular Manager",
+  "short_name": "Tubular",
+  "description": "Panel de gestión de Tubular",
+  "start_url": "/configurador/admin",
+  "scope": "/configurador/",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#111827",
+  "icons": [
+    { "src": "/configurador/icons/admin-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/configurador/icons/admin-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

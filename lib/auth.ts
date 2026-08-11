@@ -1,7 +1,7 @@
 import { createClient as createServerSupabase } from "@/lib/supabase/server";
 import { createClient as createServiceSupabase } from "@supabase/supabase-js";
 
-export type Role = "admin" | "sales";
+export type Role = "admin" | "sales" | "marketing";
 
 // Server-only: lee el rol del usuario actual.
 // Devuelve null si no hay sesión o no se puede determinar.

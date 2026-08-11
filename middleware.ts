@@ -69,7 +69,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/configurador/admin/login', request.url))
     }
 
-    // Role-based gating: only admin can access these paths.
+    // Role-based gating.
     const path = request.nextUrl.pathname;
     const adminOnlyExact = ['/admin'];
     const adminOnlyPrefix = ['/admin/parts', '/admin/products', '/admin/settings', '/admin/quotes', '/admin/stock', '/admin/reports', '/admin/cajas', '/admin/contabilidad'];
@@ -80,26 +80,42 @@ export async function middleware(request: NextRequest) {
     const isAdminOnly = adminOnlyExact.includes(path)
         || adminOnlyPrefix.some(p => path === p || path.startsWith(p + '/'))
         || isOrderEdit;
+    const isMarketingSection = path === '/admin/marketing' || path.startsWith('/admin/marketing/');
 
-    if (isAdminOnly) {
-        try {
-            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-            const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-            const res = await fetch(`${supabaseUrl}/rest/v1/profiles?user_id=eq.${user.id}&select=role`, {
-                headers: {
-                    apikey: serviceKey,
-                    Authorization: `Bearer ${serviceKey}`,
-                },
-            });
-            const rows = await res.json() as Array<{ role: string }>;
-            const role = rows?.[0]?.role;
-            if (role !== 'admin') {
-                return NextResponse.redirect(new URL('/configurador/admin/orders', request.url));
-            }
-        } catch {
-            // Si falla la verificación, mejor bloquear que filtrar.
-            return NextResponse.redirect(new URL('/configurador/admin/orders', request.url));
+    // El rol marketing sólo ve /admin/marketing, así que hay que resolver el rol
+    // en TODA ruta admin (no sólo las admin-only).
+    let role: string | undefined;
+    try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+        const res = await fetch(`${supabaseUrl}/rest/v1/profiles?user_id=eq.${user.id}&select=role`, {
+            headers: {
+                apikey: serviceKey,
+                Authorization: `Bearer ${serviceKey}`,
+            },
+        });
+        const rows = await res.json() as Array<{ role: string }>;
+        role = rows?.[0]?.role;
+    } catch {
+        role = undefined;
+    }
+
+    // marketing: encerrado en su módulo.
+    if (role === 'marketing') {
+        if (!isMarketingSection) {
+            return NextResponse.redirect(new URL('/configurador/admin/marketing', request.url));
         }
+        return response;
+    }
+
+    // El módulo de marketing es para admin y marketing (sales no).
+    if (isMarketingSection && role !== 'admin') {
+        return NextResponse.redirect(new URL('/configurador/admin/orders', request.url));
+    }
+
+    if (isAdminOnly && role !== 'admin') {
+        // Si falla la verificación o no es admin: bloquear.
+        return NextResponse.redirect(new URL('/configurador/admin/orders', request.url));
     }
 
     return response

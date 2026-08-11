@@ -53,7 +53,9 @@ export const metadata: Metadata = {
   description: "Configure your USM Haller inspired furniture",
   icons: {
     icon: "/brandbook/favicon/favicon-con-fondo.png",
-  }
+  },
+  // PWA: permite instalar el manager como app (acceso directo standalone).
+  manifest: "/configurador/manifest.webmanifest",
 };
 
 export default function RootLayout({

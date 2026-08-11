@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Menu } from "lucide-react";
 import Sidebar from "./Sidebar";
 
-type Role = "admin" | "sales" | null;
+type Role = "admin" | "sales" | "marketing" | null;
 
 export function AdminShell({ role, children }: { role: Role; children: React.ReactNode }) {
     const pathname = usePathname();

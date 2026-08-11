@@ -18,9 +18,11 @@ import {
     Wallet,
     Lightbulb,
     Calculator,
+    Star,
+    Megaphone,
 } from "lucide-react";
 
-type Role = "admin" | "sales" | null;
+type Role = "admin" | "sales" | "marketing" | null;
 
 const navItems = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard, adminOnly: true },
@@ -30,7 +32,9 @@ const navItems = [
     { name: "Contabilidad", href: "/admin/contabilidad", icon: Calculator, adminOnly: true },
     { name: "Cotizaciones", href: "/admin/quotes", icon: FileText, adminOnly: true },
     { name: "Contactos", href: "/admin/contacts", icon: MessageSquare, adminOnly: false },
+    { name: "Reviews", href: "/admin/reviews", icon: Star, adminOnly: false },
     { name: "Ideas", href: "/admin/ideas", icon: Lightbulb, adminOnly: false },
+    { name: "Marketing", href: "/admin/marketing", icon: Megaphone, adminOnly: true },
     { name: "Productos", href: "/admin/products", icon: Store, adminOnly: true },
     { name: "Stock", href: "/admin/stock", icon: Boxes, adminOnly: true },
     { name: "Parts & Costs", href: "/admin/parts", icon: Package, adminOnly: true },
@@ -38,7 +42,10 @@ const navItems = [
 ];
 
 export default function Sidebar({ role }: { role: Role }) {
-    const visibleItems = navItems.filter(i => role === "admin" || !i.adminOnly);
+    // El rol marketing sólo ve su módulo; el resto filtra por adminOnly.
+    const visibleItems = role === "marketing"
+        ? navItems.filter(i => i.href === "/admin/marketing")
+        : navItems.filter(i => role === "admin" || !i.adminOnly);
     const pathname = usePathname();
     const router = useRouter();
     const supabase = createClient();
