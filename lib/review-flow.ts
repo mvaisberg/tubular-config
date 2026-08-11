@@ -119,37 +119,37 @@ function isDecline(text: string): boolean {
 // Todo lo de abajo viaja como texto libre dentro de la ventana de 24 h.
 
 const ASK_RATING =
-    "¡Gracias por responder! 🙌\n\n" +
-    "¿Del 1 al 5, cuántas estrellas le pondrías a tu compra?\n" +
+    "Gracias por responder!\n\n" +
+    "Del 1 al 5, cuántas estrellas le pondrías a tu compra?\n" +
     "Respondé solo con el número.";
 
 const ASK_RATING_RETRY =
-    "Perdón, no te entendí. Mandame un número del 1 al 5 ⭐\n" +
+    "Perdón, no te entendí. Mandame un número del 1 al 5\n" +
     "(1 = muy malo, 5 = excelente)";
 
 const ASK_COMMENT = (rating: number) =>
     rating >= 4
-        ? `¡${"⭐".repeat(rating)} Gracias! Nos alegra un montón.\n\n¿Nos contás en una o dos líneas qué fue lo que más te gustó?`
-        : `Gracias por la sinceridad (${rating}/5).\n\n¿Nos contás qué salió mal? Lo leemos en serio y nos sirve para mejorar.`;
+        ? `Un ${rating}, gracias! Nos alegra un montón.\n\nNos contás en una o dos líneas qué fue lo que más te gustó?`
+        : `Gracias por la sinceridad (${rating}/5).\n\nNos contás qué salió mal? Lo leemos en serio y nos sirve para mejorar.`;
 
 const ASK_PHOTO = (discount: number) =>
-    "¡Gracias por el comentario! 🙏\n\n" +
-    `Última cosa: ¿nos mandás una foto del mueble en tu casa? ` +
+    "Gracias por el comentario!\n\n" +
+    `Última cosa: nos mandás una foto del mueble en tu casa? ` +
     `Te damos un *${discount}% OFF* para tu próxima compra.`;
 
 const THANKS_NO_PHOTO =
-    "¡Gracias igual por tu tiempo! Cualquier cosa que necesites, escribinos por acá. 💙";
+    "Gracias igual por tu tiempo! Cualquier cosa que necesites, escribinos por acá.";
 
 const THANKS_WITH_COUPON = (code: string, discount: number, days: number) =>
-    "¡Genial, gracias por la foto! 📸\n\n" +
+    "Genial, gracias por la foto!\n\n" +
     `Acá va tu cupón de *${discount}% OFF*: *${code}*\n` +
-    `Válido por ${days} días. Usalo en tubular.com.ar 💙`;
+    `Válido por ${days} días. Usalo en tubular.com.ar`;
 
 const OPTED_OUT =
-    "Listo, no te escribimos más por este tema. ¡Gracias igual! 💙";
+    "Listo, no te escribimos más por este tema. Gracias igual!";
 
 const GAVE_UP =
-    "Te dejo tranquilo/a. Si más adelante querés dejarnos tu opinión, escribinos cuando quieras. 💙";
+    "Te dejo tranquilo/a. Si más adelante querés dejarnos tu opinión, escribinos cuando quieras.";
 
 export interface FlowConfig {
     discountPercent: number;
