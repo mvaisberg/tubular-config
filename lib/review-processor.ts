@@ -6,7 +6,8 @@
  * review activo, no hace nada y deja pasar el mensaje a la bandeja normal.
  */
 import { createClient } from "@supabase/supabase-js";
-import { advanceReviewFlow, type ReviewState, type InboundMessage } from "@/lib/review-flow";
+import { advanceReviewFlow, type ReviewState, type InboundMessage, type FlowResult } from "@/lib/review-flow";
+import { agentAdvanceReviewFlow, agentAvailable, type ConversationTurn } from "@/lib/review-agent";
 import { sendText } from "@/lib/whatsapp";
 import { createReviewCoupon } from "@/lib/woo-coupons";
 
@@ -71,9 +72,9 @@ export async function processReviewMessage(args: ProcessArgs): Promise<ProcessRe
     };
 
     // El cupón se genera ANTES de correr el flujo sólo si va a hacer falta, para
-    // poder meter el código en el texto de la respuesta. Se decide en seco.
-    const willIssueCoupon =
-        message.hasImage && (state.step === "awaiting_comment" || state.step === "awaiting_photo");
+    // poder meter el código en el texto de la respuesta. Un solo cupón por review.
+    const hasMedia = message.hasImage || Boolean(message.hasVideo);
+    const willIssueCoupon = hasMedia && !(review as { coupon_code?: string | null }).coupon_code;
 
     let couponCode: string | undefined;
     let couponError: string | undefined;
@@ -92,11 +93,35 @@ export async function processReviewMessage(args: ProcessArgs): Promise<ProcessRe
         }
     }
 
-    const result = advanceReviewFlow(state, message, {
-        discountPercent,
-        couponDaysValid,
-        couponCode,
-    });
+    const flowConfig = { discountPercent, couponDaysValid, couponCode };
+
+    // Agente conversacional (Claude) con fallback a la máquina de estados: si no
+    // hay key o la API falla, el flujo rígido sigue funcionando igual que siempre.
+    let result: FlowResult;
+    if (agentAvailable()) {
+        try {
+            const [{ data: historyRows }, { data: contactRow }] = await Promise.all([
+                db.from("wa_messages")
+                    .select("direction, body")
+                    .eq("conversation_id", conversationId)
+                    .order("created_at", { ascending: false })
+                    .limit(12),
+                db.from("wa_contacts").select("profile_name, display_name").eq("id", contactId).single(),
+            ]);
+            const history: ConversationTurn[] = (historyRows ?? [])
+                .reverse()
+                .filter(m => m.body)
+                .map(m => ({ direction: m.direction === "inbound" ? "inbound" : "outbound", body: m.body as string }));
+            const customerName = contactRow?.display_name || contactRow?.profile_name || null;
+
+            result = await agentAdvanceReviewFlow(state, message, flowConfig, history, customerName);
+        } catch (e) {
+            console.error("[reviews] agente falló, fallback a máquina de estados:", (e as Error).message);
+            result = advanceReviewFlow(state, message, flowConfig);
+        }
+    } else {
+        result = advanceReviewFlow(state, message, flowConfig);
+    }
 
     if (!result.reply && Object.keys(result.patch).length === 0) {
         return { handled: false };
@@ -128,7 +153,9 @@ export async function processReviewMessage(args: ProcessArgs): Promise<ProcessRe
         }
     }
 
-    if (couponCode) {
+    // El cupón se registra sólo si el flujo decidió entregarlo (el agente puede
+    // descartar media que no es del mueble).
+    if (couponCode && result.issueCoupon) {
         patch.coupon_code = couponCode;
         patch.coupon_sent_at = now;
     }
@@ -196,16 +223,21 @@ async function storePhoto(
         if (!res.ok) return null;
         const buf = Buffer.from(await res.arrayBuffer());
 
-        const ext = mime.includes("png") ? "png" : "jpg";
+        const ext = mime.includes("png") ? "png"
+            : mime.includes("mp4") ? "mp4"
+            : mime.includes("3gpp") ? "3gp"
+            : mime.includes("webp") ? "webp"
+            : "jpg";
         const path = `${reviewId}/${Date.now()}.${ext}`;
 
-        // El bucket se crea en el primer uso.
+        // El bucket se crea en el primer uso. Acepta fotos y videos (WhatsApp
+        // manda video/mp4 o video/3gpp, hasta ~16MB).
         const { data: buckets } = await db.storage.listBuckets();
         if (!buckets?.some(b => b.name === PHOTO_BUCKET)) {
             await db.storage.createBucket(PHOTO_BUCKET, {
                 public: true,
-                fileSizeLimit: 5 * 1024 * 1024,
-                allowedMimeTypes: ["image/jpeg", "image/png"],
+                fileSizeLimit: 50 * 1024 * 1024,
+                allowedMimeTypes: ["image/jpeg", "image/png", "image/webp", "video/mp4", "video/3gpp"],
             });
         }
 

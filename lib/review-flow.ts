@@ -34,6 +34,8 @@ export interface InboundMessage {
     body: string;
     /** true si el mensaje trae una imagen adjunta. */
     hasImage: boolean;
+    /** true si el mensaje trae un video adjunto. */
+    hasVideo?: boolean;
 }
 
 export interface FlowPatch {
@@ -243,7 +245,7 @@ export function advanceReviewFlow(
 
         case "awaiting_comment": {
             // Si en vez de comentar manda la foto directo, se acepta igual.
-            if (msg.hasImage) {
+            if (msg.hasImage || msg.hasVideo) {
                 return {
                     reply: THANKS_WITH_COUPON(config.couponCode ?? "", config.discountPercent, config.couponDaysValid),
                     patch: { step: "completed", addPhoto: true, comment: text || undefined },
@@ -271,7 +273,7 @@ export function advanceReviewFlow(
         }
 
         case "awaiting_photo": {
-            if (msg.hasImage) {
+            if (msg.hasImage || msg.hasVideo) {
                 return {
                     reply: THANKS_WITH_COUPON(config.couponCode ?? "", config.discountPercent, config.couponDaysValid),
                     patch: { step: "completed", addPhoto: true },

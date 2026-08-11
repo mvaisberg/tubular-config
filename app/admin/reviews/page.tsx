@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { ReviewsDashboard } from "@/components/admin/ReviewsDashboard";
+import TemplatesManager from "@/components/admin/TemplatesManager";
 import { Loader2, AlertTriangle } from "lucide-react";
 
 export default function ReviewsAdminPage() {
@@ -62,6 +63,8 @@ export default function ReviewsAdminPage() {
                     </div>
                 </div>
             )}
+
+            {waConfigured && <TemplatesManager />}
 
             <ReviewsDashboard />
         </div>

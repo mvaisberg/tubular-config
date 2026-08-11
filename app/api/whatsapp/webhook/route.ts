@@ -288,6 +288,7 @@ async function handleMessages(db: Db, value: WaValue) {
                     type: m.type,
                     body: messageBody(m),
                     hasImage: m.type === "image",
+                    hasVideo: m.type === "video",
                 },
                 mediaUrl,
                 mediaMime,
