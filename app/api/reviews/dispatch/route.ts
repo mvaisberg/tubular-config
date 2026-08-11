@@ -99,8 +99,28 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Fase 2: enviar vencidos ─────────────────────────────────────────────
-    // Sólo jobs de contactos CON opt-in: los demás quedan en cola esperando el
-    // consentimiento (si el cliente opta después, el pedido de review sale igual).
+    // Se envía SIEMPRE con la plantilla activa en settings (no la que quedó
+    // grabada en el job al encolarse): cambiar la plantilla desde el panel
+    // afecta también a la cola pendiente. Las variables se adaptan a la
+    // cantidad de {{n}} que la plantilla realmente usa.
+    let templateVarCount = 2;
+    try {
+        const tplRes = await fetch(
+            `https://graph.facebook.com/v21.0/${process.env.WHATSAPP_WABA_ID}/message_templates?fields=name,language,status,components&limit=50`,
+            { headers: { Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}` } }
+        );
+        const tplJson = await tplRes.json() as { data?: { name: string; language: string; status: string; components?: { type: string; text?: string }[] }[] };
+        const tpl = (tplJson.data ?? []).find(t => t.name === template && t.language === language);
+        if (!tpl || tpl.status !== "APPROVED") {
+            return NextResponse.json({ ok: false, skipped: "template_not_approved", template });
+        }
+        const bodyText = tpl.components?.find(c => c.type === "BODY")?.text ?? "";
+        templateVarCount = new Set(bodyText.match(/\{\{\d+\}\}/g) ?? []).size;
+    } catch {
+        // Si Meta no responde, mejor no enviar en esta corrida que enviar mal.
+        return NextResponse.json({ ok: false, skipped: "template_check_failed" });
+    }
+
     const { data: jobs } = await db
         .from("wa_outbound_jobs")
         .select("id, contact_id, template_name, variables, order_id, wa_contacts!inner(id, wa_id, opt_in, opt_out_at, blocked)")
@@ -126,12 +146,13 @@ export async function POST(req: NextRequest) {
         }
 
         try {
-            const waMessageId = await sendTemplate(
-                contact.wa_id,
-                job.template_name,
-                language,
-                (job.variables as string[]) || []
-            );
+            // Variables: nombre del cliente primero, relleno genérico después,
+            // recortado a lo que la plantilla activa necesita.
+            const stored = (job.variables as string[]) || [];
+            const pool = [stored[0] || "Hola", stored[1] || "mueble"];
+            const variables = Array.from({ length: templateVarCount }, (_, i) => pool[i] ?? "mueble");
+
+            const waMessageId = await sendTemplate(contact.wa_id, template, language, variables);
 
             // Conversación: reusar la abierta o crear una nueva para la orden.
             let conversationId: string | null = null;
@@ -159,8 +180,8 @@ export async function POST(req: NextRequest) {
                     direction: "outbound",
                     wa_message_id: waMessageId || null,
                     msg_type: "template",
-                    template_name: job.template_name,
-                    body: `[plantilla: ${job.template_name}]`,
+                    template_name: template,
+                    body: `[plantilla: ${template}]`,
                     status: waMessageId ? "sent" : "pending",
                     sent_by_ai: true,
                     automation: "review_request",
