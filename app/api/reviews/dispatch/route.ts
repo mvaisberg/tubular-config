@@ -99,11 +99,14 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Fase 2: enviar vencidos ─────────────────────────────────────────────
+    // Sólo jobs de contactos CON opt-in: los demás quedan en cola esperando el
+    // consentimiento (si el cliente opta después, el pedido de review sale igual).
     const { data: jobs } = await db
         .from("wa_outbound_jobs")
-        .select("id, contact_id, template_name, variables, order_id, wa_contacts(id, wa_id, opt_in, opt_out_at, blocked)")
+        .select("id, contact_id, template_name, variables, order_id, wa_contacts!inner(id, wa_id, opt_in, opt_out_at, blocked)")
         .eq("status", "queued")
         .eq("kind", "review_request")
+        .eq("wa_contacts.opt_in", true)
         .lte("scheduled_at", new Date().toISOString())
         .limit(SEND_BATCH);
 
@@ -113,9 +116,10 @@ export async function POST(req: NextRequest) {
             id: string; wa_id: string; opt_in: boolean; opt_out_at: string | null; blocked: boolean;
         } | null;
 
-        if (!contact || !contact.opt_in || contact.opt_out_at || contact.blocked) {
+        // Opt-out o bloqueado después de encolarse: este sí se descarta.
+        if (!contact || contact.opt_out_at || contact.blocked) {
             await db.from("wa_outbound_jobs")
-                .update({ status: "skipped", skip_reason: "no_opt_in" })
+                .update({ status: "skipped", skip_reason: "opt_out" })
                 .eq("id", job.id);
             skippedNoOptIn++;
             continue;
