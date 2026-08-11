@@ -83,8 +83,17 @@ function StatCard({
     );
 }
 
+interface QueueStats {
+    queued: number;
+    sent: number;
+    skipped: number;
+    failed: number;
+    nextAt: string | null;
+}
+
 export const ReviewsDashboard = () => {
     const [reviews, setReviews] = useState<Review[]>([]);
+    const [queue, setQueue] = useState<QueueStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<Filter>("all");
     const [lightbox, setLightbox] = useState<string | null>(null);
@@ -97,6 +106,24 @@ export const ReviewsDashboard = () => {
                 .select("*, wa_contacts(wa_id, profile_name, display_name)")
                 .order("created_at", { ascending: false });
             if (data) setReviews(data as unknown as Review[]);
+
+            // Cola de envíos programados.
+            const { data: jobs } = await supabase
+                .from("wa_outbound_jobs")
+                .select("status, scheduled_at")
+                .eq("kind", "review_request");
+            if (jobs) {
+                const queuedJobs = jobs.filter(j => j.status === "queued");
+                setQueue({
+                    queued: queuedJobs.length,
+                    sent: jobs.filter(j => j.status === "sent").length,
+                    skipped: jobs.filter(j => j.status === "skipped").length,
+                    failed: jobs.filter(j => j.status === "failed").length,
+                    nextAt: queuedJobs.length
+                        ? queuedJobs.map(j => j.scheduled_at as string).sort()[0]
+                        : null,
+                });
+            }
             setLoading(false);
         };
         fetchReviews();
@@ -205,6 +232,37 @@ export const ReviewsDashboard = () => {
                     icon={Star} accent="bg-emerald-50 text-emerald-600"
                 />
             </div>
+
+            {/* Cola de envíos programados */}
+            {queue && (queue.queued > 0 || queue.failed > 0) && (
+                <div className="rounded-xl border border-gray-200 bg-white p-4 flex flex-wrap items-center gap-x-6 gap-y-2">
+                    <div className="text-sm">
+                        <span className="font-semibold text-gray-900">{queue.queued}</span>
+                        <span className="text-gray-500"> por enviar</span>
+                    </div>
+                    <div className="text-sm">
+                        <span className="font-semibold text-gray-900">{queue.sent}</span>
+                        <span className="text-gray-500"> enviados</span>
+                    </div>
+                    {queue.skipped > 0 && (
+                        <div className="text-sm">
+                            <span className="font-semibold text-gray-900">{queue.skipped}</span>
+                            <span className="text-gray-500"> descartados</span>
+                        </div>
+                    )}
+                    {queue.failed > 0 && (
+                        <div className="text-sm text-red-600">
+                            <span className="font-semibold">{queue.failed}</span> fallidos
+                        </div>
+                    )}
+                    <div className="text-xs text-gray-400 ml-auto">
+                        Ritmo: 10 por hora, de 10 a 19 hs (Arg.)
+                        {queue.nextAt && new Date(queue.nextAt) > new Date() && (
+                            <> · próximo lote: {new Date(queue.nextAt).toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })} hs</>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Embudo + distribución */}
             <div className="grid lg:grid-cols-2 gap-3">

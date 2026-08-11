@@ -17,7 +17,7 @@ import { sendTemplate, isConfigured } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
 
-const SEND_BATCH = 15; // techo por corrida: arranque suave para cuidar el quality rating
+const SEND_BATCH = 10; // techo por corrida (= por hora, el cron es horario): cuida el quality rating
 
 // Normaliza un teléfono argentino a wa_id (549 + área + número, sin + ni espacios).
 function toWaId(phone: string): string | null {
