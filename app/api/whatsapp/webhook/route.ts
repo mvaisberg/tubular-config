@@ -14,6 +14,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { verifyWebhookSignature, getMediaUrl } from "@/lib/whatsapp";
+import { processReviewMessage } from "@/lib/review-processor";
 
 export const dynamic = "force-dynamic";
 
@@ -274,5 +275,29 @@ async function handleMessages(db: Db, value: WaValue) {
                 status: "open",
             })
             .eq("id", conversationId);
+
+        // 6. Flujo de reviews. Si el contacto tiene un pedido de review activo,
+        // este mensaje lo hace avanzar y se contesta automáticamente. Si no,
+        // devuelve handled=false y el mensaje queda para que lo atienda un humano.
+        try {
+            const review = await processReviewMessage({
+                db,
+                contactId: contact.id as string,
+                conversationId,
+                message: {
+                    type: m.type,
+                    body: messageBody(m),
+                    hasImage: m.type === "image",
+                },
+                mediaUrl,
+                mediaMime,
+            });
+            if (review.error) {
+                console.error("[wa-webhook] flujo de reviews:", review.error);
+            }
+        } catch (e) {
+            // Que falle el flujo de reviews no puede romper la recepción normal.
+            console.error("[wa-webhook] flujo de reviews explotó:", e);
+        }
     }
 }

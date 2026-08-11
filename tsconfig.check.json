@@ -1,13 +1,17 @@
 {
   "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "incremental": false,
-    "plugins": []
-  },
+  "compilerOptions": { "incremental": false, "plugins": [] },
   "include": [
     "next-env.d.ts",
     "lib/whatsapp.ts",
+    "lib/review-flow.ts",
+    "lib/review-processor.ts",
+    "lib/woo-coupons.ts",
     "app/api/whatsapp/webhook/route.ts",
-    "app/api/whatsapp/send/route.ts"
+    "app/api/whatsapp/send/route.ts",
+    "app/api/whatsapp/status/route.ts",
+    "app/admin/reviews/page.tsx",
+    "components/admin/ReviewsDashboard.tsx",
+    "components/admin/Sidebar.tsx"
   ]
 }
