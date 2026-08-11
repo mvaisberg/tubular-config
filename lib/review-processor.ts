@@ -41,17 +41,29 @@ export interface ProcessResult {
 export async function processReviewMessage(args: ProcessArgs): Promise<ProcessResult> {
     const { db, contactId, conversationId, message } = args;
 
-    // ¿Hay un review activo para este contacto?
+    // ¿Hay un review activo para este contacto? Los completados recientes también
+    // entran: el cliente suele seguir la charla después del cierre ("¿te mando
+    // otra?", "¿sirve un video?") y el agente tiene que responder, aceptar más
+    // media y entregar el cupón si quedó pendiente.
+    const FOLLOWUP_WINDOW_H = 72;
     const { data: review } = await db
         .from("wa_reviews")
-        .select("id, step, rating, comment, photo_urls, prompt_count")
+        .select("id, step, rating, comment, photo_urls, prompt_count, coupon_code, updated_at")
         .eq("contact_id", contactId)
-        .in("step", ACTIVE_STEPS)
+        .in("step", [...ACTIVE_STEPS, "completed"])
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
 
     if (!review) return { handled: false };
+
+    const flowClosed = review.step === "completed";
+    if (flowClosed) {
+        const ageH = (Date.now() - new Date(review.updated_at as string).getTime()) / 3_600_000;
+        // Sin agente la máquina no maneja estados terminales; y pasada la ventana,
+        // el mensaje va a la bandeja humana como siempre.
+        if (!agentAvailable() || ageH > FOLLOWUP_WINDOW_H) return { handled: false };
+    }
 
     // Config desde settings (fila única id=1).
     const { data: settings } = await db
@@ -74,7 +86,7 @@ export async function processReviewMessage(args: ProcessArgs): Promise<ProcessRe
     // El cupón se genera ANTES de correr el flujo sólo si va a hacer falta, para
     // poder meter el código en el texto de la respuesta. Un solo cupón por review.
     const hasMedia = message.hasImage || Boolean(message.hasVideo);
-    const willIssueCoupon = hasMedia && !(review as { coupon_code?: string | null }).coupon_code;
+    const willIssueCoupon = hasMedia && !review.coupon_code;
 
     let couponCode: string | undefined;
     let couponError: string | undefined;
@@ -114,7 +126,7 @@ export async function processReviewMessage(args: ProcessArgs): Promise<ProcessRe
                 .map(m => ({ direction: m.direction === "inbound" ? "inbound" : "outbound", body: m.body as string }));
             const customerName = contactRow?.display_name || contactRow?.profile_name || null;
 
-            result = await agentAdvanceReviewFlow(state, message, flowConfig, history, customerName);
+            result = await agentAdvanceReviewFlow(state, message, flowConfig, history, customerName, flowClosed);
         } catch (e) {
             console.error("[reviews] agente falló, fallback a máquina de estados:", (e as Error).message);
             result = advanceReviewFlow(state, message, flowConfig);

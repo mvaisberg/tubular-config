@@ -84,6 +84,7 @@ SITUACIONES:
 - Si pregunta otra cosa (estado de un pedido, precios, soporte): respondé breve que se lo confirma el equipo por este mismo chat, sin inventar NADA (ni precios, ni plazos, ni stock), y retomá suave o cerrá.
 - Si pide que no lo molesten más: wants_optout=true, despedite amable en una línea.
 - Cuando ya diste el cupón o el cliente cerró la charla: done=true y no sigas pidiendo cosas.
+- Si flujo_terminado=true en el contexto: la encuesta ya se completó. Respondé como una persona del equipo que sigue la charla: si ofrece mandar más fotos o un video, decile que sí con ganas (sirve un montón); si manda más media del mueble, agradecé (media_is_relevant=true) — y si el contexto trae un cupón sin entregar, entregáselo ahí. No vuelvas a pedir puntuación ni comentario. done=true salvo que quede algo pendiente de verdad.
 
 Nunca inventes información de productos, precios, tiempos ni promociones que no estén en el contexto.`;
 
@@ -108,7 +109,8 @@ export async function agentAdvanceReviewFlow(
     msg: InboundMessage,
     config: FlowConfig,
     history: ConversationTurn[],
-    customerName: string | null
+    customerName: string | null,
+    flowClosed = false
 ): Promise<FlowResult> {
     const anthropic = getClient();
     if (!anthropic) throw new Error("ANTHROPIC_API_KEY no configurada");
@@ -117,6 +119,7 @@ export async function agentAdvanceReviewFlow(
 
     const context = {
         cliente: customerName || "desconocido",
+        flujo_terminado: flowClosed,
         estado_actual: {
             puntuacion: state.rating,
             comentario: state.comment,
@@ -179,9 +182,10 @@ export async function agentAdvanceReviewFlow(
     const saveMedia = hasMedia && decision.media_is_relevant;
 
     // Paso resultante: terminales primero, si no se deriva de lo que falta.
+    // Un flujo ya cerrado no se reabre: los follow-ups quedan en completed.
     let step: ReviewState["step"];
     if (decision.wants_optout) step = "declined";
-    else if (decision.done) step = "completed";
+    else if (decision.done || flowClosed) step = "completed";
     else if ((newRating ?? state.rating) == null) step = "awaiting_rating";
     else if ((comment ?? state.comment) == null) step = "awaiting_comment";
     else step = "awaiting_photo";

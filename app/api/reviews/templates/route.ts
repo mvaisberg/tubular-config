@@ -46,8 +46,12 @@ export async function GET() {
         .eq("id", 1)
         .single();
 
+    // hello_world es la plantilla de muestra de Meta: no se puede borrar y no sirve
+    // para el flujo — se oculta del panel.
+    const templates = (json.data ?? []).filter((t: { name: string }) => t.name !== "hello_world");
+
     return NextResponse.json({
-        templates: json.data ?? [],
+        templates,
         active: {
             name: settings?.reviews_template_name ?? null,
             language: settings?.reviews_template_language ?? "es_AR",
