@@ -80,9 +80,11 @@ export async function middleware(request: NextRequest) {
     const isAdminOnly = adminOnlyExact.includes(path)
         || adminOnlyPrefix.some(p => path === p || path.startsWith(p + '/'))
         || isOrderEdit;
-    const isMarketingSection = path === '/admin/marketing' || path.startsWith('/admin/marketing/');
+    // Sección de marketing: Ideas + Calendario + Reviews. Accesible para todos los roles.
+    const marketingPaths = ['/admin/marketing', '/admin/ideas', '/admin/reviews'];
+    const isMarketingSection = marketingPaths.some(p => path === p || path.startsWith(p + '/'));
 
-    // El rol marketing sólo ve /admin/marketing, así que hay que resolver el rol
+    // El rol marketing sólo ve su sección, así que hay que resolver el rol
     // en TODA ruta admin (no sólo las admin-only).
     let role: string | undefined;
     try {
@@ -100,17 +102,12 @@ export async function middleware(request: NextRequest) {
         role = undefined;
     }
 
-    // marketing: encerrado en su módulo.
+    // marketing: encerrado en su sección.
     if (role === 'marketing') {
         if (!isMarketingSection) {
             return NextResponse.redirect(new URL('/configurador/admin/marketing', request.url));
         }
         return response;
-    }
-
-    // El módulo de marketing es para admin y marketing (sales no).
-    if (isMarketingSection && role !== 'admin') {
-        return NextResponse.redirect(new URL('/configurador/admin/orders', request.url));
     }
 
     if (isAdminOnly && role !== 'admin') {

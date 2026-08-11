@@ -32,19 +32,23 @@ const navItems = [
     { name: "Contabilidad", href: "/admin/contabilidad", icon: Calculator, adminOnly: true },
     { name: "Cotizaciones", href: "/admin/quotes", icon: FileText, adminOnly: true },
     { name: "Contactos", href: "/admin/contacts", icon: MessageSquare, adminOnly: false },
-    { name: "Reviews", href: "/admin/reviews", icon: Star, adminOnly: false },
-    { name: "Ideas", href: "/admin/ideas", icon: Lightbulb, adminOnly: false },
-    { name: "Marketing", href: "/admin/marketing", icon: Megaphone, adminOnly: true },
     { name: "Productos", href: "/admin/products", icon: Store, adminOnly: true },
     { name: "Stock", href: "/admin/stock", icon: Boxes, adminOnly: true },
     { name: "Parts & Costs", href: "/admin/parts", icon: Package, adminOnly: true },
     { name: "Settings", href: "/admin/settings", icon: Settings, adminOnly: true },
 ];
 
+// Sección Marketing: subtítulo sin link + accesos. La ve todo el mundo;
+// el rol marketing ve SOLO esto.
+const marketingItems = [
+    { name: "Ideas", href: "/admin/ideas", icon: Lightbulb },
+    { name: "Calendario", href: "/admin/marketing", icon: Megaphone },
+    { name: "Reviews", href: "/admin/reviews", icon: Star },
+];
+
 export default function Sidebar({ role }: { role: Role }) {
-    // El rol marketing sólo ve su módulo; el resto filtra por adminOnly.
     const visibleItems = role === "marketing"
-        ? navItems.filter(i => i.href === "/admin/marketing")
+        ? []
         : navItems.filter(i => role === "admin" || !i.adminOnly);
     const pathname = usePathname();
     const router = useRouter();
@@ -72,6 +76,28 @@ export default function Sidebar({ role }: { role: Role }) {
             <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
                 {visibleItems.map((item) => {
                     const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
+                    const Icon = item.icon;
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className={`flex items-center gap-2.5 px-3 py-2 text-sm font-medium rounded-md transition-colors ${isActive
+                                ? "bg-gray-800 text-white"
+                                : "text-gray-400 hover:bg-gray-800/60 hover:text-gray-200"
+                                }`}
+                        >
+                            <Icon size={16} strokeWidth={2} />
+                            {item.name}
+                        </Link>
+                    );
+                })}
+
+                {/* Sección Marketing */}
+                <div className="pt-4 pb-1 px-3 text-[10px] font-semibold uppercase tracking-widest text-gray-500">
+                    Marketing
+                </div>
+                {marketingItems.map((item) => {
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
                     const Icon = item.icon;
                     return (
                         <Link
