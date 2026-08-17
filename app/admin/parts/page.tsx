@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import PartsTable from "@/components/admin/PartsTable";
 import ProfitAnalyzer from "@/components/admin/ProfitAnalyzer";
+import PnLReport from "@/components/admin/PnLReport";
 
 export default async function PartsPage() {
     const supabase = await createClient(); // createClient is async now in recent next.js/supabase patterns? Yes, cookies() is async.
@@ -15,6 +16,7 @@ export default async function PartsPage() {
             </header>
             {/* Sólo admins llegan a esta ruta (middleware) — análisis con impuestos y márgenes reales */}
             <ProfitAnalyzer partsData={parts || []} settings={settings || { usd_exchange_rate: 1530, profit_margin: 70 }} />
+            <PnLReport />
             <PartsTable initialParts={parts || []} />
         </div>
     );
