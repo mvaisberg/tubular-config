@@ -36,9 +36,11 @@ export async function GET(req: NextRequest) {
     const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
     const [{ data: orders }, { data: parts }, { data: settings }, { data: preconfigs }, { data: fixedCosts }] = await Promise.all([
+        // Ventas reales del período: todos los pedidos del manager (también los
+        // pendientes de pago/entrega). Sólo se excluyen cancelados.
         db.from("admin_orders")
             .select("id, order_number, final_amount, payment_method, status, created_at, items")
-            .in("status", ["paid", "completed"])
+            .neq("status", "cancelled")
             .gte("created_at", from)
             .lte("created_at", to + "T23:59:59.999Z")
             .order("created_at"),

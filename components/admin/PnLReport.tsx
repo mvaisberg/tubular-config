@@ -87,7 +87,8 @@ export default function PnLReport() {
         <div className="bg-white rounded-xl border border-gray-200 p-5">
             <h2 className="text-base font-semibold text-gray-900">Cuadro de resultados</h2>
             <p className="text-xs text-gray-500 mt-0.5 mb-3">
-                Ventas cobradas del período, costos variables reales por canal, y costos fijos de la estructura.
+                Ventas del período (todos los pedidos del manager, incluidos los pendientes de pago o entrega),
+                costos variables reales por canal, y costos fijos de la estructura.
             </p>
 
             {/* Período */}
