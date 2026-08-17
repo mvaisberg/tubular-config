@@ -17,6 +17,9 @@ export interface Settings {
     installments_6_percent?: number;
     iva_percent?: number;
     target_margin_percent?: number;
+    // Márgenes objetivo por material — si existen, pisan a target_margin_percent.
+    margin_steel_percent?: number;
+    margin_acrylic_percent?: number;
 }
 
 export interface PricingResult {
@@ -197,7 +200,8 @@ export function calculatePricing(
 
     // NEW FORMULA CONSTANTS
     const shipping_cost = settings.shipping_cost || 0;
-    const target_margin_percent = settings.target_margin_percent || settings.profit_margin || 65;
+    const materialMargin = moduleMaterial === 'acrylic' ? settings.margin_acrylic_percent : settings.margin_steel_percent;
+    const target_margin_percent = materialMargin || settings.target_margin_percent || settings.profit_margin || 65;
     const transaction_fee_percent = settings.transaction_fee_percent || 2.5;
     const transaction_fee_iva_percent = settings.transaction_fee_iva_percent || 21;
     const installments_6_percent = settings.installments_6_percent || 13;

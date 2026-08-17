@@ -1,7 +1,8 @@
 /**
  * Cuadro de resultados (P&L) por período — sólo admin.
  *
- * Toma las ventas cobradas del período (admin_orders paid/completed), resuelve
+ * Toma todos los pedidos del período (admin_orders: Woo + manuales, se excluyen
+ * sólo los cancelados — también los de importe $0, que se listan en el detalle), resuelve
  * el BOM de cada ítem para calcular el costo de materiales real, y aplica la
  * carga variable según el canal de cobro:
  *   - transfer/cash → canal efectivo: comisión de cobro 3%
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest) {
         // Ventas reales del período: todos los pedidos del manager (también los
         // pendientes de pago/entrega). Sólo se excluyen cancelados.
         db.from("admin_orders")
-            .select("id, order_number, final_amount, payment_method, status, created_at, items")
+            .select("id, order_number, client_name, source, final_amount, payment_method, payment_method_label, status, created_at, items")
             .neq("status", "cancelled")
             .gte("created_at", from)
             .lte("created_at", to + "T23:59:59.999Z")
@@ -59,10 +60,14 @@ export async function GET(req: NextRequest) {
         materials: 0, feesCard: 0, cashFee: 0, ivaToPay: 0, iibb: 0,
         estimatedItems: 0, resolvedItems: 0,
     };
+    // Detalle de cada operación incluida, para poder auditar el ciclo desde el panel.
+    const detail: {
+        order_number: string | null; date: string; client: string | null; source: string;
+        channel: string; payment: string | null; status: string; amount: number; materials: number;
+    }[] = [];
 
     for (const order of orders || []) {
         const rev = Number(order.final_amount) || 0;
-        if (rev <= 0) continue;
         const channel = order.payment_method === "cash" || order.payment_method === "transfer" ? "efectivo" : "lista";
 
         // Materiales + base con factura desde el BOM de cada ítem.
@@ -90,6 +95,17 @@ export async function GET(req: NextRequest) {
 
         agg.revenue += rev;
         agg.materials += materials;
+        detail.push({
+            order_number: order.order_number ?? null,
+            date: (order.created_at || "").slice(0, 10),
+            client: order.client_name ?? null,
+            source: order.source === "woocommerce" ? "Woo" : "Manual",
+            channel,
+            payment: order.payment_method_label || order.payment_method || null,
+            status: order.status,
+            amount: rev,
+            materials,
+        });
 
         if (channel === "lista") {
             agg.revenueLista += rev;
@@ -116,5 +132,6 @@ export async function GET(req: NextRequest) {
         variableTotal,
         contribution: agg.revenue - variableTotal,
         fixedCosts: fixedCosts || [],
+        detail,
     });
 }

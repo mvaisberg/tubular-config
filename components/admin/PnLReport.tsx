@@ -18,7 +18,15 @@ interface PnL {
     estimatedItems: number; resolvedItems: number;
     variableTotal: number; contribution: number;
     fixedCosts: { id: string; name: string; amount: number }[];
+    detail: {
+        order_number: string | null; date: string; client: string | null; source: string;
+        channel: string; payment: string | null; status: string; amount: number; materials: number;
+    }[];
 }
+
+const STATUS_LABELS: Record<string, string> = {
+    pending: "Pendiente", partial: "Seña", paid: "Pagado", completed: "Completado",
+};
 
 interface FixedRow { id: string; name: string; amount: number; enabled: boolean }
 
@@ -44,6 +52,7 @@ export default function PnLReport() {
     const [error, setError] = useState<string | null>(null);
     const [fixedRows, setFixedRows] = useState<FixedRow[]>([]);
     const [fixedLoaded, setFixedLoaded] = useState(false);
+    const [showDetail, setShowDetail] = useState(false);
 
     const load = async (f: string, t: string) => {
         setLoading(true);
@@ -115,7 +124,55 @@ export default function PnLReport() {
 
             {data && (
                 <div className="max-w-2xl">
-                    <Row label={`VENTAS TOTALES  (${data.orders} ventas: ${data.ordersLista} lista / ${data.ordersEfectivo} efectivo)`} value={fmt(data.revenue)} bold big />
+                    <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                            <Row label={`VENTAS TOTALES  (${data.orders} ventas: ${data.ordersLista} lista / ${data.ordersEfectivo} efectivo)`} value={fmt(data.revenue)} bold big />
+                        </div>
+                        <button
+                            onClick={() => setShowDetail(s => !s)}
+                            className="shrink-0 px-2.5 py-1 rounded-md text-[11px] font-medium bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        >
+                            {showDetail ? "Ocultar operaciones" : `Ver operaciones (${data.detail?.length ?? 0})`}
+                        </button>
+                    </div>
+
+                    {showDetail && (
+                        <div className="my-2 border border-gray-200 rounded-lg overflow-x-auto">
+                            <table className="w-full text-[11px]">
+                                <thead>
+                                    <tr className="bg-gray-50 text-gray-500 text-left">
+                                        <th className="px-2 py-1.5 font-medium">Pedido</th>
+                                        <th className="px-2 py-1.5 font-medium">Fecha</th>
+                                        <th className="px-2 py-1.5 font-medium">Cliente</th>
+                                        <th className="px-2 py-1.5 font-medium">Origen</th>
+                                        <th className="px-2 py-1.5 font-medium">Canal</th>
+                                        <th className="px-2 py-1.5 font-medium">Estado</th>
+                                        <th className="px-2 py-1.5 font-medium text-right">Importe</th>
+                                        <th className="px-2 py-1.5 font-medium text-right">Materiales</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {(data.detail || []).map((o, i) => (
+                                        <tr key={i} className={o.amount <= 0 ? "bg-amber-50" : ""}>
+                                            <td className="px-2 py-1 font-medium text-gray-800 whitespace-nowrap">{o.order_number || "—"}</td>
+                                            <td className="px-2 py-1 text-gray-500 whitespace-nowrap">{o.date}</td>
+                                            <td className="px-2 py-1 text-gray-700 max-w-[140px] truncate">{o.client || "—"}</td>
+                                            <td className="px-2 py-1 text-gray-500">{o.source}</td>
+                                            <td className="px-2 py-1 text-gray-500">{o.channel}{o.payment ? ` · ${o.payment}` : ""}</td>
+                                            <td className="px-2 py-1 text-gray-500">{STATUS_LABELS[o.status] || o.status}</td>
+                                            <td className="px-2 py-1 text-right tabular-nums font-medium">{fmt(o.amount)}</td>
+                                            <td className="px-2 py-1 text-right tabular-nums text-gray-500">−{fmt(o.materials)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            {(data.detail || []).some(o => o.amount <= 0) && (
+                                <p className="px-2 py-1.5 text-[10px] text-amber-600 border-t border-gray-100">
+                                    Los pedidos resaltados tienen importe $0 en el manager: se cuentan como operación pero no suman ventas. Cargales el importe en Pedidos para que impacten.
+                                </p>
+                            )}
+                        </div>
+                    )}
                     <div className="pl-3 border-l-2 border-gray-100 my-1">
                         <Row label="Materiales (BOM real de cada venta)" value={"−" + fmt(data.materials)} />
                         <Row label="Fees tarjeta + cuotas (ventas lista)" value={"−" + fmt(data.feesCard)} />

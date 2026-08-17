@@ -25,9 +25,10 @@ export default function ProfitAnalyzer({ partsData, settings }: { partsData: unk
     const [bomRows, setBomRows] = useState<PartRow[]>([]);
     const [formula, setFormula] = useState<FormulaInfo | null>(null);
     const [label, setLabel] = useState("");
+    const [wooNote, setWooNote] = useState<{ woo: number; calc: number } | null>(null);
     const supabase = createClient();
 
-    const resolve = async (raw: string): Promise<{ modules: ModuleConfig[]; hasWheels: boolean; label: string }> => {
+    const resolve = async (raw: string): Promise<{ modules: ModuleConfig[]; hasWheels: boolean; label: string; wooPrice?: number }> => {
         const arg = raw.trim();
         // Link con ?config=
         try {
@@ -51,11 +52,21 @@ export default function ProfitAnalyzer({ partsData, settings }: { partsData: unk
             if ((e as Error).message.includes("cotización")) throw e;
             /* no era URL: probar SKU */
         }
-        const { data } = await supabase.from("preconfigured_products").select("name, configuration").eq("sku", arg.toUpperCase()).maybeSingle();
+        const { data } = await supabase.from("preconfigured_products").select("name, configuration, woo_product_id").eq("sku", arg.toUpperCase()).maybeSingle();
         if (data) {
             const cfg = data.configuration as { modules?: ModuleConfig[]; hasWheels?: boolean } | ModuleConfig[];
             const modules = Array.isArray(cfg) ? cfg : cfg.modules ?? [];
-            return { modules, hasWheels: !Array.isArray(cfg) && Boolean(cfg.hasWheels), label: data.name as string };
+            // SKU de catálogo: el análisis se hace sobre el precio publicado en Woo.
+            let wooPrice = 0;
+            if (data.woo_product_id) {
+                try {
+                    const res = await fetch("/configurador/api/woocommerce/products");
+                    const j = await res.json();
+                    const p = (j.products as { id: number; price: number }[] | undefined)?.find(x => x.id === data.woo_product_id);
+                    wooPrice = p?.price || 0;
+                } catch { /* sin precio Woo: se usa el del configurador */ }
+            }
+            return { modules, hasWheels: !Array.isArray(cfg) && Boolean(cfg.hasWheels), label: data.name as string, wooPrice };
         }
         throw new Error("Pegá un link del configurador (?config= o ?quote=) o un SKU (ej. ST-201)");
     };
@@ -64,11 +75,13 @@ export default function ProfitAnalyzer({ partsData, settings }: { partsData: unk
         setLoading(true);
         setError(null);
         setResult(null);
+        setWooNote(null);
         try {
-            const { modules, hasWheels, label: lbl } = await resolve(input);
+            const { modules, hasWheels, label: lbl, wooPrice } = await resolve(input);
             if (!modules?.length) throw new Error("La configuración no tiene módulos");
             const pricing = calculatePricing(modules, partsData as never[], settings, hasWheels);
-            setResult(analyzeChannels(pricing, settings));
+            setResult(analyzeChannels(pricing, settings, wooPrice || undefined));
+            setWooNote(wooPrice ? { woo: wooPrice, calc: pricing.totalPrice } : null);
             setBomRows(Object.entries(pricing.bomSummary).map(([sku, it]) => ({
                 sku, name: it.name, qty: it.quantity, unit: it.unitCostARS, total: it.totalCostARS, creditable: creditableFraction(sku),
             })).sort((a, b) => b.total - a.total));
@@ -109,7 +122,13 @@ export default function ProfitAnalyzer({ partsData, settings }: { partsData: unk
 
             {result && (
                 <div className="mt-4">
-                    <div className="text-sm font-medium text-gray-700 mb-3">{label}</div>
+                    <div className="text-sm font-medium text-gray-700 mb-1">{label}</div>
+                    {wooNote && (
+                        <div className="mb-3 text-[11px] text-gray-500 bg-blue-50 border border-blue-100 rounded-lg px-3 py-1.5">
+                            Análisis sobre el <b>precio publicado en Woo: {fmt(wooNote.woo)}</b>.
+                            El configurador daría {fmt(wooNote.calc)} ({wooNote.calc ? (((wooNote.woo - wooNote.calc) / wooNote.calc) * 100).toFixed(1) : 0}% de diferencia).
+                        </div>
+                    )}
                     <div className="grid md:grid-cols-2 gap-4">
                         {/* LISTA */}
                         <div className="border border-gray-200 rounded-xl p-4">

@@ -40,13 +40,13 @@ export interface OrderFormInitial {
 }
 
 const PAYMENT_DISCOUNT: Record<PaymentMethod, number> = {
-    transfer: 10,
+    transfer: 20,
     cash: 20,
     other: 0,
 };
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
-    transfer: "Transferencia (−10%)",
+    transfer: "Transferencia (−20%)",
     cash: "Efectivo (−20%)",
     other: "Otro (sin descuento)",
 };
@@ -112,13 +112,25 @@ export function OrderForm({ mode, initial }: { mode: "create" | "edit"; initial?
     // Cajas para elegir dónde entra la seña/cobro.
     const [cashBoxes, setCashBoxes] = useState<{ id: string; name: string; currency: string }[]>([]);
     const [cashBoxId, setCashBoxId] = useState<string>("");
+    const [usdRate, setUsdRate] = useState<number>(1000);
+    const [boxAmountOverride, setBoxAmountOverride] = useState<string>("");
     useEffect(() => {
         supabase.from("cash_boxes").select("id,name,currency").order("sort_order")
             .then(({ data }) => { if (data) setCashBoxes(data); });
+        supabase.from("settings").select("usd_exchange_rate").eq("id", 1).single()
+            .then(({ data }) => {
+                const r = Number(data?.usd_exchange_rate);
+                if (r > 0) setUsdRate(r);
+            });
         // Al editar, precargar la caja del movimiento existente de este pedido.
         if (initial?.id) {
-            supabase.from("cash_movements").select("box_id").eq("order_id", initial.id).limit(1)
-                .then(({ data }) => { if (data && data[0]) setCashBoxId(data[0].box_id); });
+            supabase.from("cash_movements").select("box_id,amount").eq("order_id", initial.id).limit(1)
+                .then(({ data }) => {
+                    if (data && data[0]) {
+                        setCashBoxId(data[0].box_id);
+                        setBoxAmountOverride(String(data[0].amount));
+                    }
+                });
         }
     }, [initial?.id, supabase]);
 
@@ -187,6 +199,28 @@ export function OrderForm({ mode, initial }: { mode: "create" | "edit"; initial?
             : 0;
     const remaining = Math.max(0, finalAmount - computedPaidAmount);
 
+    const selectedBox = cashBoxes.find(b => b.id === cashBoxId);
+    const convertedBoxAmount = (() => {
+        if (!selectedBox || computedPaidAmount <= 0) return 0;
+        if (selectedBox.currency === "USD") {
+            return Math.round((computedPaidAmount / usdRate) * 100) / 100;
+        }
+        return Math.round(computedPaidAmount);
+    })();
+    const boxAmountToPost = (() => {
+        const raw = boxAmountOverride.trim();
+        if (raw !== "") {
+            const n = parseFloat(raw);
+            if (!Number.isNaN(n) && n > 0) return n;
+        }
+        return convertedBoxAmount;
+    })();
+    const fmtBox = (n: number, currency: string) => {
+        const prefix = currency === "USD" ? "US$" : "$";
+        const digits = currency === "ARS" ? 0 : 2;
+        return prefix + n.toLocaleString("es-AR", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+    };
+
     const handleSave = async () => {
         if (!clientName.trim()) return alert("El nombre del cliente es obligatorio");
         if (items.length === 0) return alert("Debe agregar al menos un ítem");
@@ -248,10 +282,15 @@ export function OrderForm({ mode, initial }: { mode: "create" | "edit"; initial?
             if (computedPaidAmount > 0 && cashBoxId && cashBoxId !== "none") {
                 const { data: { user } } = await supabase.auth.getUser();
                 const label = status === "paid" ? "Cobro total" : "Seña";
+                const boxCur = cashBoxes.find(b => b.id === cashBoxId)?.currency || "ARS";
+                const note = boxCur === "USD"
+                    ? `Pedido ARS $${Math.round(computedPaidAmount).toLocaleString("es-AR")} · TC ${usdRate}`
+                    : null;
                 await supabase.from("cash_movements").insert({
                     box_id: cashBoxId,
-                    amount: computedPaidAmount,
+                    amount: boxAmountToPost,
                     concept: `${label} pedido ${clientName || ""}`.trim(),
+                    note,
                     order_id: orderId,
                     author_email: user?.email || null,
                 });
@@ -511,7 +550,11 @@ export function OrderForm({ mode, initial }: { mode: "create" | "edit"; initial?
                         {status !== "pending" && (
                             <div className="animate-in fade-in slide-in-from-top-1 duration-150">
                                 <label className={labelCls}>Caja donde entra el pago *</label>
-                                <select value={cashBoxId} onChange={e => setCashBoxId(e.target.value)} className={inputCls}>
+                                <select
+                                    value={cashBoxId}
+                                    onChange={e => { setCashBoxId(e.target.value); setBoxAmountOverride(""); }}
+                                    className={inputCls}
+                                >
                                     <option value="">— Elegir caja… —</option>
                                     {cashBoxes.map(b => (
                                         <option key={b.id} value={b.id}>{b.name} ({b.currency})</option>
@@ -523,10 +566,34 @@ export function OrderForm({ mode, initial }: { mode: "create" | "edit"; initial?
                                         No se registra en ninguna caja — lo cargás manual después.
                                     </p>
                                 )}
-                                {computedPaidAmount > 0 && cashBoxId && cashBoxId !== "none" && (
-                                    <p className="text-xs text-gray-500 mt-2">
-                                        Entra <span className="font-semibold text-emerald-700 tabular-nums">${computedPaidAmount.toLocaleString("es-AR")}</span> a la caja seleccionada.
-                                    </p>
+                                {computedPaidAmount > 0 && selectedBox && (
+                                    <div className="mt-3 space-y-2">
+                                        {selectedBox.currency !== "ARS" && (
+                                            <>
+                                                <label className={labelCls}>
+                                                    Monto en {selectedBox.currency} que entra a {selectedBox.name}
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.01"
+                                                    value={boxAmountOverride === "" ? String(convertedBoxAmount) : boxAmountOverride}
+                                                    onChange={e => setBoxAmountOverride(e.target.value)}
+                                                    className={inputCls + " tabular-nums"}
+                                                />
+                                                <p className="text-xs text-gray-500">
+                                                    Pedido en ARS ${Math.round(computedPaidAmount).toLocaleString("es-AR")}
+                                                    {" · "}TC {usdRate.toLocaleString("es-AR")}
+                                                    {" → "}sugerido {fmtBox(convertedBoxAmount, selectedBox.currency)}. Podés ajustar si cobraste otro dólar.
+                                                </p>
+                                            </>
+                                        )}
+                                        {selectedBox.currency === "ARS" && (
+                                            <p className="text-xs text-gray-500">
+                                                Entra <span className="font-semibold text-emerald-700 tabular-nums">{fmtBox(boxAmountToPost, "ARS")}</span> a {selectedBox.name}.
+                                            </p>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         )}

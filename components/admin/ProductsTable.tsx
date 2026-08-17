@@ -131,15 +131,14 @@ export default function ProductsTable({ initialProducts, partsData, settings }: 
                         <th className="px-6 py-4 text-left text-[10px] font-semibold text-white tracking-normal">Módulos</th>
                         <th className="px-6 py-4 text-right text-[10px] font-semibold text-white tracking-normal">Costo Act.</th>
                         <th className="px-6 py-4 text-right text-[10px] font-semibold text-white tracking-normal opacity-80">PVP Lista</th>
-                        <th className="px-6 py-4 text-right text-[10px] font-semibold text-blue-200 tracking-normal bg-white/5">Transf. (-10%)</th>
-                        <th className="px-6 py-4 text-right text-[10px] font-semibold text-blue-200 tracking-normal bg-white/10">Efectivo (-20%)</th>
+                        <th className="px-6 py-4 text-right text-[10px] font-semibold text-blue-200 tracking-normal bg-white/10">Efectivo/Transf. (-20%)</th>
                         <th className="px-6 py-4 text-right text-[10px] font-semibold text-white tracking-normal w-32">Acciones</th>
                     </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
                     {productDetails.length === 0 && (
                         <tr>
-                            <td colSpan={7} className="px-6 py-12 text-center text-gray-400 text-xs font-bold tracking-normal">
+                            <td colSpan={6} className="px-6 py-12 text-center text-gray-400 text-xs font-bold tracking-normal">
                                 NO HAY PRODUCTOS PRECONFIGURADOS AÚN.
                             </td>
                         </tr>
@@ -168,9 +167,6 @@ export default function ProductsTable({ initialProducts, partsData, settings }: 
                                     </td>
                                     <td className="px-6 py-5 whitespace-nowrap text-xs text-right font-bold text-gray-400 line-through">
                                         ${Math.round(pricing.totalPrice).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                                    </td>
-                                    <td className="px-6 py-5 whitespace-nowrap text-xs text-right font-semibold text-gray-900 bg-gray-50">
-                                        ${Math.round(pricing.totalPrice * 0.9).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                                     </td>
                                     <td className="px-6 py-5 whitespace-nowrap text-sm text-right font-semibold text-white bg-indigo-600 border-l border-r border-gray-200">
                                         ${Math.round(pricing.totalPrice * 0.8).toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
@@ -201,7 +197,7 @@ export default function ProductsTable({ initialProducts, partsData, settings }: 
                                 </tr>
                                 {isExpanded && (
                                     <tr>
-                                        <td colSpan={7} className="p-0 border-b border-gray-200">
+                                        <td colSpan={6} className="p-0 border-b border-gray-200">
                                             <div className="bg-white p-8 lg:p-12 shadow-inner border-t border-gray-200">
                                                 {/* Vínculo con producto de catálogo (WooCommerce) */}
                                                 <div className="mb-10 p-4 border border-gray-200 bg-gray-50 flex flex-col sm:flex-row sm:items-center gap-3">

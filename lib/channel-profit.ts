@@ -55,8 +55,10 @@ export function analyzeChannels(pricing: PricingResult, settings: {
     transaction_fee_percent?: number;
     installments_6_percent?: number;
     shipping_cost?: number;
-}): ProfitComparison {
-    const P = pricing.totalPrice;
+}, priceOverride?: number): ProfitComparison {
+    // priceOverride: precio real de venta (ej. el publicado en Woo para un SKU
+    // de catálogo) cuando difiere del que calcularía el configurador.
+    const P = priceOverride ?? pricing.totalPrice;
     const C = pricing.totalCost;
     const S = settings.shipping_cost ?? 0;
 

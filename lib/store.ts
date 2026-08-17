@@ -28,6 +28,8 @@ interface ConfigState {
         installments_6_percent: number;
         iva_percent: number;
         target_margin_percent: number;
+        margin_steel_percent?: number;
+        margin_acrylic_percent?: number;
     } | null;
     bomSummary: Record<string, BOMItem>
     totalCost: number
@@ -45,6 +47,7 @@ interface ConfigState {
     showDimensions: boolean
     showAddButtons: boolean
     hasWheels: boolean
+    showDecor: boolean
     toastMessage: string | null
     history: ModuleConfig[][]
     future: ModuleConfig[][]
@@ -64,6 +67,9 @@ interface ConfigState {
         toggleAddButtons: () => void
         setShowAddButtons: (value: boolean) => void
         setHasWheels: (value: boolean) => void
+        toggleDecor: () => void
+        setShowDecor: (value: boolean) => void
+        hydrate: (payload: { modules: ModuleConfig[]; hasWheels?: boolean; environment?: EnvironmentType; showDecor?: boolean }) => void
         reset: () => void
         fetchPartsData: () => Promise<void>
         fetchSettings: () => Promise<void>
@@ -187,6 +193,7 @@ export const useConfigStore = create<ConfigState>((set, get) => {
     showDimensions: false,
     showAddButtons: true,
     hasWheels: false,
+    showDecor: false,
     toastMessage: null,
     history: [],
     future: [],
@@ -208,6 +215,8 @@ export const useConfigStore = create<ConfigState>((set, get) => {
             set({ hasWheels: value });
             get().actions.calculatePrice();
         },
+        toggleDecor: () => set((state) => ({ showDecor: !state.showDecor })),
+        setShowDecor: (value) => set({ showDecor: value }),
         setModules: (modules) => {
             snapshot();
             set({ modules, selectedModuleId: null });
@@ -323,9 +332,7 @@ export const useConfigStore = create<ConfigState>((set, get) => {
                 return s < minX - 0.5 || e > maxX + 0.5;
             });
             if (conflict) {
-                if (typeof window !== 'undefined') {
-                    alert('No se puede cambiar la altura: hay un módulo superior apoyado fuera del cluster. Separá los módulos primero.');
-                }
+                get().actions.showToast('No se puede cambiar la altura: hay un módulo arriba apoyado fuera de esta fila. Separá los módulos primero.');
                 return;
             }
 
@@ -371,6 +378,22 @@ export const useConfigStore = create<ConfigState>((set, get) => {
             }));
             get().actions.calculatePrice();
         },
+        hydrate: (payload) => {
+            if (!Array.isArray(payload.modules) || payload.modules.length === 0) return;
+            const modules = payload.modules.map((m) => enforceModuleConstraints(m));
+            set({
+                modules,
+                hasWheels: typeof payload.hasWheels === 'boolean' ? payload.hasWheels : get().hasWheels,
+                environment: payload.environment === 'room' || payload.environment === 'none'
+                    ? payload.environment
+                    : get().environment,
+                showDecor: typeof payload.showDecor === 'boolean' ? payload.showDecor : get().showDecor,
+                selectedModuleId: null,
+                history: [],
+                future: [],
+            });
+            get().actions.calculatePrice();
+        },
         reset: () => {
             snapshot();
             set({
@@ -383,7 +406,8 @@ export const useConfigStore = create<ConfigState>((set, get) => {
                     hasPanel: { top: true, bottom: true, left: true, right: true, front: false, back: true }
                 }],
                 selectedModuleId: null,
-                totalPrice: 0 // Will be recalculated
+                hasWheels: false,
+                totalPrice: 0
             });
             get().actions.calculatePrice();
         },
@@ -395,6 +419,7 @@ export const useConfigStore = create<ConfigState>((set, get) => {
                 get().actions.calculatePrice();
             } else if (error) {
                 console.error('Error fetching parts:', error);
+                get().actions.showToast('No se pudieron cargar los precios. Recargá la página.');
             }
         },
         fetchSettings: async () => {
@@ -410,12 +435,15 @@ export const useConfigStore = create<ConfigState>((set, get) => {
                         transaction_fee_iva_percent: data.transaction_fee_iva_percent || 21,
                         installments_6_percent: data.installments_6_percent || 13,
                         iva_percent: data.iva_percent || 21,
-                        target_margin_percent: data.target_margin_percent || 65
+                        target_margin_percent: data.target_margin_percent || 65,
+                        margin_steel_percent: data.margin_steel_percent || undefined,
+                        margin_acrylic_percent: data.margin_acrylic_percent || undefined
                     }
                 });
                 get().actions.calculatePrice();
             } else if (error) {
                 console.error('Error fetching settings:', error);
+                get().actions.showToast('No se pudieron cargar los precios. Recargá la página.');
             }
         },
         calculatePrice: () => {

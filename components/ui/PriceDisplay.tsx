@@ -73,21 +73,7 @@ export const PriceDisplay = ({ className }: { className?: string }) => {
 
                     <div className="flex justify-between items-center group">
                         <div className="flex flex-col gap-0.5">
-                            <span className="text-[0.875rem] md:text-sm font-black text-[#354763] uppercase">Transferencia</span>
-                            <span className="text-[0.75rem] md:text-xs font-bold text-slate-500 uppercase tracking-widest">10% OFF</span>
-                        </div>
-                        <div className="flex flex-col items-end">
-                            <span className="text-[1.25rem] md:text-xl font-black text-[#354763]">
-                                ${fmt(Math.round(finalPrice * 0.9))}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="h-px bg-[#354763]/10 w-full" />
-
-                    <div className="flex justify-between items-center group">
-                        <div className="flex flex-col gap-0.5">
-                            <span className="text-[0.875rem] md:text-sm font-black text-[#354763] uppercase">Efectivo</span>
+                            <span className="text-[0.875rem] md:text-sm font-black text-[#354763] uppercase">Efectivo / Transferencia</span>
                             <span className="text-[0.75rem] md:text-xs font-bold text-slate-500 uppercase tracking-widest">20% OFF</span>
                         </div>
                         <div className="flex flex-col items-end">
@@ -125,7 +111,7 @@ export const PriceDisplay = ({ className }: { className?: string }) => {
                             <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
                             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
                         </svg>
-                        Agregar al Carrito
+                        Comprar
                     </>
                 )}
             </button>

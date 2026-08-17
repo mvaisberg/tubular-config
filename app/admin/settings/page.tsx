@@ -17,14 +17,13 @@ export default function SettingsPage() {
 
     const [usdExchangeRate, setUsdExchangeRate] = useState<string>("0");
     const [shippingCost, setShippingCost] = useState<string>("20000");
-    const [targetMarginPercent, setTargetMarginPercent] = useState<string>("65");
+    const [marginSteelPercent, setMarginSteelPercent] = useState<string>("70");
+    const [marginAcrylicPercent, setMarginAcrylicPercent] = useState<string>("70");
     const [transactionFeePercent, setTransactionFeePercent] = useState<string>("2.5");
     const [transactionFeeIvaPercent, setTransactionFeeIvaPercent] = useState<string>("21");
     const [installments6Percent, setInstallments6Percent] = useState<string>("13");
     const [ivaPercent, setIvaPercent] = useState<string>("21");
     const [fixedCosts, setFixedCosts] = useState<FixedCost[]>([]);
-    // Calculadora de precio: costo de materiales de prueba (no se guarda).
-    const [calcCost, setCalcCost] = useState<string>("300000");
 
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -39,7 +38,8 @@ export default function SettingsPage() {
             if (settings) {
                 setUsdExchangeRate(settings.usd_exchange_rate?.toString() || "0");
                 setShippingCost(settings.shipping_cost?.toString() || "20000");
-                setTargetMarginPercent(settings.target_margin_percent?.toString() || "65");
+                setMarginSteelPercent((settings.margin_steel_percent ?? settings.target_margin_percent)?.toString() || "70");
+                setMarginAcrylicPercent((settings.margin_acrylic_percent ?? settings.target_margin_percent)?.toString() || "70");
                 setTransactionFeePercent(settings.transaction_fee_percent?.toString() || "2.5");
                 setTransactionFeeIvaPercent(settings.transaction_fee_iva_percent?.toString() || "21");
                 setInstallments6Percent(settings.installments_6_percent?.toString() || "13");
@@ -67,7 +67,8 @@ export default function SettingsPage() {
         const updates = {
             usd_exchange_rate: parseFloat(usdExchangeRate),
             shipping_cost: parseFloat(shippingCost),
-            target_margin_percent: parseFloat(targetMarginPercent),
+            margin_steel_percent: parseFloat(marginSteelPercent),
+            margin_acrylic_percent: parseFloat(marginAcrylicPercent),
             transaction_fee_percent: parseFloat(transactionFeePercent),
             transaction_fee_iva_percent: parseFloat(transactionFeeIvaPercent),
             installments_6_percent: parseFloat(installments6Percent),
@@ -156,14 +157,18 @@ export default function SettingsPage() {
                 {/* Logística y margen */}
                 <section className="bg-white border border-gray-200 rounded-lg p-6">
                     <h2 className="text-sm font-semibold text-gray-900 mb-4">Logística y margen</h2>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                         <div>
                             <label className={labelCls}>Envío ($)</label>
                             <input type="number" value={shippingCost} onChange={e => setShippingCost(e.target.value)} className={inputCls} />
                         </div>
                         <div>
-                            <label className={labelCls}>Margen (%)</label>
-                            <input type="number" value={targetMarginPercent} onChange={e => setTargetMarginPercent(e.target.value)} className={inputCls} />
+                            <label className={labelCls}>Margen acero (%)</label>
+                            <input type="number" value={marginSteelPercent} onChange={e => setMarginSteelPercent(e.target.value)} className={inputCls} />
+                        </div>
+                        <div>
+                            <label className={labelCls}>Margen acrílico (%)</label>
+                            <input type="number" value={marginAcrylicPercent} onChange={e => setMarginAcrylicPercent(e.target.value)} className={inputCls} />
                         </div>
                     </div>
                 </section>
@@ -190,99 +195,6 @@ export default function SettingsPage() {
                         </div>
                     </div>
                 </section>
-
-                {/* Fórmula de precio + calculadora (misma matemática que lib/pricing.ts) */}
-                {(() => {
-                    const margin = parseFloat(targetMarginPercent) || 0;
-                    const ship = parseFloat(shippingCost) || 0;
-                    const trans = parseFloat(transactionFeePercent) || 0;
-                    const transIva = parseFloat(transactionFeeIvaPercent) || 0;
-                    const cuotas = parseFloat(installments6Percent) || 0;
-                    const iva = parseFloat(ivaPercent) || 0;
-
-                    // Réplica exacta de calculatePricing (lib/pricing.ts):
-                    const feeTrans = trans * (1 + transIva / 100);           // comisión c/IVA
-                    const feeCuotas = cuotas * (1 + iva / 100);              // cuotas c/IVA
-                    const feeTotal = feeTrans + feeCuotas;
-
-                    const cost = parseFloat(calcCost) || 0;
-                    const basePrice = margin < 100 ? Math.round(cost / (1 - margin / 100)) : 0;
-                    const plusShipping = basePrice + ship;
-                    const finalPrice = feeTotal < 100 ? Math.round(plusShipping / (1 - feeTotal / 100)) : 0;
-                    const realRevenue = Math.round(finalPrice * (1 - feeTotal / 100));
-                    const grossProfit = realRevenue - cost - ship;
-                    const money = (n: number) => "$" + Math.round(n).toLocaleString("es-AR");
-                    const pct = (n: number) => n.toLocaleString("es-AR", { maximumFractionDigits: 3 }) + "%";
-
-                    return (
-                        <section className="bg-white border border-gray-200 rounded-lg p-6 lg:col-span-2">
-                            <h2 className="text-sm font-semibold text-gray-900 mb-1">Fórmula de precio</h2>
-                            <p className="text-xs text-gray-500 mb-5">
-                                Así se arma el PVP de lista. Los valores se actualizan al instante con lo que edites arriba — probá acá y recién después tocá <b>Guardar cambios</b>.
-                            </p>
-
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                {/* Fórmula expresada */}
-                                <div className="space-y-2">
-                                    <div className="rounded-lg border border-gray-200 divide-y divide-gray-100 text-sm">
-                                        <div className="px-4 py-3 flex justify-between items-center bg-gray-50">
-                                            <span className="font-medium text-gray-700">1 · Costo de materiales</span>
-                                            <span className="text-gray-500 text-xs">sale del despiece (Partes)</span>
-                                        </div>
-                                        <div className="px-4 py-3 flex justify-between items-center">
-                                            <span className="text-gray-700">2 · ÷ (1 − <b>margen {margin}%</b>)</span>
-                                            <span className="text-xs text-gray-400">= Precio base</span>
-                                        </div>
-                                        <div className="px-4 py-3 flex justify-between items-center">
-                                            <span className="text-gray-700">3 · + <b>envío {money(ship)}</b></span>
-                                            <span className="text-xs text-gray-400">costo fijo</span>
-                                        </div>
-                                        <div className="px-4 py-3">
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-gray-700">4 · ÷ (1 − <b>fees {pct(feeTotal)}</b>)</span>
-                                                <span className="text-xs text-gray-400">= PVP lista</span>
-                                            </div>
-                                            <div className="mt-2 text-[11px] text-gray-500 space-y-0.5 pl-4">
-                                                <div>• Transacción: {trans}% × (1 + IVA {transIva}%) = <b>{pct(feeTrans)}</b></div>
-                                                <div>• 6 cuotas: {cuotas}% × (1 + IVA {iva}%) = <b>{pct(feeCuotas)}</b></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <p className="text-[11px] text-gray-400">
-                                        El margen y los fees van como <b>divisor</b> (÷ (1−%)) y no como suma, para que el % quede calculado sobre el precio final, no sobre el costo. Los descuentos por medio de pago (−10% transf., −20% efectivo) se aplican después, sobre el PVP.
-                                    </p>
-                                </div>
-
-                                {/* Calculadora */}
-                                <div className="rounded-lg border-2 border-indigo-100 bg-indigo-50/40 p-5">
-                                    <label className={labelCls}>🧮 Calculadora — Costo de materiales de prueba</label>
-                                    <div className="relative mb-4">
-                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
-                                        <input
-                                            type="number"
-                                            value={calcCost}
-                                            onChange={e => setCalcCost(e.target.value)}
-                                            className={inputCls + " pl-7 text-lg font-semibold"}
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5 text-sm">
-                                        <div className="flex justify-between"><span className="text-gray-500">Precio base (÷ {(1 - margin / 100).toLocaleString("es-AR", { maximumFractionDigits: 2 })})</span><span className="tabular-nums font-medium">{money(basePrice)}</span></div>
-                                        <div className="flex justify-between"><span className="text-gray-500">+ Envío</span><span className="tabular-nums font-medium">{money(plusShipping)}</span></div>
-                                        <div className="flex justify-between items-center pt-2 border-t border-indigo-100">
-                                            <span className="font-semibold text-gray-900">PVP lista</span>
-                                            <span className="tabular-nums text-xl font-bold text-indigo-700">{money(finalPrice)}</span>
-                                        </div>
-                                        <div className="flex justify-between"><span className="text-gray-500">Transferencia (−10%)</span><span className="tabular-nums font-medium">{money(finalPrice * 0.9)}</span></div>
-                                        <div className="flex justify-between"><span className="text-gray-500">Efectivo (−20%)</span><span className="tabular-nums font-medium">{money(finalPrice * 0.8)}</span></div>
-                                        <div className="flex justify-between pt-2 border-t border-indigo-100"><span className="text-gray-500">Recaudación real (PVP − fees)</span><span className="tabular-nums font-medium">{money(realRevenue)}</span></div>
-                                        <div className="flex justify-between"><span className="text-gray-500">Utilidad bruta (− costo − envío)</span><span className={`tabular-nums font-semibold ${grossProfit >= 0 ? "text-emerald-700" : "text-rose-600"}`}>{money(grossProfit)}</span></div>
-                                        <div className="flex justify-between"><span className="text-gray-500">Margen real s/ recaudación</span><span className="tabular-nums font-medium">{realRevenue > 0 ? Math.round((grossProfit / realRevenue) * 100) : 0}%</span></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-                    );
-                })()}
 
                 {/* Costos fijos */}
                 <section className="bg-white border border-gray-200 rounded-lg p-6 lg:col-span-2">
