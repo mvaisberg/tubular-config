@@ -13,6 +13,8 @@ import type { PricingResult } from "@/lib/pricing";
 export const IVA = 0.21;
 export const IIBB_RATE = 0.035;
 export const CASH_FACTOR = 0.8;
+/** Comisión de cobro del canal efectivo/transferencia (costo de cobrar). */
+export const CASH_FEE_RATE = 0.03;
 
 /** Fracción del costo de cada pieza que viene CON factura (genera crédito fiscal). */
 export function creditableFraction(sku: string): number {
@@ -83,9 +85,10 @@ export function analyzeChannels(pricing: PricingResult, settings: {
     };
 
     const E = P * CASH_FACTOR;
-    const cashProfit = E - C - S;
+    const cashFees = E * CASH_FEE_RATE;
+    const cashProfit = E - cashFees - C - S;
     const efectivo: ChannelAnalysis = {
-        price: E, fees: 0, feesNet: 0, feesIva: 0,
+        price: E, fees: cashFees, feesNet: cashFees, feesIva: 0,
         ivaDebit: 0, ivaCreditPurchases: 0, ivaCreditFees: 0, ivaToPay: 0, iibb: 0,
         materials: C, shipping: S,
         profit: cashProfit, profitPct: E ? cashProfit / E : 0,

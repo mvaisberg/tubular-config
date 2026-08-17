@@ -14,7 +14,8 @@ import { Search, Loader2, Wallet, CreditCard } from "lucide-react";
 const fmt = (n: number) => "$" + Math.round(n).toLocaleString("es-AR");
 const pct = (n: number) => (n * 100).toFixed(1) + "%";
 
-interface PartRow { sku: string; name: string; qty: number; total: number; creditable: number }
+interface PartRow { sku: string; name: string; qty: number; unit: number; total: number; creditable: number }
+interface FormulaInfo { productCost: number; marginPercent: number; basePrice: number; shippingCost: number; pricePlusShipping: number; feePercent: number; finalPrice: number }
 
 export default function ProfitAnalyzer({ partsData, settings }: { partsData: unknown[]; settings: Settings }) {
     const [input, setInput] = useState("");
@@ -22,8 +23,8 @@ export default function ProfitAnalyzer({ partsData, settings }: { partsData: unk
     const [error, setError] = useState<string | null>(null);
     const [result, setResult] = useState<ProfitComparison | null>(null);
     const [bomRows, setBomRows] = useState<PartRow[]>([]);
+    const [formula, setFormula] = useState<FormulaInfo | null>(null);
     const [label, setLabel] = useState("");
-    const [showBom, setShowBom] = useState(false);
     const supabase = createClient();
 
     const resolve = async (raw: string): Promise<{ modules: ModuleConfig[]; hasWheels: boolean; label: string }> => {
@@ -69,8 +70,9 @@ export default function ProfitAnalyzer({ partsData, settings }: { partsData: unk
             const pricing = calculatePricing(modules, partsData as never[], settings, hasWheels);
             setResult(analyzeChannels(pricing, settings));
             setBomRows(Object.entries(pricing.bomSummary).map(([sku, it]) => ({
-                sku, name: it.name, qty: it.quantity, total: it.totalCostARS, creditable: creditableFraction(sku),
+                sku, name: it.name, qty: it.quantity, unit: it.unitCostARS, total: it.totalCostARS, creditable: creditableFraction(sku),
             })).sort((a, b) => b.total - a.total));
+            setFormula(pricing.breakdown);
             setLabel(lbl);
         } catch (e) {
             setError((e as Error).message);
@@ -132,7 +134,7 @@ export default function ProfitAnalyzer({ partsData, settings }: { partsData: unk
                                 <span className="text-sm font-semibold text-gray-900">Efectivo / transferencia (20% off)</span>
                             </div>
                             <Row label="Precio de venta" value={fmt(result.efectivo.price)} bold />
-                            <Row label="Fees" value="—" />
+                            <Row label="Comisión de cobro 3%" value={"−" + fmt(result.efectivo.fees)} />
                             <Row label="IVA" value="—" />
                             <Row label="IIBB" value="—" />
                             <Row label="Materiales" value={"−" + fmt(result.efectivo.materials)} />
@@ -151,36 +153,54 @@ export default function ProfitAnalyzer({ partsData, settings }: { partsData: unk
                         {result.lista.profit < result.efectivo.profit ? "(la venta facturada deja menos)" : "(la venta facturada deja más)"}
                     </div>
 
-                    <button onClick={() => setShowBom(!showBom)} className="mt-3 text-xs font-medium text-gray-500 hover:text-gray-800">
-                        {showBom ? "▾ Ocultar despiece" : "▸ Ver despiece y crédito fiscal por pieza"}
-                    </button>
-                    {showBom && (
-                        <div className="mt-2 border border-gray-200 rounded-lg overflow-hidden">
-                            <table className="w-full text-xs">
-                                <thead className="bg-gray-50 text-gray-500">
-                                    <tr>
-                                        <th className="text-left px-3 py-1.5">Pieza</th>
-                                        <th className="text-right px-3 py-1.5">Cant.</th>
-                                        <th className="text-right px-3 py-1.5">Costo</th>
-                                        <th className="text-right px-3 py-1.5">Con factura</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {bomRows.map(r => (
-                                        <tr key={r.sku} className="border-t border-gray-100">
-                                            <td className="px-3 py-1">{r.name}</td>
-                                            <td className="px-3 py-1 text-right">{r.qty}</td>
-                                            <td className="px-3 py-1 text-right">{fmt(r.total)}</td>
-                                            <td className="px-3 py-1 text-right text-gray-500">{r.creditable ? (r.creditable * 100) + "%" : "—"}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                    {/* Despiece: costo y cantidad de cada pieza */}
+                    <div className="mt-4 border border-gray-200 rounded-xl overflow-hidden">
+                        <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200 text-sm font-semibold text-gray-900">
+                            Despiece de partes
                         </div>
-                    )}
+                        <table className="w-full text-xs">
+                            <thead className="text-gray-500 border-b border-gray-100">
+                                <tr>
+                                    <th className="text-left px-4 py-1.5 font-medium">Pieza</th>
+                                    <th className="text-right px-3 py-1.5 font-medium">Cant.</th>
+                                    <th className="text-right px-3 py-1.5 font-medium">Unitario</th>
+                                    <th className="text-right px-3 py-1.5 font-medium">Subtotal</th>
+                                    <th className="text-right px-4 py-1.5 font-medium">Con factura</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {bomRows.map(r => (
+                                    <tr key={r.sku} className="border-t border-gray-100">
+                                        <td className="px-4 py-1.5">{r.name}</td>
+                                        <td className="px-3 py-1.5 text-right tabular-nums">{r.qty}</td>
+                                        <td className="px-3 py-1.5 text-right tabular-nums">{fmt(r.unit)}</td>
+                                        <td className="px-3 py-1.5 text-right tabular-nums font-medium">{fmt(r.total)}</td>
+                                        <td className="px-4 py-1.5 text-right text-gray-500">{r.creditable ? (r.creditable * 100) + "%" : "—"}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                            <tfoot>
+                                <tr className="border-t-2 border-gray-200 bg-gray-50">
+                                    <td className="px-4 py-2 font-semibold text-gray-900">COSTO MATERIALES</td>
+                                    <td className="px-3 py-2 text-right tabular-nums text-gray-500">{bomRows.reduce((a, r) => a + r.qty, 0)} piezas</td>
+                                    <td />
+                                    <td className="px-3 py-2 text-right tabular-nums font-bold text-gray-900">{formula ? fmt(formula.productCost) : ""}</td>
+                                    <td />
+                                </tr>
+                            </tfoot>
+                        </table>
+                        {formula && (
+                            <div className="px-4 py-2.5 border-t border-gray-200 text-[11px] text-gray-500 bg-white">
+                                <span className="font-medium text-gray-700">Cómo se forma el precio de lista:</span>{" "}
+                                costo {fmt(formula.productCost)} ÷ {(1 - formula.marginPercent / 100).toFixed(2)} (margen {formula.marginPercent}%) = {fmt(formula.basePrice)}
+                                {" → "}+ envío {fmt(formula.shippingCost)} = {fmt(formula.pricePlusShipping)}
+                                {" → "}÷ {(1 - formula.feePercent / 100).toFixed(4)} (fees {formula.feePercent.toFixed(2)}%) = <span className="font-semibold text-gray-800">{fmt(formula.finalPrice)}</span>
+                            </div>
+                        )}
+                    </div>
                     <p className="mt-2 text-[11px] text-gray-400">
                         Supuestos: RI · IVA de los fees tomado como crédito · IIBB 3,5% sobre el neto sin IVA · con factura:
-                        acrílicos 100%, caños 25%, bolas/soportes/conectores 50%.
+                        acrílicos 100%, caños 25%, bolas/soportes/conectores 50% · efectivo con comisión de cobro 3%.
                     </p>
                 </div>
             )}
