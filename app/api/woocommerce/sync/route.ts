@@ -273,6 +273,12 @@ export async function POST() {
                     status: mapStatus(o.status),
                     paid_amount: mapStatus(o.status) === "paid" ? finalAmount : 0,
                     created_at: o.date_created,
+                    // Pago con tarjeta/MP → facturado automático en Contabilidad
+                    // (efectivo/transferencia se factura a mano). Fecha estable =
+                    // fecha del pedido, así el re-sync no la mueve.
+                    ...(mapPaymentMethod(o.payment_method) === "other" && finalAmount > 0
+                        ? { invoiced: true, invoiced_at: o.date_created }
+                        : {}),
                 };
 
                 const existingId = existingMap.get(row.woo_order_id);

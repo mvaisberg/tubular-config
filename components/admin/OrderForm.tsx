@@ -37,6 +37,8 @@ export interface OrderFormInitial {
     discount_percentage?: number;
     status?: Status;
     paid_amount?: number | null;
+    invoiced?: boolean | null;
+    invoiced_at?: string | null;
 }
 
 const PAYMENT_DISCOUNT: Record<PaymentMethod, number> = {
@@ -251,6 +253,11 @@ export function OrderForm({ mode, initial }: { mode: "create" | "edit"; initial?
             final_amount: finalAmount,
             status,
             paid_amount: computedPaidAmount,
+            // Pago con tarjeta/MP → se factura sí o sí: queda marcado automático
+            // en Contabilidad. Efectivo/transferencia se factura a mano.
+            ...(paymentMethod === "other" && !initial?.invoiced
+                ? { invoiced: true, invoiced_at: new Date().toISOString() }
+                : {}),
         };
 
         let error;
