@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Loader2, Star, Camera, MessageCircle, Send, Ticket, ExternalLink } from "lucide-react";
+import { Loader2, Star, Camera, MessageCircle, Send, Ticket, ExternalLink, Download, X } from "lucide-react";
 
 type Step =
     | "queued" | "sent" | "awaiting_rating" | "awaiting_comment"
@@ -46,6 +46,146 @@ const STEP_CLS: Record<Step, string> = {
 };
 
 type Filter = "all" | "responded" | "with_photo" | "pending" | "published";
+
+// ── Tarjeta para contenido ──────────────────────────────────────────────────
+// Dibuja la review en un canvas 1080px (cuadrado, o vertical si lleva foto)
+// con la estética de la marca, para descargar como PNG y usar en redes.
+
+const BRAND = "#354763";
+
+function drawStar(ctx: CanvasRenderingContext2D, cx: number, cy: number, R: number) {
+    const r = R * 0.48;
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+        const rad = i % 2 === 0 ? R : r;
+        const a = (Math.PI / 5) * i - Math.PI / 2;
+        const x = cx + rad * Math.cos(a), y = cy + rad * Math.sin(a);
+        if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+    }
+    ctx.closePath();
+}
+
+function wrapText(ctx: CanvasRenderingContext2D, text: string, maxW: number): string[] {
+    const lines: string[] = [];
+    for (const para of text.split(/\n+/)) {
+        let line = "";
+        for (const word of para.split(/\s+/).filter(Boolean)) {
+            const probe = line ? line + " " + word : word;
+            if (ctx.measureText(probe).width <= maxW || !line) line = probe;
+            else { lines.push(line); line = word; }
+        }
+        if (line) lines.push(line);
+    }
+    return lines;
+}
+
+async function drawReviewCard(r: Review, name: string, includePhoto: boolean): Promise<string> {
+    const W = 1080;
+    const photoUrl = includePhoto ? (r.photo_urls ?? [])[0] : null;
+    let img: HTMLImageElement | null = null;
+    if (photoUrl) {
+        img = await new Promise<HTMLImageElement | null>(res => {
+            const i = new Image();
+            i.crossOrigin = "anonymous";
+            i.onload = () => res(i);
+            i.onerror = () => res(null);
+            i.src = photoUrl;
+        });
+    }
+    const photoH = img ? 640 : 0;
+    const H = img ? 1350 : 1080;
+    const canvas = document.createElement("canvas");
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext("2d")!;
+
+    ctx.fillStyle = "#faf9f6";
+    ctx.fillRect(0, 0, W, H);
+
+    if (img) {
+        const scale = Math.max(W / img.width, photoH / img.height);
+        const dw = img.width * scale, dh = img.height * scale;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, 0, W, photoH);
+        ctx.clip();
+        ctx.drawImage(img, (W - dw) / 2, (photoH - dh) / 2, dw, dh);
+        ctx.restore();
+    }
+
+    // Zona de texto: se centra verticalmente entre la foto y el pie de marca.
+    const footerH = 150;
+    const zoneTop = photoH, zoneH = H - photoH - footerH;
+    const maxTextW = W - 200;
+
+    // Comentario: achicar la letra hasta que entre.
+    const comment = (r.comment ?? "").trim();
+    let fontSize = 46, lines: string[] = [];
+    if (comment) {
+        for (; fontSize >= 26; fontSize -= 2) {
+            ctx.font = `italic ${fontSize}px Georgia, 'Times New Roman', serif`;
+            lines = wrapText(ctx, `“${comment}”`, maxTextW);
+            if (lines.length * fontSize * 1.5 <= zoneH - 220) break;
+        }
+    }
+    const starR = 26, starGap = 74;
+    const blockH = 2 * starR + 50 + lines.length * fontSize * 1.5 + (comment ? 30 : 0) + 44;
+    let y = zoneTop + Math.max((zoneH - blockH) / 2, 60) + starR;
+
+    // Estrellas
+    const rating = r.rating ?? 0;
+    const cx0 = W / 2 - 2 * starGap;
+    for (let i = 0; i < 5; i++) {
+        drawStar(ctx, cx0 + i * starGap, y, starR);
+        ctx.fillStyle = i < rating ? "#f5b431" : "#e2e0da";
+        ctx.fill();
+    }
+    y += starR + 60;
+
+    // Comentario
+    if (comment) {
+        ctx.font = `italic ${fontSize}px Georgia, 'Times New Roman', serif`;
+        ctx.fillStyle = "#2b2f36";
+        ctx.textAlign = "center";
+        for (const line of lines) {
+            ctx.fillText(line, W / 2, y + fontSize * 0.5);
+            y += fontSize * 1.5;
+        }
+        y += 30;
+    }
+
+    // Nombre
+    ctx.font = "600 34px -apple-system, 'Helvetica Neue', Arial, sans-serif";
+    ctx.fillStyle = "#8a8f98";
+    ctx.textAlign = "center";
+    ctx.fillText(`— ${name}`, W / 2, y + 20);
+
+    // Pie de marca
+    const fy = H - footerH;
+    ctx.strokeStyle = "#e5e3dd";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(100, fy);
+    ctx.lineTo(W - 100, fy);
+    ctx.stroke();
+    ctx.font = "bold 56px -apple-system, 'Helvetica Neue', Arial, sans-serif";
+    ctx.fillStyle = BRAND;
+    ctx.fillText("tubular™", W / 2, fy + 78);
+    ctx.font = "500 24px -apple-system, 'Helvetica Neue', Arial, sans-serif";
+    ctx.fillStyle = "#a0a4ab";
+    ctx.fillText("tubular.com.ar", W / 2, fy + 118);
+
+    try {
+        return canvas.toDataURL("image/png");
+    } catch {
+        // Foto sin CORS ensucia el canvas: regenerar sin foto.
+        return includePhoto ? drawReviewCard(r, name, false) : "";
+    }
+}
+
+function contactName(r: Review): string {
+    const c = r.wa_contacts;
+    return c?.display_name || c?.profile_name || c?.wa_id || "Cliente Tubular";
+}
 
 function Stars({ n }: { n: number | null }) {
     if (!n) return <span className="text-gray-300 text-xs">—</span>;
@@ -97,7 +237,20 @@ export const ReviewsDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<Filter>("all");
     const [lightbox, setLightbox] = useState<string | null>(null);
+    const [cardFor, setCardFor] = useState<Review | null>(null);
+    const [cardPhoto, setCardPhoto] = useState(true);
+    const [cardUrl, setCardUrl] = useState<string | null>(null);
     const supabase = createClient();
+
+    // Generar la tarjeta cuando se abre el popup o se cambia incluir/quitar foto.
+    useEffect(() => {
+        if (!cardFor) { setCardUrl(null); return; }
+        let alive = true;
+        setCardUrl(null);
+        drawReviewCard(cardFor, contactName(cardFor), cardPhoto)
+            .then(url => { if (alive) setCardUrl(url || null); });
+        return () => { alive = false; };
+    }, [cardFor, cardPhoto]);
 
     useEffect(() => {
         const fetchReviews = async () => {
@@ -369,9 +522,9 @@ export const ReviewsDashboard = () => {
                                             )}
                                         </td>
                                         <td className="px-4 py-3"><Stars n={r.rating} /></td>
-                                        <td className="px-4 py-3 text-gray-600">
+                                        <td className="px-4 py-3 text-gray-600 max-w-md">
                                             {r.comment
-                                                ? <span className="line-clamp-2">{r.comment}</span>
+                                                ? <span className="whitespace-pre-wrap break-words">{r.comment}</span>
                                                 : <span className="text-gray-300">—</span>}
                                         </td>
                                         <td className="px-4 py-3">
@@ -405,7 +558,15 @@ export const ReviewsDashboard = () => {
                                                 ? <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">{r.coupon_code}</code>
                                                 : <span className="text-gray-300">—</span>}
                                         </td>
-                                        <td className="px-4 py-3 text-right">
+                                        <td className="px-4 py-3 text-right whitespace-nowrap">
+                                            <button
+                                                onClick={() => { setCardPhoto(true); setCardFor(r); }}
+                                                disabled={!r.rating && !r.comment}
+                                                title="Ver como tarjeta para contenido"
+                                                className="px-2 py-1 mr-1.5 rounded-md text-[11px] font-medium border bg-white text-gray-500 border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                            >
+                                                Tarjeta
+                                            </button>
                                             <button
                                                 onClick={() => togglePublished(r)}
                                                 disabled={!r.rating}
@@ -426,6 +587,66 @@ export const ReviewsDashboard = () => {
                     </table>
                 </div>
             </div>
+
+            {/* Tarjeta para contenido */}
+            {cardFor && (
+                <div
+                    className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 md:p-8 overflow-y-auto"
+                    onClick={() => setCardFor(null)}
+                >
+                    <div
+                        className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-4"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-sm font-semibold text-gray-900">Tarjeta de review</h3>
+                            <button
+                                onClick={() => setCardFor(null)}
+                                className="p-1.5 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        {cardUrl ? (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img src={cardUrl} alt="Tarjeta de review" className="w-full rounded-xl border border-gray-200" />
+                        ) : (
+                            <div className="aspect-square flex items-center justify-center bg-gray-50 rounded-xl">
+                                <Loader2 className="w-6 h-6 animate-spin text-gray-300" />
+                            </div>
+                        )}
+
+                        <div className="mt-3 flex items-center gap-2">
+                            {(cardFor.photo_urls ?? []).length > 0 && (
+                                <label className="flex items-center gap-1.5 text-xs text-gray-600 mr-auto cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={cardPhoto}
+                                        onChange={e => setCardPhoto(e.target.checked)}
+                                    />
+                                    Incluir foto del cliente
+                                </label>
+                            )}
+                            <a
+                                href={cardUrl ?? "#"}
+                                download={`review-${contactName(cardFor).replace(/\s+/g, "-").toLowerCase()}.png`}
+                                className={`ml-auto flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium ${
+                                    cardUrl
+                                        ? "bg-gray-900 text-white hover:bg-gray-800"
+                                        : "bg-gray-200 text-gray-400 pointer-events-none"
+                                }`}
+                            >
+                                <Download className="w-3.5 h-3.5" />
+                                Descargar PNG
+                            </a>
+                        </div>
+                        <p className="mt-2 text-[10px] text-gray-400">
+                            1080 px, listo para historias o feed. Si la foto no carga, la tarjeta sale sin foto.
+                        </p>
+                    </div>
+                </div>
+            )}
 
             {/* Visor de foto */}
             {lightbox && (
