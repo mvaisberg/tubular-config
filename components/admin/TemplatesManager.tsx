@@ -27,6 +27,7 @@ const DEFAULT_BODY =
 export default function TemplatesManager() {
     const [templates, setTemplates] = useState<MetaTemplate[]>([]);
     const [active, setActive] = useState<string | null>(null);
+    const [followup, setFollowup] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [creating, setCreating] = useState(false);
@@ -48,6 +49,7 @@ export default function TemplatesManager() {
             if (json.error) throw new Error(json.error);
             setTemplates(json.templates);
             setActive(json.active?.name ?? null);
+            setFollowup(json.active?.followup ?? null);
         } catch (e) {
             setError((e as Error).message);
         } finally {
@@ -78,17 +80,18 @@ export default function TemplatesManager() {
         }
     };
 
-    const activate = async (templateName: string) => {
+    const activate = async (templateName: string, slot: "first" | "followup" = "first") => {
         setCreating(true);
         try {
             const res = await fetch("/configurador/api/reviews/templates", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: templateName }),
+                body: JSON.stringify({ name: templateName, slot }),
             });
             const json = await res.json();
             if (json.error) throw new Error(json.error);
-            setActive(templateName);
+            if (slot === "followup") setFollowup(templateName);
+            else setActive(templateName);
         } catch (e) {
             setError((e as Error).message);
         } finally {
@@ -115,7 +118,7 @@ export default function TemplatesManager() {
                 </div>
             </div>
             <p className="text-xs text-gray-500 mb-4">
-                El primer mensaje del flujo sale con una plantilla aprobada por Meta. Creá variantes (con estrellas, otro copy) y elegí cuál se usa.
+                El primer mensaje del flujo sale con una plantilla aprobada por Meta; el 2º intento (para los que no respondieron) usa su propia plantilla. Creá variantes y elegí cuál va en cada lugar.
             </p>
 
             {error && <div className="mb-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</div>}
@@ -181,8 +184,9 @@ export default function TemplatesManager() {
                 {templates.map((t) => {
                     const badge = STATUS_BADGE[t.status] ?? { cls: "bg-gray-50 text-gray-600 border-gray-200", icon: null, label: t.status };
                     const isActive = t.name === active;
+                    const isFollowup = t.name === followup;
                     return (
-                        <div key={`${t.name}-${t.language}`} className={`border rounded-lg p-3 ${isActive ? "border-gray-900 bg-gray-50" : "border-gray-200"}`}>
+                        <div key={`${t.name}-${t.language}`} className={`border rounded-lg p-3 ${isActive || isFollowup ? "border-gray-900 bg-gray-50" : "border-gray-200"}`}>
                             <div className="flex items-center justify-between gap-2 mb-1">
                                 <div className="flex items-center gap-2 min-w-0">
                                     <span className="text-sm font-semibold text-gray-800 truncate">{t.name}</span>
@@ -191,17 +195,28 @@ export default function TemplatesManager() {
                                         {badge.icon} {badge.label}
                                     </span>
                                 </div>
-                                {isActive ? (
-                                    <span className="text-[11px] font-semibold text-gray-900 shrink-0">● En uso</span>
-                                ) : t.status === "APPROVED" && (
-                                    <button
-                                        onClick={() => activate(t.name)}
-                                        disabled={creating}
-                                        className="text-[12px] font-medium text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg px-2.5 py-1 hover:bg-gray-100 shrink-0"
-                                    >
-                                        Usar esta
-                                    </button>
-                                )}
+                                <div className="flex items-center gap-2 shrink-0">
+                                    {isActive && <span className="text-[11px] font-semibold text-gray-900">● 1er mensaje</span>}
+                                    {isFollowup && <span className="text-[11px] font-semibold text-indigo-700">● 2º intento</span>}
+                                    {!isActive && t.status === "APPROVED" && (
+                                        <button
+                                            onClick={() => activate(t.name)}
+                                            disabled={creating}
+                                            className="text-[12px] font-medium text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg px-2.5 py-1 hover:bg-gray-100"
+                                        >
+                                            Usar de 1er mensaje
+                                        </button>
+                                    )}
+                                    {!isFollowup && t.status === "APPROVED" && (
+                                        <button
+                                            onClick={() => activate(t.name, "followup")}
+                                            disabled={creating}
+                                            className="text-[12px] font-medium text-indigo-600 hover:text-indigo-800 border border-indigo-200 rounded-lg px-2.5 py-1 hover:bg-indigo-50"
+                                        >
+                                            Usar de 2º intento
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                             <p className="text-xs text-gray-500 whitespace-pre-wrap line-clamp-3">{bodyOf(t)}</p>
                         </div>

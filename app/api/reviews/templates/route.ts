@@ -4,7 +4,9 @@
  * GET    → lista las plantillas del WABA (con estado de aprobación de Meta)
  *          + cuál está activa para el disparo de reviews.
  * POST   → crea una plantilla nueva en Meta (queda PENDING hasta que aprueben).
- * PUT    → elige qué plantilla usa el dispatcher (settings.reviews_template_name).
+ * PUT    → elige qué plantilla usa el dispatcher. slot "first" (default) →
+ *          settings.reviews_template_name; slot "followup" (2º intento a los
+ *          que no respondieron) → settings.reviews_followup_template_name.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServerSupabase } from "@/lib/supabase/server";
@@ -42,7 +44,7 @@ export async function GET() {
 
     const { data: settings } = await serviceDb()
         .from("settings")
-        .select("reviews_template_name, reviews_template_language")
+        .select("reviews_template_name, reviews_followup_template_name, reviews_template_language")
         .eq("id", 1)
         .single();
 
@@ -54,6 +56,7 @@ export async function GET() {
         templates,
         active: {
             name: settings?.reviews_template_name ?? null,
+            followup: settings?.reviews_followup_template_name ?? null,
             language: settings?.reviews_template_language ?? "es_AR",
         },
     });
@@ -105,14 +108,15 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
     if (!(await requireUser())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { name } = await req.json() as { name?: string };
+    const { name, slot } = await req.json() as { name?: string; slot?: "first" | "followup" };
     if (!name) return NextResponse.json({ error: "Falta name" }, { status: 400 });
 
+    const field = slot === "followup" ? "reviews_followup_template_name" : "reviews_template_name";
     const { error } = await serviceDb()
         .from("settings")
-        .update({ reviews_template_name: name })
+        .update({ [field]: name })
         .eq("id", 1);
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    return NextResponse.json({ ok: true, active: name });
+    return NextResponse.json({ ok: true, active: name, slot: slot ?? "first" });
 }

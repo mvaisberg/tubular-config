@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 
     const { data: settings } = await db
         .from("settings")
-        .select("reviews_enabled, reviews_delay_days, reviews_template_name, reviews_template_language")
+        .select("reviews_enabled, reviews_delay_days, reviews_template_name, reviews_followup_template_name, reviews_template_language")
         .eq("id", 1)
         .single();
 
@@ -99,35 +99,48 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Fase 2: enviar vencidos ─────────────────────────────────────────────
-    // Se envía SIEMPRE con la plantilla activa en settings (no la que quedó
-    // grabada en el job al encolarse): cambiar la plantilla desde el panel
-    // afecta también a la cola pendiente. Las variables se adaptan a la
-    // cantidad de {{n}} que la plantilla realmente usa.
-    let templateVarCount = 2;
+    // Cada kind de job usa la plantilla activa en settings al momento del envío
+    // (no la que quedó grabada al encolarse): cambiar la plantilla desde el
+    // panel afecta también a la cola pendiente. Las variables se adaptan a la
+    // cantidad de {{n}} que la plantilla realmente usa. Un kind cuya plantilla
+    // no esté aprobada deja sus jobs en cola sin marcar (salen al aprobarse).
+    const followupTemplate = settings.reviews_followup_template_name || null;
+    const tplByKind: Record<string, { name: string; varCount: number } | null> = {
+        review_request: null,
+        review_followup: null,
+    };
     try {
         const tplRes = await fetch(
             `https://graph.facebook.com/v21.0/${process.env.WHATSAPP_WABA_ID}/message_templates?fields=name,language,status,components&limit=50`,
             { headers: { Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}` } }
         );
         const tplJson = await tplRes.json() as { data?: { name: string; language: string; status: string; components?: { type: string; text?: string }[] }[] };
-        const tpl = (tplJson.data ?? []).find(t => t.name === template && t.language === language);
-        if (!tpl || tpl.status !== "APPROVED") {
-            return NextResponse.json({ ok: false, skipped: "template_not_approved", template });
-        }
-        const bodyText = tpl.components?.find(c => c.type === "BODY")?.text ?? "";
-        templateVarCount = new Set(bodyText.match(/\{\{\d+\}\}/g) ?? []).size;
+        const resolve = (name: string | null) => {
+            const tpl = name ? (tplJson.data ?? []).find(t => t.name === name && t.language === language) : undefined;
+            if (!tpl || tpl.status !== "APPROVED") return null;
+            const bodyText = tpl.components?.find(c => c.type === "BODY")?.text ?? "";
+            return { name: name!, varCount: new Set(bodyText.match(/\{\{\d+\}\}/g) ?? []).size };
+        };
+        tplByKind.review_request = resolve(template);
+        tplByKind.review_followup = resolve(followupTemplate);
     } catch {
         // Si Meta no responde, mejor no enviar en esta corrida que enviar mal.
         return NextResponse.json({ ok: false, skipped: "template_check_failed" });
     }
 
+    const sendableKinds = Object.keys(tplByKind).filter(k => tplByKind[k]);
+    if (!sendableKinds.length) {
+        return NextResponse.json({ ok: false, skipped: "template_not_approved", template });
+    }
+
     const { data: jobs } = await db
         .from("wa_outbound_jobs")
-        .select("id, contact_id, template_name, variables, order_id, wa_contacts!inner(id, wa_id, opt_in, opt_out_at, blocked)")
+        .select("id, contact_id, kind, template_name, variables, order_id, wa_contacts!inner(id, wa_id, opt_in, opt_out_at, blocked)")
         .eq("status", "queued")
-        .eq("kind", "review_request")
+        .in("kind", sendableKinds)
         .eq("wa_contacts.opt_in", true)
         .lte("scheduled_at", new Date().toISOString())
+        .order("scheduled_at")
         .limit(SEND_BATCH);
 
     let sent = 0, skippedNoOptIn = 0, failed = 0;
@@ -146,13 +159,14 @@ export async function POST(req: NextRequest) {
         }
 
         try {
+            const tpl = tplByKind[job.kind as string]!;
             // Variables: nombre del cliente primero, relleno genérico después,
             // recortado a lo que la plantilla activa necesita.
             const stored = (job.variables as string[]) || [];
             const pool = [stored[0] || "Hola", stored[1] || "mueble"];
-            const variables = Array.from({ length: templateVarCount }, (_, i) => pool[i] ?? "mueble");
+            const variables = Array.from({ length: tpl.varCount }, (_, i) => pool[i] ?? "mueble");
 
-            const waMessageId = await sendTemplate(contact.wa_id, template, language, variables);
+            const waMessageId = await sendTemplate(contact.wa_id, tpl.name, language, variables);
 
             // Conversación: reusar la abierta o crear una nueva para la orden.
             let conversationId: string | null = null;
@@ -180,21 +194,30 @@ export async function POST(req: NextRequest) {
                     direction: "outbound",
                     wa_message_id: waMessageId || null,
                     msg_type: "template",
-                    template_name: template,
-                    body: `[plantilla: ${template}]`,
+                    template_name: tpl.name,
+                    body: `[plantilla: ${tpl.name}]`,
                     status: waMessageId ? "sent" : "pending",
                     sent_by_ai: true,
-                    automation: "review_request",
+                    automation: job.kind as string,
                 });
             }
 
-            await db.from("wa_reviews").insert({
-                contact_id: contact.id,
-                conversation_id: conversationId,
-                order_id: job.order_id,
-                step: "sent",
-                requested_at: new Date().toISOString(),
-            });
+            if (job.kind === "review_followup") {
+                // Segundo intento: la review ya existe — si venció, se reactiva
+                // para que el webhook retome la conversación. No se crea otra.
+                await db.from("wa_reviews")
+                    .update({ step: "sent" })
+                    .eq("contact_id", contact.id)
+                    .eq("step", "expired");
+            } else {
+                await db.from("wa_reviews").insert({
+                    contact_id: contact.id,
+                    conversation_id: conversationId,
+                    order_id: job.order_id,
+                    step: "sent",
+                    requested_at: new Date().toISOString(),
+                });
+            }
 
             await db.from("wa_outbound_jobs")
                 .update({ status: "sent", sent_at: new Date().toISOString() })
