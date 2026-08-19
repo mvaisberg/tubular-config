@@ -16,7 +16,7 @@ export default async function PartsPage() {
             </header>
             {/* Sólo admins llegan a esta ruta (middleware) — análisis con impuestos y márgenes reales */}
             <ProfitAnalyzer partsData={parts || []} settings={settings || { usd_exchange_rate: 1530, profit_margin: 70 }} />
-            <PnLReport />
+            <PnLReport settings={settings || undefined} />
             <PartsTable initialParts={parts || []} />
         </div>
     );
