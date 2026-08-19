@@ -99,6 +99,29 @@ export default function ProductsTable({ initialProducts, partsData, settings }: 
             .finally(() => setWooLoading(false));
     }, []);
 
+    // Crea el producto en Woo desde esta configuración: descripción con medidas,
+    // precio del configurador y variaciones por color. Queda en borrador para
+    // subirle las fotos y publicar desde wp-admin.
+    const [creatingWoo, setCreatingWoo] = useState<string | null>(null);
+    const createInWoo = async (productId: string) => {
+        setCreatingWoo(productId);
+        try {
+            const res = await fetch("/configurador/api/woocommerce/products", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ productId }),
+            });
+            const json = await res.json();
+            if (json.error) { alert("Error: " + json.error); return; }
+            setProducts(ps => ps.map(p => p.id === productId ? { ...p, woo_product_id: json.id } : p));
+            if (confirm(`Producto creado en Woo (borrador) a $${Number(json.price).toLocaleString("es-AR")}.\n\n¿Abrir wp-admin para subirle las fotos y publicarlo?`)) {
+                window.open(json.editUrl, "_blank");
+            }
+        } finally {
+            setCreatingWoo(null);
+        }
+    };
+
     const assignWoo = async (productId: string, wooId: number | null) => {
         setProducts(ps => ps.map(p => p.id === productId ? { ...p, woo_product_id: wooId } : p));
         const { error } = await supabase
@@ -217,8 +240,16 @@ export default function ProductsTable({ initialProducts, partsData, settings }: 
                                                             </option>
                                                         ))}
                                                     </select>
-                                                    {product.woo_product_id && (
+                                                    {product.woo_product_id ? (
                                                         <span className="text-[11px] text-emerald-600 font-semibold shrink-0">Vinculado ✓</span>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => createInWoo(product.id)}
+                                                            disabled={creatingWoo === product.id}
+                                                            className="shrink-0 inline-flex items-center gap-1.5 bg-gray-900 text-white px-3 py-2 text-xs font-semibold rounded-md hover:bg-gray-800 disabled:opacity-50"
+                                                        >
+                                                            {creatingWoo === product.id ? "Creando…" : "Crear producto en Woo"}
+                                                        </button>
                                                     )}
                                                 </div>
 
