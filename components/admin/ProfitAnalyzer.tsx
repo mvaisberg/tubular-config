@@ -96,11 +96,6 @@ export default function ProfitAnalyzer({ partsData, settings }: { partsData: unk
 
     return (
         <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h2 className="text-base font-semibold text-gray-900">Análisis de rentabilidad por canal</h2>
-            <p className="text-xs text-gray-500 mt-0.5 mb-3">
-                Pegá un link del configurador (compartir o cotización) o un SKU. Muestra el neto real de una venta
-                facturada a lista vs efectivo/transferencia.
-            </p>
             <div className="flex gap-2">
                 <input
                     value={input}
