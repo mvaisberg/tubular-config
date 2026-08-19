@@ -298,6 +298,10 @@ export default function PnLReport({ settings }: { settings?: Settings }) {
             {/* ── Simulador de facturación ─────────────────────────────────── */}
             {settings && (() => {
                 const num = (s: string) => parseFloat(s) || 0;
+                // Formato es-AR con separador de miles mientras se tipea;
+                // el estado guarda solo los dígitos.
+                const fmtIn = (s: string) => (s ? Number(s).toLocaleString("es-AR") : "");
+                const parseIn = (v: string) => v.replace(/\D/g, "");
                 const ticket = num(simTicket) || 1500000;
                 const quadrants: { key: string; label: string; sub: string; value: string; set: (v: string) => void; q: SimQuadrant }[] = [
                     { key: "al", label: "Acrílico · Tarjeta", sub: "facturado a lista", value: simAcrLista, set: setSimAcrLista, q: { material: "acrylic", channel: "lista", rev: num(simAcrLista) } },
@@ -331,9 +335,10 @@ export default function PnLReport({ settings }: { settings?: Settings }) {
                                     <div className="relative">
                                         <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
                                         <input
-                                            type="number"
-                                            value={c.value}
-                                            onChange={e => c.set(e.target.value)}
+                                            type="text"
+                                            inputMode="numeric"
+                                            value={fmtIn(c.value)}
+                                            onChange={e => c.set(parseIn(e.target.value))}
                                             placeholder="0"
                                             className="w-full pl-6 pr-2 py-1.5 text-sm border border-gray-200 rounded-md tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
                                         />
@@ -355,9 +360,10 @@ export default function PnLReport({ settings }: { settings?: Settings }) {
                             <div className="relative">
                                 <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400">$</span>
                                 <input
-                                    type="number"
-                                    value={simTicket}
-                                    onChange={e => setSimTicket(e.target.value)}
+                                    type="text"
+                                    inputMode="numeric"
+                                    value={fmtIn(simTicket)}
+                                    onChange={e => setSimTicket(parseIn(e.target.value))}
                                     className="w-28 pl-5 pr-1 py-0.5 border border-gray-200 rounded-md tabular-nums"
                                 />
                             </div>
