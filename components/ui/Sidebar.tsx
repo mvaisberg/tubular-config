@@ -24,8 +24,8 @@ const STEEL_COLORS = [
 const ACRYLIC_COLORS = [
     { value: 'orange_translucent', label: 'Naranja', hex: '#E64A00', opacity: 0.5 },
     { value: 'transparent', label: 'Transparente', hex: '#E0F7FA', opacity: 0.3 },
-    { value: 'blue_translucent', label: 'Azul', hex: '#003366', opacity: 0.5 },
-    { value: 'green_translucent', label: 'Verde', hex: '#003D1F', opacity: 0.5 },
+    // Azul y verde discontinuados (ago-2026): fuera del selector, pero el render
+    // 3D los mantiene para que las configuraciones viejas sigan viéndose bien.
     { value: 'black_solid', label: 'Negro', hex: '#000000', opacity: 1 },
     { value: 'white_solid', label: 'Blanco', hex: '#FFFFFF', opacity: 1 },
 ];
