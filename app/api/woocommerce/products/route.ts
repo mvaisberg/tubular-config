@@ -96,8 +96,14 @@ export async function GET() {
 
 // ── POST: crear producto en Woo desde una configuración guardada ────────────
 
+// Acero usa el atributo global pa_color (id 9) con los términos RAL — igual que
+// el resto del catálogo, así el plugin de swatches muestra los colores.
+// Acrílico no tiene términos en pa_color (el catálogo usa pa_acrilico-* por
+// nivel), así que va con atributo propio "Color" hasta unificar.
+const STEEL_COLOR_ATTR_ID = 9;
+const MARCA_ATTR_ID = 10;
 const COLORS: Record<"steel" | "acrylic", string[]> = {
-    steel: ["Grafito", "Blanco", "Beige"],
+    steel: ["Negro Grafito (RAL 9011)", "Blanco Puro (RAL 9010)", "Beige (RAL 1019)"],
     acrylic: ["Naranja Translúcido", "Transparente", "Negro Sólido", "Blanco Sólido"],
 };
 const CATEGORY_ID: Record<"steel" | "acrylic", number> = { steel: 54, acrylic: 53 };
@@ -174,15 +180,22 @@ export async function POST(req: NextRequest) {
             description,
             categories: [{ id: CATEGORY_ID[material] }],
             attributes: [
-                { name: "Color", visible: true, variation: true, options: colors },
-                { name: "Marca", visible: true, variation: false, options: ["Tubular"] },
+                material === "steel"
+                    ? { id: STEEL_COLOR_ATTR_ID, visible: true, variation: true, options: colors }
+                    : { name: "Color", visible: true, variation: true, options: colors },
+                { id: MARCA_ATTR_ID, visible: true, variation: false, options: ["Tubular"] },
             ],
+            ...(material === "steel"
+                ? { default_attributes: [{ id: STEEL_COLOR_ATTR_ID, option: colors[0] }] }
+                : {}),
         });
 
         await woo(`products/${created.id}/variations/batch`, "POST", {
             create: colors.map(c => ({
                 regular_price: price,
-                attributes: [{ name: "Color", option: c }],
+                attributes: [material === "steel"
+                    ? { id: STEEL_COLOR_ATTR_ID, option: c }
+                    : { name: "Color", option: c }],
             })),
         });
 
