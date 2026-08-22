@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, Minus, ArrowRightLeft, History, Wallet, X, Pencil, Trash2 } from "lucide-react";
+import { Plus, Minus, ArrowRightLeft, History, Wallet, X, Pencil, Trash2, Equal } from "lucide-react";
 
 interface Box {
     id: string;
@@ -41,6 +41,7 @@ export default function CashBoxManager({ initialBoxes, initialMovements }: { ini
     const [historyBox, setHistoryBox] = useState<string | null>(null);
     const [boxEditor, setBoxEditor] = useState<null | { mode: "create" } | { mode: "edit"; box: Box }>(null);
     const [movEditor, setMovEditor] = useState<Movement | null>(null);
+    const [adjustBox, setAdjustBox] = useState<Box | null>(null);
     // Listado global: filtro por caja y cantidad visible.
     const [globalFilter, setGlobalFilter] = useState<string>("all");
     const [globalLimit, setGlobalLimit] = useState(50);
@@ -115,7 +116,6 @@ export default function CashBoxManager({ initialBoxes, initialMovements }: { ini
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {boxes.map(box => {
                     const bal = balances[box.id] || 0;
-                    const open = historyBox === box.id;
                     const boxMovs = movements.filter(m => m.box_id === box.id);
                     return (
                         <div key={box.id} className="bg-white border border-gray-200 rounded-lg flex flex-col">
@@ -143,41 +143,13 @@ export default function CashBoxManager({ initialBoxes, initialMovements }: { ini
                                 <button onClick={() => setModal({ type: "out", box })} className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-md transition-colors">
                                     <Minus size={13} /> Egreso
                                 </button>
-                                <button onClick={() => setHistoryBox(open ? null : box.id)} className={`p-2 rounded-md transition-colors ${open ? "text-indigo-600 bg-indigo-50" : "text-gray-400 hover:text-indigo-600 hover:bg-indigo-50"}`} title="Historial">
+                                <button onClick={() => setAdjustBox(box)} className="p-2 rounded-md text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors" title="Ajustar saldo final">
+                                    <Equal size={14} />
+                                </button>
+                                <button onClick={() => setHistoryBox(box.id)} className="p-2 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" title={`Movimientos (${boxMovs.length})`}>
                                     <History size={14} />
                                 </button>
                             </div>
-                            {open && (
-                                <div className="border-t border-gray-100 max-h-80 overflow-y-auto">
-                                    {boxMovs.length === 0 ? (
-                                        <p className="text-xs text-gray-400 italic p-3">Sin movimientos.</p>
-                                    ) : (
-                                        <ul className="divide-y divide-gray-50">
-                                            {boxMovs.map(m => (
-                                                <li key={m.id} className="group flex items-start gap-2 text-xs px-3 py-1.5 hover:bg-gray-50">
-                                                    <span className="text-gray-400 w-20 shrink-0 pt-0.5">{format(new Date(m.created_at), "d MMM HH:mm", { locale: es })}</span>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="text-gray-700 truncate">
-                                                            {m.transfer_id ? "↔ " : m.order_id ? "🧾 " : ""}{m.concept || (m.order_id ? "Pedido" : m.transfer_id ? "Transferencia" : "—")}
-                                                        </div>
-                                                        {m.note && <div className="text-[10px] text-gray-400 truncate">{m.note}</div>}
-                                                    </div>
-                                                    <span className={`tabular-nums font-medium shrink-0 pt-0.5 ${m.amount >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                                                        {m.amount >= 0 ? "+" : ""}{fmt(m.amount, box.currency)}
-                                                    </span>
-                                                    <button
-                                                        onClick={() => setMovEditor(m)}
-                                                        className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-indigo-600 shrink-0 pt-0.5"
-                                                        title="Editar movimiento"
-                                                    >
-                                                        <Pencil size={12} />
-                                                    </button>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    )}
-                                </div>
-                            )}
                         </div>
                     );
                 })}
@@ -269,6 +241,89 @@ export default function CashBoxManager({ initialBoxes, initialMovements }: { ini
                     );
                 })()}
             </div>
+
+            {/* Historial completo de una caja (modal ancho) */}
+            {historyBox && (() => {
+                const box = boxById[historyBox];
+                if (!box) return null;
+                const boxMovs = movements
+                    .filter(m => m.box_id === historyBox)
+                    .slice()
+                    .sort((a, b) => b.created_at.localeCompare(a.created_at));
+                const bal = balances[historyBox] || 0;
+                return (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => setHistoryBox(null)}>
+                        <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col relative" onClick={e => e.stopPropagation()}>
+                            <div className="flex items-center justify-between p-4 border-b border-gray-100">
+                                <div>
+                                    <h3 className="text-sm font-semibold text-gray-900">Movimientos · {box.name}</h3>
+                                    <p className="text-xs text-gray-500 mt-0.5">
+                                        {boxMovs.length} movimientos · saldo actual{" "}
+                                        <span className={`font-semibold ${bal < 0 ? "text-rose-600" : "text-gray-900"}`}>{fmt(bal, box.currency)}</span>
+                                    </p>
+                                </div>
+                                <button onClick={() => setHistoryBox(null)} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+                            </div>
+                            <div className="overflow-y-auto flex-1">
+                                {boxMovs.length === 0 ? (
+                                    <p className="text-xs text-gray-400 italic p-4">Sin movimientos.</p>
+                                ) : (
+                                    <table className="w-full text-xs">
+                                        <thead className="sticky top-0 bg-gray-50">
+                                            <tr className="text-left text-gray-500 border-b border-gray-100">
+                                                <th className="px-4 py-2 font-medium">Fecha</th>
+                                                <th className="px-4 py-2 font-medium">Concepto</th>
+                                                <th className="px-4 py-2 font-medium">Cargó</th>
+                                                <th className="px-4 py-2 font-medium text-right">Monto</th>
+                                                <th className="px-2 py-2" />
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-50">
+                                            {boxMovs.map(m => (
+                                                <tr key={m.id} className="group hover:bg-gray-50">
+                                                    <td className="px-4 py-2 text-gray-400 whitespace-nowrap align-top">{format(new Date(m.created_at), "d MMM yy HH:mm", { locale: es })}</td>
+                                                    <td className="px-4 py-2 text-gray-700">
+                                                        <div>{m.transfer_id ? "↔ " : m.order_id ? "🧾 " : ""}{m.concept || (m.order_id ? "Pedido" : m.transfer_id ? "Transferencia" : "—")}</div>
+                                                        {m.note && <div className="text-[10px] text-gray-400">{m.note}</div>}
+                                                    </td>
+                                                    <td className="px-4 py-2 text-gray-400 whitespace-nowrap align-top">{m.author_email?.split("@")[0] || "—"}</td>
+                                                    <td className={`px-4 py-2 text-right tabular-nums font-semibold whitespace-nowrap align-top ${m.amount >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                                                        {m.amount >= 0 ? "+" : ""}{fmt(m.amount, box.currency)}
+                                                    </td>
+                                                    <td className="px-2 py-2 align-top">
+                                                        <button onClick={() => setMovEditor(m)} className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-indigo-600" title="Editar">
+                                                            <Pencil size={13} />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
+
+            {adjustBox && (
+                <AdjustModal
+                    box={adjustBox}
+                    currentBalance={balances[adjustBox.id] || 0}
+                    onClose={() => setAdjustBox(null)}
+                    onSave={async (target, note) => {
+                        const diff = target - (balances[adjustBox.id] || 0);
+                        if (diff === 0) { alert("El saldo ya es ese: no hay nada que ajustar."); return; }
+                        const ok = await addMovement([{
+                            box_id: adjustBox.id,
+                            amount: diff,
+                            concept: "Ajuste de saldo",
+                            note: note || `Saldo ajustado a ${fmt(target, adjustBox.currency)}`,
+                        }]);
+                        if (ok) setAdjustBox(null);
+                    }}
+                />
+            )}
 
             {movEditor && (
                 <MovementEditModal
@@ -381,6 +436,51 @@ function MoveModal({ box, type, onClose, onSave }: { box: Box; type: "in" | "out
                     onClick={async () => { const n = parseFloat(amount); if (!n || n <= 0) return alert("Monto inválido"); setSaving(true); await onSave(n, concept.trim(), note.trim()); setSaving(false); }}
                     className={`px-4 py-1.5 text-sm font-medium text-white rounded-md disabled:opacity-50 ${isIn ? "bg-emerald-600 hover:bg-emerald-700" : "bg-rose-600 hover:bg-rose-700"}`}
                 >{saving ? "…" : "Confirmar"}</button>
+            </div>
+        </Overlay>
+    );
+}
+
+function AdjustModal({ box, currentBalance, onClose, onSave }: {
+    box: Box;
+    currentBalance: number;
+    onClose: () => void;
+    onSave: (target: number, note: string) => Promise<void>;
+}) {
+    const [target, setTarget] = useState("");
+    const [note, setNote] = useState("");
+    const [saving, setSaving] = useState(false);
+    const parsed = target.trim() === "" ? null : parseFloat(target);
+    const diff = parsed === null || isNaN(parsed) ? null : parsed - currentBalance;
+    return (
+        <Overlay onClose={onClose}>
+            <h3 className="text-sm font-semibold text-gray-900 mb-1">Ajustar saldo · {box.name}</h3>
+            <p className="text-xs text-gray-500 mb-4">
+                Saldo actual: <span className={`font-semibold ${currentBalance < 0 ? "text-rose-600" : "text-gray-900"}`}>{fmt(currentBalance, box.currency)}</span>.
+                Ingresá el saldo real y se genera un movimiento de ajuste por la diferencia.
+            </p>
+            <label className="text-xs font-medium text-gray-700 block mb-1">Saldo final deseado ({box.currency})</label>
+            <input
+                type="number" value={target} onChange={e => setTarget(e.target.value)} autoFocus
+                className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="0"
+            />
+            {diff !== null && (
+                <p className={`text-xs mb-3 font-medium ${diff === 0 ? "text-gray-400" : diff > 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                    {diff === 0 ? "Sin diferencia con el saldo actual." : `Movimiento de ajuste: ${diff > 0 ? "+" : ""}${fmt(diff, box.currency)}`}
+                </p>
+            )}
+            <label className="text-xs font-medium text-gray-700 block mb-1">Nota (opcional)</label>
+            <input
+                type="text" value={note} onChange={e => setNote(e.target.value)}
+                className="w-full border border-gray-200 rounded-md px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Ej: arqueo de caja, diferencia contada…"
+            />
+            <div className="flex justify-end gap-2">
+                <button onClick={onClose} className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-md">Cancelar</button>
+                <button
+                    disabled={saving || parsed === null || isNaN(parsed as number)}
+                    onClick={async () => { setSaving(true); await onSave(parsed as number, note.trim()); setSaving(false); }}
+                    className="px-4 py-1.5 text-sm font-medium bg-amber-600 text-white rounded-md hover:bg-amber-700 disabled:opacity-50"
+                >{saving ? "…" : "Ajustar saldo"}</button>
             </div>
         </Overlay>
     );
