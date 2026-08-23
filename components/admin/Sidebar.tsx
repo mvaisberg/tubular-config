@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import NoStatsToggle from "./NoStatsToggle";
 import {
     LayoutDashboard,
     Package,
@@ -15,11 +16,13 @@ import {
     ExternalLink,
     Boxes,
     BarChart3,
+    Radar,
     Wallet,
     Lightbulb,
     Calculator,
     Star,
     Megaphone,
+    ListChecks,
 } from "lucide-react";
 
 type Role = "admin" | "sales" | "marketing" | null;
@@ -28,6 +31,7 @@ const navItems = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard, adminOnly: true },
     { name: "Pedidos", href: "/admin/orders", icon: ShoppingCart, adminOnly: false },
     { name: "Informes", href: "/admin/reports", icon: BarChart3, adminOnly: true },
+    { name: "Tráfico", href: "/admin/trafico", icon: Radar, adminOnly: true },
     { name: "Cajas", href: "/admin/cajas", icon: Wallet, adminOnly: true },
     { name: "Contabilidad", href: "/admin/contabilidad", icon: Calculator, adminOnly: true },
     { name: "Cotizaciones", href: "/admin/quotes", icon: FileText, adminOnly: true },
@@ -44,6 +48,7 @@ const marketingItems = [
     { name: "Ideas", href: "/admin/ideas", icon: Lightbulb },
     { name: "Calendario", href: "/admin/marketing", icon: Megaphone },
     { name: "Reviews", href: "/admin/reviews", icon: Star },
+    { name: "Checklist conversión", href: "/admin/conversion", icon: ListChecks },
 ];
 
 export default function Sidebar({ role }: { role: Role }) {
@@ -116,6 +121,7 @@ export default function Sidebar({ role }: { role: Role }) {
             </nav>
 
             <div className="px-3 py-4 border-t border-gray-800 space-y-1">
+                <NoStatsToggle compact />
                 <a
                     href="/configurador"
                     target="_blank"
