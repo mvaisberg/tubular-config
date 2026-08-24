@@ -1,18 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, BarChart3, Boxes, ChevronRight } from "lucide-react";
+import { ArrowLeft, BarChart3, Boxes, ChevronRight, Radar } from "lucide-react";
 import ReportsView from "@/components/admin/ReportsView";
 import StockReport from "@/components/admin/StockReport";
+import TrafficReport from "@/components/admin/TrafficReport";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function ReportsHub({ orders }: { orders: any[] }) {
-    const [selected, setSelected] = useState<"general" | "stock" | null>(null);
+    const [selected, setSelected] = useState<"general" | "stock" | "trafico" | null>(null);
 
     if (selected) {
         const meta = selected === "general"
             ? { title: "Facturación y cobranzas", subtitle: "Ingresos, cobros y descuentos por período" }
-            : { title: "Stock de piezas · pedidos pendientes", subtitle: "Piezas a producir según los pedidos pendientes de entregar" };
+            : selected === "stock"
+            ? { title: "Stock de piezas · pedidos pendientes", subtitle: "Piezas a producir según los pedidos pendientes de entregar" }
+            : { title: "Tráfico del configurador", subtitle: "Quién llega (publicidad vs orgánico), quién lo usa de verdad y quién es tráfico basura" };
         return (
             <div className="space-y-6 pb-32">
                 <button onClick={() => setSelected(null)}
@@ -23,7 +26,7 @@ export default function ReportsHub({ orders }: { orders: any[] }) {
                     <h1 className="text-2xl font-semibold tracking-tight text-gray-900">{meta.title}</h1>
                     <p className="text-sm text-gray-500 mt-1">{meta.subtitle}</p>
                 </header>
-                {selected === "general" ? <ReportsView orders={orders} /> : <StockReport />}
+                {selected === "general" ? <ReportsView orders={orders} /> : selected === "stock" ? <StockReport /> : <TrafficReport />}
             </div>
         );
     }
@@ -40,6 +43,12 @@ export default function ReportsHub({ orders }: { orders: any[] }) {
             icon: Boxes,
             title: "Stock de piezas",
             desc: "Qué piezas necesito para armar los pedidos pendientes de entregar. Dinámico y con desglose de paneles por color.",
+        },
+        {
+            key: "trafico" as const,
+            icon: Radar,
+            title: "Tráfico del configurador",
+            desc: "Publicidad vs orgánico, % que usa el configurador de verdad y tráfico basura. Por campaña UTM.",
         },
     ];
 
