@@ -16,13 +16,16 @@ interface Data {
     referrers: ({ name: string } & Agg)[];
 }
 
-const iso = (d: Date) => d.toISOString().slice(0, 10);
+// Fecha local (no UTC): a la noche en Argentina "hoy" seguiría siendo hoy.
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const dur = (s: number) => s >= 60 ? `${Math.floor(s / 60)}m ${s % 60}s` : `${s}s`;
 
 function presetRange(key: string): [string, string] {
     const now = new Date();
     const past = (days: number) => { const d = new Date(now); d.setDate(d.getDate() - days); return d; };
     switch (key) {
+        case "hoy": return [iso(now), iso(now)];
+        case "ayer": return [iso(past(1)), iso(past(1))];
         case "7d": return [iso(past(6)), iso(now)];
         case "14d": return [iso(past(13)), iso(now)];
         case "30d": return [iso(past(29)), iso(now)];
@@ -54,7 +57,7 @@ export default function TrafficReport() {
     return (
         <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-2">
-                {[["7d", "Últimos 7 días"], ["14d", "14 días"], ["30d", "30 días"]].map(([k, l]) => (
+                {[["hoy", "Hoy"], ["ayer", "Ayer"], ["7d", "Últimos 7 días"], ["14d", "14 días"], ["30d", "30 días"]].map(([k, l]) => (
                     <button key={k} onClick={() => applyPreset(k)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium ${preset === k ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
                         {l}
