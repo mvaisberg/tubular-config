@@ -32,6 +32,8 @@ export default function JobApplicationForm() {
     const [sending, setSending] = useState(false);
     const [done, setDone] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    // Las preguntas quedan ocultas hasta que la persona decide postularse.
+    const [started, setStarted] = useState(false);
 
     if (done) {
         return (
@@ -45,9 +47,25 @@ export default function JobApplicationForm() {
         );
     }
 
+    if (!started) {
+        return (
+            <button
+                type="button"
+                onClick={() => {
+                    setStarted(true);
+                    setTimeout(() => document.getElementById("form-postulacion")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+                }}
+                className="w-full py-4 bg-[#354763] text-white font-bold text-sm tracking-widest uppercase rounded-xl hover:bg-[#2a3850] transition-colors shadow-lg shadow-[#354763]/20"
+            >
+                Quiero postularme →
+            </button>
+        );
+    }
+
     return (
         <form
-            className="bg-white border border-gray-200 rounded-2xl p-5 md:p-7 space-y-5"
+            id="form-postulacion"
+            className="bg-white border border-gray-200 rounded-2xl p-5 md:p-7 space-y-5 scroll-mt-6"
             onSubmit={async (e) => {
                 e.preventDefault();
                 if (!schedule || !physical || !license) { setError("Completá todas las preguntas de Sí/No y el registro."); return; }
