@@ -10,6 +10,7 @@ import { advanceReviewFlow, type ReviewState, type InboundMessage, type FlowResu
 import { agentAdvanceReviewFlow, agentAvailable, type ConversationTurn } from "@/lib/review-agent";
 import { sendText } from "@/lib/whatsapp";
 import { createReviewCoupon } from "@/lib/woo-coupons";
+import { shouldAutoPublish } from "@/lib/review-autopublish";
 
 type Db = ReturnType<typeof createClient<any>>;
 
@@ -179,6 +180,21 @@ export async function processReviewMessage(args: ProcessArgs): Promise<ProcessRe
     }
 
     if (result.reply) patch.last_prompt_at = now;
+
+    // Auto-publicación: 5 estrellas + comentario inequívocamente positivo se
+    // publica solo. Ante cualquier duda queda para revisión manual del equipo.
+    const finalRating = (patch.rating as number | undefined) ?? review.rating;
+    const finalComment = (patch.comment as string | undefined) ?? review.comment;
+    if (finalRating === 5 && finalComment) {
+        const { data: contact } = await db
+            .from("wa_contacts").select("wa_id").eq("id", contactId).maybeSingle();
+        const decision = await shouldAutoPublish({
+            rating: finalRating,
+            comment: finalComment,
+            waId: contact?.wa_id ?? null,
+        });
+        if (decision.publish) patch.published = true;
+    }
 
     await db.from("wa_reviews").update(patch).eq("id", review.id);
 
