@@ -1,6 +1,8 @@
-// Informe de stock de piezas necesarias según los pedidos PENDIENTES DE ENTREGAR.
+// Informe de stock de piezas comprometidas por los pedidos AÚN NO ENTREGADOS.
 //
-// Dinámico: recorre los pedidos con fulfillment_status='pending', resuelve la config de
+// El stock se compromete apenas entra el pedido: mientras no se entregue, esas
+// piezas no están disponibles (sin importar si ya se armó la estructura o se embaló).
+// Dinámico: recorre esos pedidos, resuelve la config de
 // cada línea (configurador o catálogo vinculado) y suma todas las piezas. Los paneles se
 // desglosan por color (tomado de la variante del pedido) para saber cuánto pintar de cada uno.
 // Solo admin (datos de producción/costos).
@@ -45,7 +47,10 @@ export async function GET() {
     const db = createServiceSupabase(supabaseUrl, serviceKey);
 
     const [ordersRes, partsRes, settingsRes, preRes] = await Promise.all([
-        db.from("admin_orders").select("id, order_number, client_name, items, fulfillment_status").eq("fulfillment_status", "pending"),
+        db.from("admin_orders")
+            .select("id, order_number, client_name, items, fulfillment_status")
+            .neq("fulfillment_status", "delivered")
+            .neq("status", "cancelled"),
         db.from("parts").select("*"),
         db.from("settings").select("*").eq("id", 1).maybeSingle(),
         db.from("preconfigured_products").select("sku, woo_product_id, configuration"),

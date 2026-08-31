@@ -99,19 +99,21 @@ const PRIORITY_STATES: { value: string; label: string; cls: string }[] = [
     { value: "high", label: "Alta", cls: "bg-rose-50 text-rose-700 border-rose-300" },
 ];
 
-// Solo usamos 3 estados de logística: Pendiente → Embalado → Entregado.
+// Estados de logística: Pendiente → Estructura hecha → Embalado → Entregado.
 // Cualquier estado legacy distinto cae en la columna "Pendiente".
 const FULFILLMENT_STATES: { value: string; label: string; cls: string }[] = [
     { value: "pending", label: "Pendiente", cls: "bg-gray-100 text-gray-700 border-gray-200" },
+    { value: "structure_done", label: "Estructura hecha", cls: "bg-blue-50 text-blue-700 border-blue-200" },
     { value: "packed", label: "Embalado", cls: "bg-purple-50 text-purple-700 border-purple-200" },
     { value: "delivered", label: "Entregado", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
 ];
 
-// Mapea el fulfillment_status de un pedido a una de las 3 columnas.
+// Mapea el fulfillment_status de un pedido a su columna.
 function columnFor(status: string | null | undefined): string {
     if (status === "delivered") return "delivered";
     if (status === "packed") return "packed";
-    return "pending"; // pending + cualquier estado legacy (in_production, assembled, shipped)
+    if (status === "structure_done" || status === "assembled") return "structure_done";
+    return "pending"; // pending + cualquier estado legacy (in_production, shipped)
 }
 
 type Filter = "all" | "pending" | "partial" | "paid" | "pickup" | "delivery" | "manual" | "woocommerce";
@@ -233,7 +235,7 @@ export default function OrdersGrid({ initialOrders, showPricing = true }: { init
 
     // Agrupa los pedidos filtrados en las 3 columnas por estado de logística.
     const columns = useMemo(() => {
-        const groups: Record<string, Order[]> = { pending: [], packed: [], delivered: [] };
+        const groups: Record<string, Order[]> = { pending: [], structure_done: [], packed: [], delivered: [] };
         filtered.forEach(o => groups[columnFor(o.fulfillment_status)].push(o));
         return groups;
     }, [filtered]);
@@ -423,7 +425,7 @@ export default function OrdersGrid({ initialOrders, showPricing = true }: { init
                     {orders.length === 0 ? "No hay pedidos todavía." : "No hay resultados para tu búsqueda."}
                 </div>
             ) : (
-                <div className={`grid grid-cols-1 gap-4 items-start ${showDelivered ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
+                <div className={`grid grid-cols-1 gap-4 items-start ${showDelivered ? "md:grid-cols-2 xl:grid-cols-4" : "md:grid-cols-3"}`}>
                     {(showDelivered ? FULFILLMENT_STATES : FULFILLMENT_STATES.filter(s => s.value !== "delivered")).map(col => {
                         const colOrders = columns[col.value] || [];
                         return (

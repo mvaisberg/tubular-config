@@ -14,7 +14,7 @@ export default function ReportsHub({ orders }: { orders: any[] }) {
         const meta = selected === "general"
             ? { title: "Facturación y cobranzas", subtitle: "Ingresos, cobros y descuentos por período" }
             : selected === "stock"
-            ? { title: "Stock de piezas · pedidos pendientes", subtitle: "Piezas a producir según los pedidos pendientes de entregar" }
+            ? { title: "Stock de piezas comprometidas", subtitle: "Piezas que ya están tomadas por los pedidos que todavía no se entregaron" }
             : { title: "Tráfico del configurador", subtitle: "Quién llega (publicidad vs orgánico), quién lo usa de verdad y quién es tráfico basura" };
         return (
             <div className="space-y-6 pb-32">
@@ -42,7 +42,7 @@ export default function ReportsHub({ orders }: { orders: any[] }) {
             key: "stock" as const,
             icon: Boxes,
             title: "Stock de piezas",
-            desc: "Qué piezas necesito para armar los pedidos pendientes de entregar. Dinámico y con desglose de paneles por color.",
+            desc: "Qué piezas están comprometidas por los pedidos sin entregar. Dinámico y con desglose de paneles por color.",
         },
         {
             key: "trafico" as const,

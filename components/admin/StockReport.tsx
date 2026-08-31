@@ -49,7 +49,7 @@ export default function StockReport() {
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3 text-sm text-gray-600">
                     <span className="inline-flex items-center gap-1.5 bg-gray-900 text-white px-3 py-1.5 font-semibold">
-                        <Package size={15} strokeWidth={2.5} /> {data?.pendingOrders ?? "—"} pedidos pendientes
+                        <Package size={15} strokeWidth={2.5} /> {data?.pendingOrders ?? "—"} pedidos sin entregar
                     </span>
                     {data && data.matchedOrders < data.pendingOrders && (
                         <span className="text-amber-600 font-medium">
