@@ -68,7 +68,7 @@ export function ageFromYear(year: number | null): number | null {
 }
 
 export interface Criteria { ageMin: number; ageMax: number; salaryMax: number }
-export const DEFAULT_CRITERIA: Criteria = { ageMin: 25, ageMax: 35, salaryMax: 1_000_000 };
+export const DEFAULT_CRITERIA: Criteria = { ageMin: 18, ageMax: 30, salaryMax: 1_000_000 };
 
 export interface Evaluation {
     passes: boolean;
