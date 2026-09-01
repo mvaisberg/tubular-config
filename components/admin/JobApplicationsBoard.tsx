@@ -48,12 +48,15 @@ export default function JobApplicationsBoard({ initial }: { initial: App[] }) {
     const [hideDiscarded, setHideDiscarded] = useState(true);
     const [crit, setCrit] = useState<Criteria>(DEFAULT_CRITERIA);
 
-    const { fit, rest } = useMemo(() => {
+    const FINALIST_STATES = ["shortlisted", "interviewed", "hired"];
+    const { fit, rest, finalists } = useMemo(() => {
         const list = hideDiscarded ? apps.filter(a => a.status !== "discarded") : apps;
         const scored = list.map(a => ({ app: a, ev: evaluate(a, crit) }));
+        const isFinal = (x: typeof scored[number]) => FINALIST_STATES.includes(x.app.status);
         return {
-            fit: scored.filter(x => x.ev.passes).sort((a, b) => b.ev.score - a.ev.score),
-            rest: scored.filter(x => !x.ev.passes).sort((a, b) => b.ev.score - a.ev.score),
+            finalists: scored.filter(isFinal).sort((a, b) => b.ev.score - a.ev.score),
+            fit: scored.filter(x => !isFinal(x) && x.ev.passes).sort((a, b) => b.ev.score - a.ev.score),
+            rest: scored.filter(x => !isFinal(x) && !x.ev.passes).sort((a, b) => b.ev.score - a.ev.score),
         };
     }, [apps, crit, hideDiscarded]);
 
@@ -179,7 +182,7 @@ export default function JobApplicationsBoard({ initial }: { initial: App[] }) {
             )}
 
             {/* Dos columnas: descartadas por filtro | recomendadas */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
                 <section>
                     <header className="flex items-center justify-between mb-2 px-1">
                         <h2 className="text-sm font-semibold text-gray-500">No cumplen el filtro</h2>
@@ -204,6 +207,24 @@ export default function JobApplicationsBoard({ initial }: { initial: App[] }) {
                     </div>
                     <p className="text-[11px] text-gray-400 mt-2 px-1">
                         Ordenados por cercanía al taller, margen de sueldo y qué tan completa está la postulación.
+                    </p>
+                </section>
+
+                <section>
+                    <header className="flex items-center justify-between mb-2 px-1">
+                        <h2 className="text-sm font-semibold text-indigo-700">★ Finalistas · para entrevistar</h2>
+                        <span className="text-xs font-semibold text-indigo-600 tabular-nums">{finalists.length}</span>
+                    </header>
+                    <div className="space-y-2 lg:max-h-[75vh] lg:overflow-y-auto pr-1">
+                        {finalists.map(x => <Card key={x.app.id} app={x.app} ev={x.ev} />)}
+                        {finalists.length === 0 && (
+                            <p className="text-xs text-gray-400 italic px-1">
+                                Marcá una postulación como Preseleccionada y aparece acá.
+                            </p>
+                        )}
+                    </div>
+                    <p className="text-[11px] text-gray-400 mt-2 px-1">
+                        Revisados uno por uno: estabilidad laboral en el CV, experiencia relevante y cómo redactan.
                     </p>
                 </section>
             </div>
