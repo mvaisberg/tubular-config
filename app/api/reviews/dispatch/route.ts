@@ -3,6 +3,9 @@
  *
  * Fase 1 — encolar: pedidos entregados hace >= reviews_delay_days con WhatsApp
  *   cargado → un job en wa_outbound_jobs (dedupe por orden, nunca repite).
+ * Fase 1b — segunda vuelta: a quienes no contestaron NADA a los
+ *   reviews_followup_days del primer pedido, se les encola el 2º intento
+ *   (una sola vez por review).
  * Fase 2 — enviar: jobs vencidos → plantilla aprobada vía Cloud API. Sólo a
  *   contactos con opt_in (si no, queda skipped/no_opt_in). Al enviar se crea la
  *   fila en wa_reviews (step 'sent'): de ahí en más la conversación la maneja
@@ -46,7 +49,7 @@ export async function POST(req: NextRequest) {
 
     const { data: settings } = await db
         .from("settings")
-        .select("reviews_enabled, reviews_delay_days, reviews_template_name, reviews_followup_template_name, reviews_template_language")
+        .select("reviews_enabled, reviews_delay_days, reviews_followup_days, reviews_template_name, reviews_followup_template_name, reviews_template_language")
         .eq("id", 1)
         .single();
 
@@ -98,13 +101,45 @@ export async function POST(req: NextRequest) {
         // conflicto de dedupe_key = ya estaba encolado: silencio y seguimos
     }
 
+    const followupTemplateName = settings.reviews_followup_template_name || null;
+
+    // ── Fase 1b: segunda vuelta para quienes no contestaron nada ────────────
+    // A los N días del primer pedido sin una sola respuesta, se encola un
+    // followup con la plantilla del 2º intento. Una sola vez por review.
+    const followupDays = settings.reviews_followup_days ?? 7;
+    let queuedFollowups = 0;
+    if (followupTemplateName) {
+        const fCutoff = new Date(Date.now() - followupDays * 24 * 3600 * 1000).toISOString();
+        const { data: silent } = await db
+            .from("wa_reviews")
+            .select("id, contact_id, order_id, requested_at")
+            .is("responded_at", null)
+            .in("step", ["sent", "expired"])
+            .lte("requested_at", fCutoff)
+            .limit(200);
+
+        for (const rev of silent || []) {
+            const { error } = await db.from("wa_outbound_jobs").insert({
+                contact_id: rev.contact_id,
+                kind: "review_followup",
+                template_name: followupTemplateName,
+                variables: ["Hola", "mueble"],
+                scheduled_at: new Date().toISOString(),
+                dedupe_key: `review_followup:${rev.id}`,
+                order_id: rev.order_id,
+            });
+            if (!error) queuedFollowups++;
+            // conflicto de dedupe_key = ya se le mandó el 2º intento: se saltea
+        }
+    }
+
     // ── Fase 2: enviar vencidos ─────────────────────────────────────────────
     // Cada kind de job usa la plantilla activa en settings al momento del envío
     // (no la que quedó grabada al encolarse): cambiar la plantilla desde el
     // panel afecta también a la cola pendiente. Las variables se adaptan a la
     // cantidad de {{n}} que la plantilla realmente usa. Un kind cuya plantilla
     // no esté aprobada deja sus jobs en cola sin marcar (salen al aprobarse).
-    const followupTemplate = settings.reviews_followup_template_name || null;
+    const followupTemplate = followupTemplateName;
     const tplByKind: Record<string, { name: string; varCount: number } | null> = {
         review_request: null,
         review_followup: null,
@@ -231,5 +266,5 @@ export async function POST(req: NextRequest) {
         }
     }
 
-    return NextResponse.json({ ok: true, queued, sent, skipped_no_opt_in: skippedNoOptIn, failed });
+    return NextResponse.json({ ok: true, queued, queued_followups: queuedFollowups, sent, skipped_no_opt_in: skippedNoOptIn, failed });
 }
