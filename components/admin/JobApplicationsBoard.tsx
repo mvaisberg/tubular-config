@@ -30,6 +30,7 @@ interface App {
     status: string;
     admin_notes: string | null;
     job_stability?: string | null;
+    finalist_rank?: number | null;
 }
 
 const STATUS: Record<string, { label: string; cls: string }> = {
@@ -62,7 +63,10 @@ export default function JobApplicationsBoard({ initial }: { initial: App[] }) {
         const scored = list.map(a => ({ app: a, ev: evaluate(a, crit) }));
         const isFinal = (x: typeof scored[number]) => FINALIST_STATES.includes(x.app.status);
         return {
-            finalists: scored.filter(isFinal).sort((a, b) => b.ev.score - a.ev.score),
+            finalists: scored.filter(isFinal).sort((a, b) => {
+                const ra = a.app.finalist_rank ?? 999, rb = b.app.finalist_rank ?? 999;
+                return ra !== rb ? ra - rb : b.ev.score - a.ev.score;
+            }),
             fit: scored.filter(x => !isFinal(x) && x.ev.passes).sort((a, b) => b.ev.score - a.ev.score),
             rest: scored.filter(x => !isFinal(x) && !x.ev.passes).sort((a, b) => b.ev.score - a.ev.score),
         };
@@ -96,6 +100,9 @@ export default function JobApplicationsBoard({ initial }: { initial: App[] }) {
                 className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-left hover:border-gray-400 hover:shadow-sm transition-all"
             >
                 <div className="flex items-center gap-1.5 flex-wrap">
+                    {a.finalist_rank && (
+                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-bold shrink-0">{a.finalist_rank}</span>
+                    )}
                     <span className="text-sm font-semibold text-gray-900">{a.full_name}</span>
                     {ev.age && <span className="text-xs text-gray-500">{ev.age}a</span>}
                     <span className={`text-[10px] font-medium border rounded-full px-1.5 py-0.5 ${st.cls}`}>{st.label}</span>
