@@ -31,6 +31,7 @@ interface App {
     admin_notes: string | null;
     job_stability?: string | null;
     finalist_rank?: number | null;
+    secondary_school?: string | null;
 }
 
 const STATUS: Record<string, { label: string; cls: string }> = {
@@ -48,6 +49,13 @@ const STABILITY: Record<string, { label: string; cls: string }> = {
     alta: { label: "Estable", cls: "bg-emerald-50 text-emerald-700 border border-emerald-200" },
     media: { label: "Media", cls: "bg-amber-50 text-amber-700 border border-amber-200" },
     baja: { label: "Rota mucho", cls: "bg-rose-50 text-rose-700 border border-rose-200" },
+};
+
+// Secundario declarado en el CV.
+const SCHOOL: Record<string, { label: string; cls: string }> = {
+    completo: { label: "🎓 Secundario", cls: "bg-sky-50 text-sky-700 border border-sky-200" },
+    en_curso: { label: "Secundario en curso", cls: "bg-amber-50 text-amber-700 border border-amber-200" },
+    incompleto: { label: "Sin secundario", cls: "bg-rose-50 text-rose-700 border border-rose-200" },
 };
 
 export default function JobApplicationsBoard({ initial }: { initial: App[] }) {
@@ -79,6 +87,10 @@ export default function JobApplicationsBoard({ initial }: { initial: App[] }) {
     const setStability = async (id: string, job_stability: string | null) => {
         setApps(prev => prev.map(a => a.id === id ? { ...a, job_stability } : a));
         await supabase.from("job_applications").update({ job_stability }).eq("id", id);
+    };
+    const setSchool = async (id: string, secondary_school: string | null) => {
+        setApps(prev => prev.map(a => a.id === id ? { ...a, secondary_school } : a));
+        await supabase.from("job_applications").update({ secondary_school }).eq("id", id);
     };
     const saveNotes = async (id: string, admin_notes: string) => {
         await supabase.from("job_applications").update({ admin_notes }).eq("id", id);
@@ -116,6 +128,11 @@ export default function JobApplicationsBoard({ initial }: { initial: App[] }) {
                     {a.job_stability && (
                         <span className={`text-[10px] font-medium rounded px-1.5 py-0.5 ${STABILITY[a.job_stability]?.cls || ""}`}>
                             {STABILITY[a.job_stability]?.label}
+                        </span>
+                    )}
+                    {a.secondary_school && (
+                        <span className={`text-[10px] font-medium rounded px-1.5 py-0.5 ${SCHOOL[a.secondary_school]?.cls || ""}`}>
+                            {SCHOOL[a.secondary_school]?.label}
                         </span>
                     )}
                 </div>
@@ -273,6 +290,19 @@ export default function JobApplicationsBoard({ initial }: { initial: App[] }) {
                                             </button>
                                         ))}
                                         {!a.job_stability && <span className="text-xs text-gray-400 self-center ml-1">sin analizar</span>}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">Secundario (según el CV)</div>
+                                    <div className="flex gap-1.5">
+                                        {(["completo", "en_curso", "incompleto"] as const).map(k => (
+                                            <button key={k} onClick={() => setSchool(a.id, a.secondary_school === k ? null : k)}
+                                                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${a.secondary_school === k ? SCHOOL[k].cls : "bg-white text-gray-400 border-gray-200 hover:border-gray-400"}`}>
+                                                {k === "completo" ? "Completo" : k === "en_curso" ? "En curso" : "Incompleto"}
+                                            </button>
+                                        ))}
+                                        {!a.secondary_school && <span className="text-xs text-gray-400 self-center ml-1">sin datos</span>}
                                     </div>
                                 </div>
 
