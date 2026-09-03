@@ -67,8 +67,13 @@ export function ageFromYear(year: number | null): number | null {
     return new Date().getFullYear() - year;
 }
 
-export interface Criteria { ageMin: number; ageMax: number; salaryMax: number }
-export const DEFAULT_CRITERIA: Criteria = { ageMin: 18, ageMax: 30, salaryMax: 1_000_000 };
+export interface Criteria {
+    ageMin: number;
+    ageMax: number;
+    salaryMax: number;   // pretensión estrictamente MENOR a este monto
+    commuteMax: number;  // minutos de viaje declarados
+}
+export const DEFAULT_CRITERIA: Criteria = { ageMin: 18, ageMax: 26, salaryMax: 1_000_000, commuteMax: 40 };
 
 export interface Evaluation {
     passes: boolean;
@@ -89,6 +94,7 @@ export function evaluate(app: {
     strengths: string | null;
     cv_path: string | null;
     drivers_license: string | null;
+    job_stability?: string | null;
 }, c: Criteria = DEFAULT_CRITERIA): Evaluation {
     const age = ageFromYear(app.birth_year);
     const salary = parseSalary(app.salary_expectation);
@@ -100,7 +106,10 @@ export function evaluate(app: {
     if (age === null) reasons.push("sin edad declarada");
     else if (age < c.ageMin || age > c.ageMax) reasons.push(`${age} años (busca ${c.ageMin}–${c.ageMax})`);
     if (salary === null) reasons.push("sueldo no interpretable");
-    else if (salary > c.salaryMax) reasons.push(`pide $${salary.toLocaleString("es-AR")}`);
+    else if (salary >= c.salaryMax) reasons.push(`pide $${salary.toLocaleString("es-AR")}`);
+    if (commute === null) reasons.push("no declaró el viaje");
+    else if (commute > c.commuteMax) reasons.push(`${commute} min de viaje`);
+    if (app.job_stability === "baja") reasons.push("cambia de trabajo cada pocos meses");
 
     // Score: viaje corto pesa más que todo (predice rotación), después margen de
     // sueldo, y suma si se tomó el trabajo de contar su experiencia o dejar CV.
@@ -112,6 +121,8 @@ export function evaluate(app: {
     if ((app.strengths || "").trim().length > 15) score += 3;
     if (app.cv_path) score += 4;
     if (app.drivers_license && app.drivers_license !== "no") score += 3;
+    if (app.job_stability === "alta") score += 12;
+    else if (app.job_stability === "media") score += 5;
 
     return { passes: reasons.length === 0, reasons, age, salary, commute, score: Math.round(score) };
 }

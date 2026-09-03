@@ -29,6 +29,7 @@ interface App {
     utm_source: string | null;
     status: string;
     admin_notes: string | null;
+    job_stability?: string | null;
 }
 
 const STATUS: Record<string, { label: string; cls: string }> = {
@@ -40,6 +41,13 @@ const STATUS: Record<string, { label: string; cls: string }> = {
 };
 
 const money = (n: number | null) => n === null ? "—" : "$" + n.toLocaleString("es-AR");
+
+// Estabilidad laboral leída del CV.
+const STABILITY: Record<string, { label: string; cls: string }> = {
+    alta: { label: "Estable", cls: "bg-emerald-50 text-emerald-700 border border-emerald-200" },
+    media: { label: "Media", cls: "bg-amber-50 text-amber-700 border border-amber-200" },
+    baja: { label: "Rota mucho", cls: "bg-rose-50 text-rose-700 border border-rose-200" },
+};
 
 export default function JobApplicationsBoard({ initial }: { initial: App[] }) {
     const supabase = createClient();
@@ -63,6 +71,10 @@ export default function JobApplicationsBoard({ initial }: { initial: App[] }) {
     const setStatus = async (id: string, status: string) => {
         setApps(prev => prev.map(a => a.id === id ? { ...a, status } : a));
         await supabase.from("job_applications").update({ status }).eq("id", id);
+    };
+    const setStability = async (id: string, job_stability: string | null) => {
+        setApps(prev => prev.map(a => a.id === id ? { ...a, job_stability } : a));
+        await supabase.from("job_applications").update({ job_stability }).eq("id", id);
     };
     const saveNotes = async (id: string, admin_notes: string) => {
         await supabase.from("job_applications").update({ admin_notes }).eq("id", id);
@@ -89,6 +101,16 @@ export default function JobApplicationsBoard({ initial }: { initial: App[] }) {
                     <span className={`text-[10px] font-medium border rounded-full px-1.5 py-0.5 ${st.cls}`}>{st.label}</span>
                     {a.cv_path && <FileText size={12} className="text-gray-400" />}
                     {a.admin_notes && <StickyNote size={12} className="text-indigo-400" />}
+                    {a.drivers_license && a.drivers_license !== "no" && (
+                        <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-red-600 border border-red-300 bg-red-50 rounded px-1.5 py-0.5 uppercase">
+                            {a.drivers_license === "moto" ? "🏍 Moto" : a.drivers_license === "auto" ? "🚗 Auto" : "🚗 Auto+Moto"}
+                        </span>
+                    )}
+                    {a.job_stability && (
+                        <span className={`text-[10px] font-medium rounded px-1.5 py-0.5 ${STABILITY[a.job_stability]?.cls || ""}`}>
+                            {STABILITY[a.job_stability]?.label}
+                        </span>
+                    )}
                 </div>
                 <div className="text-[11px] text-gray-500 mt-0.5 truncate">
                     {money(ev.salary)} · {ev.commute !== null ? `${ev.commute} min` : "viaje ?"} · {(a.location || "—").slice(0, 30)}
@@ -114,7 +136,12 @@ export default function JobApplicationsBoard({ initial }: { initial: App[] }) {
                     <input type="number" value={crit.ageMax} onChange={e => setCrit(c => ({ ...c, ageMax: Number(e.target.value) }))} className={numCls} />
                 </label>
                 <label className="flex items-center gap-1.5 text-xs text-gray-600">
-                    Sueldo hasta $
+                    Viaje hasta
+                    <input type="number" step="5" value={crit.commuteMax} onChange={e => setCrit(c => ({ ...c, commuteMax: Number(e.target.value) }))} className={numCls} />
+                    min
+                </label>
+                <label className="flex items-center gap-1.5 text-xs text-gray-600">
+                    Sueldo menor a $
                     <input type="number" step="50000" value={crit.salaryMax} onChange={e => setCrit(c => ({ ...c, salaryMax: Number(e.target.value) }))} className={numCls + " w-28"} />
                 </label>
                 <label className="flex items-center gap-1.5 text-xs text-gray-600 ml-auto">
@@ -145,7 +172,7 @@ export default function JobApplicationsBoard({ initial }: { initial: App[] }) {
                 <section>
                     <header className="flex items-center justify-between mb-2 px-1">
                         <h2 className="text-sm font-semibold text-emerald-700">
-                            ✓ Recomendados · {crit.ageMin}–{crit.ageMax} años, hasta ${(crit.salaryMax / 1000).toFixed(0)}k
+                            ✓ Recomendados · ≤{crit.ageMax} años · ≤{crit.commuteMax} min · &lt;${(crit.salaryMax / 1000).toFixed(0)}k
                         </h2>
                         <span className="text-xs font-semibold text-emerald-600 tabular-nums">{fit.length}</span>
                     </header>
@@ -218,10 +245,28 @@ export default function JobApplicationsBoard({ initial }: { initial: App[] }) {
                                     <Row k="Zona y viaje" v={a.location} />
                                     <Row k="Horario L-V + sáb" v={a.available_schedule ? "Sí puede ✓" : "No puede ✗"} />
                                     <Row k="Esfuerzo físico" v={a.physical_ok ? "Sí puede ✓" : "No puede ✗"} />
-                                    <Row k="Registro" v={a.drivers_license} />
+                                    <div className="flex gap-2">
+                                        <span className="text-gray-400 w-36 shrink-0">Registro</span>
+                                        {a.drivers_license && a.drivers_license !== "no"
+                                            ? <span className="font-bold text-red-600 uppercase">{a.drivers_license === "moto" ? "🏍 Moto" : a.drivers_license === "auto" ? "🚗 Auto" : "🚗 Auto y moto"}</span>
+                                            : <span className="text-gray-900 font-medium">No tiene</span>}
+                                    </div>
                                     <Row k="Puede empezar" v={a.start_date} />
                                     <Row k="Sueldo pretendido" v={`${a.salary_expectation || "—"}${ev.salary ? `  →  ${money(ev.salary)}` : ""}`} />
                                     <Row k="Año de nacimiento" v={a.birth_year ? String(a.birth_year) : null} />
+                                </div>
+
+                                <div>
+                                    <div className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mb-1.5">Estabilidad laboral (según el CV)</div>
+                                    <div className="flex gap-1.5">
+                                        {["alta", "media", "baja"].map(k => (
+                                            <button key={k} onClick={() => setStability(a.id, a.job_stability === k ? null : k)}
+                                                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${a.job_stability === k ? STABILITY[k].cls : "bg-white text-gray-400 border-gray-200 hover:border-gray-400"}`}>
+                                                {STABILITY[k].label}
+                                            </button>
+                                        ))}
+                                        {!a.job_stability && <span className="text-xs text-gray-400 self-center ml-1">sin analizar</span>}
+                                    </div>
                                 </div>
 
                                 <Block title="Experiencia en trabajos anteriores" text={a.experience} />
