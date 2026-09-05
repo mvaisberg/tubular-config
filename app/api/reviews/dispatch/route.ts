@@ -22,10 +22,14 @@ export const dynamic = "force-dynamic";
 
 const SEND_BATCH = 10; // techo por corrida (= por hora, el cron es horario): cuida el quality rating
 
-// Normaliza un teléfono argentino a wa_id (549 + área + número, sin + ni espacios).
+// Normaliza a wa_id. Los argentinos van como 549 + área + número; un número
+// internacional escrito con "+" (ej. +49 de Alemania) se respeta tal cual —
+// antes se le anteponía 54 y el envío fallaba.
 function toWaId(phone: string): string | null {
-    const digits = phone.replace(/\D/g, "");
+    const raw = (phone || "").trim();
+    const digits = raw.replace(/\D/g, "");
     if (digits.length < 8) return null;
+    if (raw.startsWith("+") && !digits.startsWith("54")) return digits;
     if (digits.startsWith("549")) return digits;
     if (digits.startsWith("54")) return "549" + digits.slice(2);
     if (digits.length === 10) return "549" + digits; // 11XXXXXXXX estilo CABA
