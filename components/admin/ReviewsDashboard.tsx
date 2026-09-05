@@ -20,6 +20,7 @@ interface Review {
     responded_at: string | null;
     completed_at: string | null;
     created_at: string;
+    conversation_id: string | null;
     wa_contacts: { wa_id: string; profile_name: string | null; display_name: string | null } | null;
 }
 
@@ -182,6 +183,15 @@ async function drawReviewCard(r: Review, name: string, includePhoto: boolean): P
     }
 }
 
+// Estado del último mensaje de plantilla en WhatsApp.
+const DELIVERY: Record<string, { label: string; cls: string }> = {
+    sent: { label: "enviado", cls: "text-gray-400" },
+    delivered: { label: "entregado ✓✓", cls: "text-blue-600" },
+    read: { label: "leído ✓✓", cls: "text-emerald-600" },
+    failed: { label: "NO llegó ✗", cls: "text-rose-600 font-semibold" },
+    pending: { label: "pendiente", cls: "text-gray-400" },
+};
+
 function contactName(r: Review): string {
     const c = r.wa_contacts;
     return c?.display_name || c?.profile_name || c?.wa_id || "Cliente Tubular";
@@ -237,6 +247,8 @@ export const ReviewsDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<Filter>("all");
     const [lightbox, setLightbox] = useState<string | null>(null);
+    const [sends, setSends] = useState<Record<string, { count: number; status: string; last: string }>>({});
+    const [editing, setEditing] = useState<Review | null>(null);
     const [cardFor, setCardFor] = useState<Review | null>(null);
     const [cardPhoto, setCardPhoto] = useState(true);
     const [cardUrl, setCardUrl] = useState<string | null>(null);
@@ -259,6 +271,27 @@ export const ReviewsDashboard = () => {
                 .select("*, wa_contacts(wa_id, profile_name, display_name)")
                 .order("created_at", { ascending: false });
             if (data) setReviews(data as unknown as Review[]);
+
+            // Envíos de plantilla por conversación: cuántos y en qué estado quedó el último.
+            const { data: msgs } = await supabase
+                .from("wa_messages")
+                .select("conversation_id, status, created_at, automation")
+                .eq("direction", "outbound")
+                .eq("msg_type", "template")
+                .order("created_at");
+            if (msgs) {
+                const acc: Record<string, { count: number; status: string; last: string }> = {};
+                for (const m of msgs as { conversation_id: string; status: string; created_at: string; automation: string | null }[]) {
+                    if (!m.conversation_id || !(m.automation || "").startsWith("review")) continue;
+                    const prev = acc[m.conversation_id];
+                    acc[m.conversation_id] = {
+                        count: (prev?.count ?? 0) + 1,
+                        status: m.status,          // el último por orden ascendente
+                        last: m.created_at,
+                    };
+                }
+                setSends(acc);
+            }
 
             // Cola de envíos programados.
             const { data: jobs } = await supabase
@@ -333,6 +366,12 @@ export const ReviewsDashboard = () => {
             default: return reviews;
         }
     }, [reviews, filter]);
+
+    const saveReview = async (id: string, patch: { rating: number | null; comment: string | null }) => {
+        setReviews(prev => prev.map(x => x.id === id ? { ...x, ...patch } : x));
+        const { error } = await supabase.from("wa_reviews").update(patch).eq("id", id);
+        if (error) alert("No se pudo guardar: " + error.message);
+    };
 
     const togglePublished = async (r: Review) => {
         const next = !r.published;
@@ -503,6 +542,7 @@ export const ReviewsDashboard = () => {
                                 <th className="px-4 py-2.5">Puntuación</th>
                                 <th className="px-4 py-2.5 min-w-[220px]">Comentario</th>
                                 <th className="px-4 py-2.5">Fotos</th>
+                                <th className="px-4 py-2.5">Envíos</th>
                                 <th className="px-4 py-2.5">Estado</th>
                                 <th className="px-4 py-2.5">Cupón</th>
                                 <th className="px-4 py-2.5 text-right">Web</th>
@@ -548,6 +588,19 @@ export const ReviewsDashboard = () => {
                                                 </div>
                                             ) : <span className="text-gray-300">—</span>}
                                         </td>
+                                        <td className="px-4 py-3 whitespace-nowrap">
+                                            {(() => {
+                                                const s = r.conversation_id ? sends[r.conversation_id] : undefined;
+                                                if (!s) return <span className="text-gray-300 text-xs">—</span>;
+                                                const d = DELIVERY[s.status] || DELIVERY.sent;
+                                                return (
+                                                    <span className="text-xs">
+                                                        <b>{s.count}</b>{s.count === 1 ? " envío" : " envíos"}
+                                                        <span className={`ml-1.5 ${d.cls}`}>{d.label}</span>
+                                                    </span>
+                                                );
+                                            })()}
+                                        </td>
                                         <td className="px-4 py-3">
                                             <span className={`inline-block px-2 py-0.5 rounded-md text-[11px] font-medium border ${STEP_CLS[r.step]}`}>
                                                 {STEP_LABEL[r.step]}
@@ -559,6 +612,13 @@ export const ReviewsDashboard = () => {
                                                 : <span className="text-gray-300">—</span>}
                                         </td>
                                         <td className="px-4 py-3 text-right whitespace-nowrap">
+                                            <button
+                                                onClick={() => setEditing(r)}
+                                                title="Editar puntuación y comentario"
+                                                className="px-2 py-1 mr-1.5 rounded-md text-[11px] font-medium border bg-white text-gray-500 border-gray-200 hover:bg-gray-50"
+                                            >
+                                                Editar
+                                            </button>
                                             <button
                                                 onClick={() => { setCardPhoto(true); setCardFor(r); }}
                                                 disabled={!r.rating && !r.comment}
@@ -587,6 +647,16 @@ export const ReviewsDashboard = () => {
                     </table>
                 </div>
             </div>
+
+            {/* Editar puntuación y comentario */}
+            {editing && (
+                <EditReviewModal
+                    review={editing}
+                    name={contactName(editing)}
+                    onClose={() => setEditing(null)}
+                    onSave={async (patch) => { await saveReview(editing.id, patch); setEditing(null); }}
+                />
+            )}
 
             {/* Tarjeta para contenido */}
             {cardFor && (
@@ -672,3 +742,62 @@ export const ReviewsDashboard = () => {
         </div>
     );
 };
+
+function EditReviewModal({ review, name, onClose, onSave }: {
+    review: Review;
+    name: string;
+    onClose: () => void;
+    onSave: (patch: { rating: number | null; comment: string | null }) => Promise<void>;
+}) {
+    const [rating, setRating] = useState<number | null>(review.rating);
+    const [comment, setComment] = useState(review.comment || "");
+    const [saving, setSaving] = useState(false);
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-5" onClick={e => e.stopPropagation()}>
+                <div className="flex items-start justify-between mb-4">
+                    <div>
+                        <h3 className="text-base font-semibold text-gray-900">Editar reseña</h3>
+                        <p className="text-xs text-gray-500 mt-0.5">{name}</p>
+                    </div>
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+                </div>
+
+                <label className="block text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1.5">Puntuación</label>
+                <div className="flex items-center gap-1 mb-4">
+                    {[1, 2, 3, 4, 5].map(n => (
+                        <button key={n} type="button" onClick={() => setRating(n)} className="p-0.5">
+                            <Star className={`w-7 h-7 transition-colors ${rating && n <= rating ? "fill-amber-400 text-amber-400" : "text-gray-200 hover:text-amber-200"}`} />
+                        </button>
+                    ))}
+                    {rating !== null && (
+                        <button type="button" onClick={() => setRating(null)} className="ml-2 text-[11px] text-gray-400 hover:text-rose-600 underline">
+                            quitar
+                        </button>
+                    )}
+                </div>
+
+                <label className="block text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1.5">Comentario</label>
+                <textarea
+                    value={comment}
+                    onChange={e => setComment(e.target.value)}
+                    rows={6}
+                    placeholder="Lo que escribió el cliente…"
+                    className="w-full text-sm leading-relaxed border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                />
+                <p className="text-[11px] text-gray-400 mt-1.5">
+                    Si la reseña está publicada, los cambios se ven en la web al guardar.
+                </p>
+
+                <div className="flex justify-end gap-2 mt-4">
+                    <button onClick={onClose} className="px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
+                    <button
+                        disabled={saving}
+                        onClick={async () => { setSaving(true); await onSave({ rating, comment: comment.trim() || null }); setSaving(false); }}
+                        className="px-4 py-2 text-sm font-medium bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50"
+                    >{saving ? "Guardando…" : "Guardar"}</button>
+                </div>
+            </div>
+        </div>
+    );
+}
